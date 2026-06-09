@@ -149,7 +149,7 @@ export default function AdminDashboard() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr>
-                {['Rizier', 'Email', 'Ville', 'CA total', 'Ventes', 'Clients', 'Inscrit', 'Statut', 'Actions'].map(h => (
+                {['Rizier', 'Email', 'Ville', 'CA total', 'Ventes', 'Clients', 'Dernière vente', 'Statut', 'Actions'].map(h => (
                   <th key={h} className="table-header whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -166,12 +166,22 @@ export default function AdminDashboard() {
                   <td className="table-cell text-right font-medium text-[#1B5E20]">{fmt(u.ca_total)}</td>
                   <td className="table-cell text-center">{u.nb_ventes}</td>
                   <td className="table-cell text-center">{u.nb_clients}</td>
-                  <td className="table-cell text-xs whitespace-nowrap">{fmtDate(u.created_at)}</td>
+                  <td className="table-cell text-xs whitespace-nowrap text-gray-500">
+                    {u.derniere_vente ? fmtDate(u.derniere_vente) : <span className="text-gray-300">jamais</span>}
+                  </td>
                   <td className="table-cell">
-                    {u.suspended
-                      ? <span className="text-xs font-medium text-red-600">🚫 Suspendu</span>
-                      : <span className="text-xs font-medium text-green-600">✅ Actif</span>
-                    }
+                    {u.suspended ? (
+                      <div>
+                        <span className="text-xs font-medium text-red-600">🚫 Suspendu</span>
+                        {u.suspended_reason && (
+                          <div className="text-xs text-red-400 mt-0.5 max-w-[120px] truncate" title={u.suspended_reason}>
+                            {u.suspended_reason}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-xs font-medium text-green-600">✅ Actif</span>
+                    )}
                   </td>
                   <td className="table-cell">
                     <div className="flex items-center gap-2 whitespace-nowrap">
@@ -250,12 +260,28 @@ export default function AdminDashboard() {
       {modal?.type === 'suspend' && (
         <ModalWrap title={`Suspendre — ${modal.user.nom}`} onClose={() => setModal(null)}>
           <p className="text-sm text-gray-600 mb-3">
-            L'utilisateur ne pourra plus se connecter. Précise la raison (optionnel) :
+            L'utilisateur ne pourra plus se connecter. Il verra la raison à la prochaine tentative.
           </p>
+          {/* Raisons rapides */}
+          <div className="flex flex-wrap gap-2 mb-3">
+            {['Non-paiement', 'Compte dupliqué', 'Activité suspecte', 'Contrat résilié', 'Demande utilisateur'].map((r) => (
+              <button
+                key={r}
+                onClick={() => setSuspendReason(r)}
+                className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                  suspendReason === r
+                    ? 'bg-red-600 text-white border-red-600'
+                    : 'bg-white text-gray-600 border-gray-300 hover:border-red-400'
+                }`}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
           <textarea
             className="input resize-none"
-            rows={3}
-            placeholder="Ex : non-paiement, compte dupliqué..."
+            rows={2}
+            placeholder="Ou précise une raison personnalisée..."
             value={suspendReason}
             onChange={(e) => setSuspendReason(e.target.value)}
           />

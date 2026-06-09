@@ -35,8 +35,16 @@ export default function Login() {
           <h2 className="text-base font-semibold text-gray-800 mb-4">Connexion</h2>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 mb-4">
+            <div className={`border text-sm rounded-lg px-4 py-3 mb-4 ${
+              error.toLowerCase().includes('suspendu')
+                ? 'bg-orange-50 border-orange-300 text-orange-800'
+                : 'bg-red-50 border-red-200 text-red-700'
+            }`}>
+              {error.toLowerCase().includes('suspendu') && <p className="font-semibold mb-1">⛔ Accès suspendu</p>}
               {error}
+              {error.toLowerCase().includes('suspendu') && (
+                <p className="mt-2 text-xs">Contactez l'administrateur PFS pour régulariser votre situation.</p>
+              )}
             </div>
           )}
 
@@ -76,11 +84,9 @@ export default function Login() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-500 mt-4">
-            Pas encore de compte ?{' '}
-            <Link to="/register" className="text-[#1B5E20] font-medium hover:underline">
-              S'inscrire
-            </Link>
+          <p className="text-center text-sm text-gray-400 mt-4">
+            Accès sur invitation uniquement.<br />
+            Contactez l'administrateur PFS pour obtenir un compte.
           </p>
         </div>
       </div>
