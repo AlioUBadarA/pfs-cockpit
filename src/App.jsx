@@ -22,6 +22,11 @@ function PublicRoute({ children }) {
   return user ? <Navigate to="/" replace /> : children
 }
 
+function RootRedirect() {
+  const { isAdmin } = useAuth()
+  return isAdmin ? <Navigate to="/admin" replace /> : <Dashboard />
+}
+
 function AdminRoute({ children }) {
   const { user, isAdmin } = useAuth()
   if (!user) return <Navigate to="/login" replace />
@@ -36,7 +41,7 @@ function AppRoutes() {
       <Route path="/register" element={<Navigate to="/login" replace />} />
 
       <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
-        <Route index           element={<Dashboard />} />
+        <Route index           element={<RootRedirect />} />
         <Route path="ventes"   element={<Ventes />} />
         <Route path="creances" element={<Creances />} />
         <Route path="clients"  element={<Clients />} />
