@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import api from '../../services/api'
 import KpiCard from '../../components/KpiCard'
 import StatutBadge from '../../components/StatutBadge'
+import { useAuth } from '../../context/AuthContext'
 
 const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '—'
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '—'
@@ -10,6 +11,7 @@ const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '—'
 export default function AdminUserDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { user: adminUser, startImpersonation } = useAuth()
   const [data, setData]         = useState(null)
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState('')
@@ -74,6 +76,16 @@ export default function AdminUserDetail() {
     finally { setSaving(false) }
   }
 
+  const handleImpersonate = async () => {
+    try {
+      const { data } = await api.post(`/api/admin/users/${id}/impersonate`)
+      await startImpersonation(data.user, data.token, { id: adminUser.id, nom: adminUser.nom })
+      navigate('/')
+    } catch (err) {
+      setError(err.response?.data?.error || 'Impossible d\'accéder à cet espace')
+    }
+  }
+
   const doDelete = async () => {
     setSaving(true)
     try {
@@ -98,6 +110,14 @@ export default function AdminUserDetail() {
         <Link to="/admin" className="text-sm text-[#1B5E20] hover:underline">← Retour</Link>
         <h2 className="text-xl font-bold text-gray-900 flex-1">{user.nom}</h2>
         <div className="flex gap-2 flex-wrap">
+          {!user.suspended && (
+            <button
+              onClick={handleImpersonate}
+              className="btn-primary text-sm flex items-center gap-1"
+            >
+              👁 Accéder à l'espace
+            </button>
+          )}
           <button onClick={() => setShowEdit(true)} className="btn-secondary text-sm">Modifier profil</button>
           <button onClick={() => setShowPassword(true)} className="btn-secondary text-sm">Reset mot de passe</button>
           {user.suspended

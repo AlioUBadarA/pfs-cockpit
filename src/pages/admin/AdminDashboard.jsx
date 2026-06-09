@@ -1,20 +1,23 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import api from '../../services/api'
 import KpiCard from '../../components/KpiCard'
 import StatutBadge from '../../components/StatutBadge'
+import { useAuth } from '../../context/AuthContext'
 
 const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '—'
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : 'jamais'
 
 export default function AdminDashboard() {
+  const { user: adminUser, startImpersonation } = useAuth()
+  const navigate = useNavigate()
   const [stats, setStats]       = useState(null)
   const [users, setUsers]       = useState([])
   const [loading, setLoading]   = useState(true)
   const [search, setSearch]     = useState('')
   const [filter, setFilter]     = useState('tous')
   const [error, setError]       = useState('')
-  const [modal, setModal]       = useState(null) // { type:'create'|'suspend', user? }
+  const [modal, setModal]       = useState(null)
   const [form, setForm]         = useState({ nom:'', email:'', password:'', rizerie:'', telephone:'', ville:'' })
   const [suspendReason, setSuspendReason] = useState('')
   const [saving, setSaving]     = useState(false)
@@ -39,6 +42,16 @@ export default function AdminDashboard() {
       filter === 'actifs'    ? !u.suspended : true
     return matchSearch && matchFilter
   })
+
+  const handleImpersonate = async (u) => {
+    try {
+      const { data } = await api.post(`/api/admin/users/${u.id}/impersonate`)
+      await startImpersonation(data.user, data.token, { id: adminUser.id, nom: adminUser.nom })
+      navigate('/')
+    } catch (err) {
+      setError(err.response?.data?.error || 'Impossible d\'accéder à cet espace')
+    }
+  }
 
   const handleSuspend = async (user, shouldSuspend) => {
     if (shouldSuspend) {
@@ -184,7 +197,16 @@ export default function AdminDashboard() {
                     )}
                   </td>
                   <td className="table-cell">
-                    <div className="flex items-center gap-2 whitespace-nowrap">
+                    <div className="flex items-center gap-2 whitespace-nowrap flex-wrap">
+                      {!u.suspended && (
+                        <button
+                          onClick={() => handleImpersonate(u)}
+                          className="text-xs bg-[#1B5E20] text-white px-2 py-1 rounded font-medium hover:bg-[#388E3C] transition-colors"
+                          title="Naviguer dans l'espace de ce rizier"
+                        >
+                          👁 Accéder
+                        </button>
+                      )}
                       <Link
                         to={`/admin/users/${u.id}`}
                         className="text-xs text-[#1B5E20] font-medium hover:underline"

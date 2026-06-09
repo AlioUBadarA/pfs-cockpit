@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import ImpersonationBanner from './ImpersonationBanner'
 
 const USER_NAV = [
   { to: '/',         label: 'Dashboard',  end: true },
@@ -34,6 +35,7 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
+      <ImpersonationBanner />
       {/* Navbar */}
       <header className="bg-[#1B5E20] shadow-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center h-14 gap-6">
