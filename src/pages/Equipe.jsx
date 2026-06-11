@@ -5,18 +5,17 @@ import Modal from '../components/Modal'
 const fmt     = (n) => Number(n).toLocaleString('fr-FR') + ' F'
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-'
 
-const INIT = { nom: '', email: '', password: '', telephone: '' }
+const INIT = { nom: '', email: '', telephone: '' }
 
 export default function Equipe() {
   const [vendeurs, setVendeurs] = useState([])
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState('')
-  const [modalOpen, setModalOpen]     = useState(false)
-  const [pwdModal, setPwdModal]       = useState(null)
-  const [editModal, setEditModal]     = useState(null)
-  const [form, setForm]               = useState(INIT)
-  const [newPwd, setNewPwd]           = useState('')
-  const [saving, setSaving]           = useState(false)
+  const [pwdModal, setPwdModal]   = useState(null)
+  const [editModal, setEditModal] = useState(null)
+  const [form, setForm]           = useState(INIT)
+  const [newPwd, setNewPwd]       = useState('')
+  const [saving, setSaving]       = useState(false)
 
   const load = useCallback(() => {
     setLoading(true)
@@ -29,22 +28,6 @@ export default function Equipe() {
   useEffect(() => { load() }, [load])
 
   const set = (f) => (e) => setForm(prev => ({ ...prev, [f]: e.target.value }))
-
-  const handleCreate = async (e) => {
-    e.preventDefault()
-    setSaving(true)
-    setError('')
-    try {
-      await api.post('/api/equipe', form)
-      setModalOpen(false)
-      setForm(INIT)
-      load()
-    } catch (err) {
-      setError(err.response?.data?.error || 'Erreur')
-    } finally {
-      setSaving(false)
-    }
-  }
 
   const handleEdit = async (e) => {
     e.preventDefault()
@@ -99,9 +82,7 @@ export default function Equipe() {
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <h2 className="text-xl font-bold text-gray-900">Équipe de vente</h2>
-        <button onClick={() => { setForm(INIT); setModalOpen(true) }} className="btn-primary text-sm">
-          + Ajouter un vendeur
-        </button>
+        <span className="text-xs text-gray-400 italic">Les comptes sont créés par l'administrateur</span>
       </div>
 
       {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">{error}</div>}
@@ -130,10 +111,8 @@ export default function Equipe() {
           </div>
         ) : vendeurs.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-400 text-sm mb-3">Aucun vendeur dans votre équipe</p>
-            <button onClick={() => { setForm(INIT); setModalOpen(true) }} className="btn-primary text-sm">
-              + Ajouter le premier vendeur
-            </button>
+            <p className="text-gray-400 text-sm">Aucun vendeur dans votre équipe pour le moment.</p>
+            <p className="text-gray-300 text-xs mt-1">Contactez l'administrateur pour créer des comptes.</p>
           </div>
         ) : (
           <table className="w-full text-left border-collapse">
@@ -169,37 +148,6 @@ export default function Equipe() {
           </table>
         )}
       </div>
-
-      {/* Modal créer vendeur */}
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Nouveau vendeur">
-        <form onSubmit={handleCreate} className="space-y-4">
-          <div>
-            <label className="label">Nom complet *</label>
-            <input className="input" value={form.nom} onChange={set('nom')} required />
-          </div>
-          <div>
-            <label className="label">Email *</label>
-            <input type="email" className="input" value={form.email} onChange={set('email')} required />
-          </div>
-          <div>
-            <label className="label">Téléphone</label>
-            <input className="input" value={form.telephone} onChange={set('telephone')} />
-          </div>
-          <div>
-            <label className="label">Mot de passe * (min. 6 caractères)</label>
-            <input type="password" className="input" value={form.password} onChange={set('password')} required minLength={6} />
-          </div>
-          <p className="text-xs text-gray-500">Le vendeur pourra se connecter avec cet email et ce mot de passe.</p>
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <div className="flex gap-3 pt-2">
-            <button type="button" className="btn-secondary flex-1" onClick={() => setModalOpen(false)}>Annuler</button>
-            <button type="submit" disabled={saving} className="btn-primary flex-1 flex items-center justify-center gap-2">
-              {saving && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-              {saving ? 'Création...' : 'Créer le compte'}
-            </button>
-          </div>
-        </form>
-      </Modal>
 
       {/* Modal éditer vendeur */}
       <Modal open={!!editModal} onClose={() => setEditModal(null)} title="Modifier le vendeur">
