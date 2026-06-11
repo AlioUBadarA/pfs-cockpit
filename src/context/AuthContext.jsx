@@ -82,11 +82,12 @@ export function AuthProvider({ children }) {
     }
   }
 
-  const isAdmin = user?.role === 'superadmin'
+  const isAdmin   = user?.role === 'superadmin'
+  const isVendeur = user?.role === 'vendeur'
 
   return (
     <AuthContext.Provider value={{
-      user, loading, login, logout, register, isAdmin,
+      user, loading, login, logout, register, isAdmin, isVendeur,
       impersonating, startImpersonation, stopImpersonation,
     }}>
       {children}

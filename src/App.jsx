@@ -8,6 +8,11 @@ import Ventes from './pages/Ventes'
 import Creances from './pages/Creances'
 import Clients from './pages/Clients'
 import Pilotage from './pages/Pilotage'
+import Forecast from './pages/Forecast'
+import Actions from './pages/Actions'
+import Prospection from './pages/Prospection'
+import Rentabilite from './pages/Rentabilite'
+import Equipe from './pages/Equipe'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminUserDetail from './pages/admin/AdminUserDetail'
 import AdminAudit from './pages/admin/AdminAudit'
@@ -34,6 +39,14 @@ function AdminRoute({ children }) {
   return children
 }
 
+function RizierRoute({ children }) {
+  const { user, isAdmin, isVendeur } = useAuth()
+  if (!user) return <Navigate to="/login" replace />
+  if (isAdmin) return <Navigate to="/admin" replace />
+  if (isVendeur) return <Navigate to="/" replace />
+  return children
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -42,10 +55,15 @@ function AppRoutes() {
 
       <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
         <Route index           element={<RootRedirect />} />
-        <Route path="ventes"   element={<Ventes />} />
-        <Route path="creances" element={<Creances />} />
-        <Route path="clients"  element={<Clients />} />
-        <Route path="pilotage" element={<Pilotage />} />
+        <Route path="ventes"      element={<Ventes />} />
+        <Route path="creances"    element={<Creances />} />
+        <Route path="clients"     element={<Clients />} />
+        <Route path="pilotage"    element={<Pilotage />} />
+        <Route path="forecast"    element={<Forecast />} />
+        <Route path="actions"     element={<Actions />} />
+        <Route path="prospection" element={<Prospection />} />
+        <Route path="rentabilite" element={<Rentabilite />} />
+        <Route path="equipe"      element={<RizierRoute><Equipe /></RizierRoute>} />
 
         {/* Admin */}
         <Route path="admin"              element={<AdminRoute><AdminDashboard /></AdminRoute>} />

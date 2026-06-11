@@ -4,11 +4,19 @@ import { useAuth } from '../context/AuthContext'
 import ImpersonationBanner from './ImpersonationBanner'
 
 const USER_NAV = [
-  { to: '/',         label: 'Dashboard',  end: true },
-  { to: '/ventes',   label: 'Ventes' },
-  { to: '/creances', label: 'Créances' },
-  { to: '/clients',  label: 'Clients' },
-  { to: '/pilotage', label: 'Pilotage' },
+  { to: '/',            label: 'Dashboard',   end: true },
+  { to: '/ventes',      label: 'Ventes' },
+  { to: '/creances',    label: 'Créances' },
+  { to: '/clients',     label: 'Clients' },
+  { to: '/pilotage',    label: 'Pilotage' },
+  { to: '/forecast',    label: 'Forecast' },
+  { to: '/actions',     label: 'Actions' },
+  { to: '/prospection', label: 'Prospection' },
+  { to: '/rentabilite', label: 'Rentabilité' },
+]
+
+const RIZIER_EXTRA = [
+  { to: '/equipe', label: 'Équipe' },
 ]
 
 const ADMIN_NAV = [
@@ -17,7 +25,7 @@ const ADMIN_NAV = [
 ]
 
 export default function Layout() {
-  const { user, logout, isAdmin } = useAuth()
+  const { user, logout, isAdmin, isVendeur } = useAuth()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -31,7 +39,11 @@ export default function Layout() {
     ? user.nom.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
     : 'PF'
 
-  const navItems = isAdmin ? ADMIN_NAV : USER_NAV
+  const navItems = isAdmin
+    ? ADMIN_NAV
+    : isVendeur
+      ? USER_NAV
+      : [...USER_NAV, ...RIZIER_EXTRA]
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
