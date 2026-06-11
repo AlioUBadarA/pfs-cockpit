@@ -116,7 +116,7 @@ export default function Dashboard() {
                     <span className="text-sm text-gray-700 truncate max-w-[120px]">{c.nom}</span>
                   </div>
                   <span className="text-sm font-semibold text-[#1B5E20] whitespace-nowrap">
-                    {Number(c.total).toLocaleString('fr-FR')} F
+                    {fmt(c.ca_total)}
                   </span>
                 </li>
               ))}
