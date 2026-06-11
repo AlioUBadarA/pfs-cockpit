@@ -6,14 +6,14 @@ import ContratsClients from './ContratsClients'
 import ContratsPaddy from './ContratsPaddy'
 
 const TABS = [
-  { key: 'clients',          label: 'Clients' },
   { key: 'prospection',      label: 'Prospection' },
+  { key: 'clients',          label: 'Clients' },
   { key: 'contrats-clients', label: 'Contrats clients' },
   { key: 'contrats-paddy',   label: 'Contrats paddy' },
 ]
 
 export default function CRMGroup() {
-  const [active, setActive] = useState('clients')
+  const [active, setActive] = useState('prospection')
   return (
     <div>
       <PageTabs tabs={TABS} active={active} setActive={setActive} />
