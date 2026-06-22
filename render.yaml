@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: pfs-frontend
+    name: cockpit-pfs
     env: static
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
