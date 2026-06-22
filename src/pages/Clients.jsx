@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
 import Modal from '../components/Modal'
 import StatutBadge from '../components/StatutBadge'
+import KpiCard from '../components/KpiCard'
 
 const TYPES = ['Grossiste', 'Détaillant marché', 'Boutique', 'Restauration', 'Cantine-Institution']
 const STATUTS_CLIENT = ['Actif', 'Prospect', 'Dormant']
@@ -13,6 +14,15 @@ const CLIENT_INIT = {
 }
 
 const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
+
+// Profil simplifié basé sur la récence du dernier achat (proxy Récence/Fréquence/Montant).
+function profilOf(c) {
+  if (c.nb_ventes === 0) return { label: 'Pas encore acheté', color: '#8a7f6e' }
+  if (c.recence == null) return { label: 'Pas encore acheté', color: '#8a7f6e' }
+  if (c.recence <= 30) return { label: 'Actif récent', color: '#1b75bc' }
+  if (c.recence <= 60) return { label: 'À relancer', color: '#F9A825' }
+  return { label: 'Inactif', color: '#CC0000' }
+}
 
 export default function Clients() {
   const [clients, setClients] = useState([])
@@ -26,8 +36,29 @@ export default function Clients() {
 
   const load = useCallback(() => {
     setLoading(true)
-    api.get('/api/clients')
-      .then((r) => setClients(r.data?.clients || r.data || []))
+    Promise.all([
+      api.get('/api/clients'),
+      api.get('/api/ventes', { params: { limit: 500 } }),
+    ])
+      .then(([rc, rv]) => {
+        const ventes = Array.isArray(rv.data) ? rv.data : []
+        const today = new Date()
+        const byClient = {}
+        ventes.forEach((v) => {
+          if (!v.client_id) return
+          const e = byClient[v.client_id] || { ca_total: 0, nb_ventes: 0, derniere_vente: null }
+          e.ca_total += Number(v.montant || 0)
+          e.nb_ventes += 1
+          if (!e.derniere_vente || v.date_vente > e.derniere_vente) e.derniere_vente = v.date_vente
+          byClient[v.client_id] = e
+        })
+        const enriched = (rc.data || []).map((c) => {
+          const e = byClient[c.id] || { ca_total: 0, nb_ventes: 0, derniere_vente: null }
+          const recence = e.derniere_vente ? Math.round((today - new Date(e.derniere_vente)) / 86400000) : null
+          return { ...c, ...e, recence }
+        })
+        setClients(enriched)
+      })
       .catch(() => setError('Erreur de chargement'))
       .finally(() => setLoading(false))
   }, [])
@@ -35,6 +66,8 @@ export default function Clients() {
   useEffect(() => { load() }, [load])
 
   const filtered = tab === 'Tous' ? clients : clients.filter((c) => c.statut === tab)
+  const caPortefeuille = clients.reduce((s, c) => s + c.ca_total, 0)
+  const aRelancer = clients.filter((c) => c.recence != null && c.recence > 30).length
 
   const openNew = () => {
     setEditing(null)
@@ -94,7 +127,10 @@ export default function Clients() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="text-xl font-bold text-gray-900">Clients</h2>
+        <div>
+          <h2 className="font-display text-xl font-bold text-gray-900">Portefeuille</h2>
+          <p className="text-sm text-gray-500 mt-0.5">Valeur, fidélisation et relance des clients</p>
+        </div>
         <button onClick={openNew} className="btn-primary text-sm">
           + Ajouter un client
         </button>
@@ -106,6 +142,12 @@ export default function Clients() {
         </div>
       )}
 
+      <div className="grid grid-cols-3 gap-4">
+        <KpiCard title="Clients" value={clients.length} color="#1b75bc" />
+        <KpiCard title="CA portefeuille" value={fmt(caPortefeuille)} color="#1565C0" />
+        <KpiCard title="À relancer (+30j)" value={aRelancer} color="#F9A825" />
+      </div>
+
       {/* Tabs filtre */}
       <div className="flex gap-2 border-b border-gray-200">
         {TABS.map((t) => (
@@ -114,7 +156,7 @@ export default function Clients() {
             onClick={() => setTab(t)}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               tab === t
-                ? 'border-[#1B5E20] text-[#1B5E20]'
+                ? 'border-[#1b75bc] text-[#1b75bc]'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -128,7 +170,7 @@ export default function Clients() {
 
       {loading ? (
         <div className="flex justify-center py-10">
-          <span className="w-7 h-7 border-4 border-[#388E3C] border-t-transparent rounded-full animate-spin" />
+          <span className="w-7 h-7 border-4 border-[#62bb46] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
         <p className="text-sm text-gray-400 text-center py-10">Aucun client dans cette catégorie</p>
@@ -210,8 +252,7 @@ export default function Clients() {
 }
 
 function ClientCard({ client: c, onEdit, onChangeStatut }) {
-  const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
-
+  const profil = profilOf(c)
   return (
     <div className="card hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-2">
@@ -222,6 +263,15 @@ function ClientCard({ client: c, onEdit, onChangeStatut }) {
         <StatutBadge statut={c.statut} />
       </div>
 
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-[10.5px] font-semibold px-2 py-0.5 rounded-full" style={{ background: `${profil.color}1a`, color: profil.color }}>
+          {profil.label}
+        </span>
+        {c.nb_ventes > 0 && (
+          <span className="text-[11px] text-gray-500">{fmt(c.ca_total)} · {c.nb_ventes} vente(s)</span>
+        )}
+      </div>
+
       <div className="space-y-1 text-xs text-gray-600 mb-3">
         {c.telephone && (
           <p>📞 {c.telephone}</p>
@@ -230,7 +280,7 @@ function ClientCard({ client: c, onEdit, onChangeStatut }) {
           <p>📦 Volume estimé : <span className="font-medium">{fmt(c.volume_estime)}</span></p>
         )}
         {c.valorise && (
-          <p>💰 Valorisé : <span className="font-medium text-[#1B5E20]">{fmt(c.valorise)}</span></p>
+          <p>💰 Valorisé : <span className="font-medium text-[#1b75bc]">{fmt(c.valorise)}</span></p>
         )}
         {c.horaire && (
           <p>🕐 {c.horaire}</p>
@@ -247,7 +297,7 @@ function ClientCard({ client: c, onEdit, onChangeStatut }) {
         </select>
         <button
           onClick={onEdit}
-          className="text-xs text-[#1B5E20] font-medium hover:underline"
+          className="text-xs text-[#1b75bc] font-medium hover:underline"
         >
           Modifier
         </button>

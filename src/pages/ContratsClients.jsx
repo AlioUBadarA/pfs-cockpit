@@ -88,7 +88,7 @@ export default function ContratsClients() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="text-xl font-bold text-gray-900">Contrats clients</h2>
+        <h2 className="font-display text-xl font-bold text-gray-900">Contrats clients</h2>
         <button onClick={openNew} className="btn-primary text-sm">+ Nouveau contrat</button>
       </div>
 
@@ -98,7 +98,7 @@ export default function ContratsClients() {
       <div className="grid grid-cols-3 gap-3">
         <div className="card text-center">
           <p className="text-xs text-gray-500 mb-1">Contrats actifs</p>
-          <p className="text-2xl font-bold text-[#1B5E20]">{items.filter(i => i.statut === 'Actif').length}</p>
+          <p className="text-2xl font-bold text-[#1b75bc]">{items.filter(i => i.statut === 'Actif').length}</p>
         </div>
         <div className="card text-center">
           <p className="text-xs text-gray-500 mb-1">Total contrats</p>
@@ -123,7 +123,7 @@ export default function ContratsClients() {
       {/* Tableau */}
       <div className="card p-0 overflow-x-auto">
         {loading ? (
-          <div className="flex justify-center py-10"><span className="w-7 h-7 border-4 border-[#388E3C] border-t-transparent rounded-full animate-spin" /></div>
+          <div className="flex justify-center py-10"><span className="w-7 h-7 border-4 border-[#62bb46] border-t-transparent rounded-full animate-spin" /></div>
         ) : items.length === 0 ? (
           <div className="text-center py-12 text-gray-400">
             <p className="text-sm mb-3">Aucun contrat enregistré</p>
@@ -145,7 +145,7 @@ export default function ContratsClients() {
                     <td className="table-cell text-sm">{item.produit}</td>
                     <td className="table-cell text-right">{item.quantite_mensuelle ? Number(item.quantite_mensuelle).toLocaleString('fr-FR') + ' kg' : '-'}</td>
                     <td className="table-cell text-right">{fmt(item.prix_unitaire)}</td>
-                    <td className="table-cell text-right font-semibold text-[#1B5E20]">{caMensuel > 0 ? Number(caMensuel).toLocaleString('fr-FR') + ' F' : '-'}</td>
+                    <td className="table-cell text-right font-semibold text-[#1b75bc]">{caMensuel > 0 ? Number(caMensuel).toLocaleString('fr-FR') + ' F' : '-'}</td>
                     <td className="table-cell whitespace-nowrap text-sm">{fmtDate(item.date_debut)}</td>
                     <td className="table-cell whitespace-nowrap text-sm">{fmtDate(item.date_fin)}</td>
                     <td className="table-cell">
@@ -191,7 +191,7 @@ export default function ContratsClients() {
           </div>
           {form.quantite_mensuelle && form.prix_unitaire && (
             <div className="bg-green-50 rounded-lg px-3 py-2 text-sm">
-              CA mensuel estimé : <strong className="text-[#1B5E20]">{Number(form.quantite_mensuelle * form.prix_unitaire).toLocaleString('fr-FR')} F</strong>
+              CA mensuel estimé : <strong className="text-[#1b75bc]">{Number(form.quantite_mensuelle * form.prix_unitaire).toLocaleString('fr-FR')} F</strong>
             </div>
           )}
           <div className="grid grid-cols-2 gap-3">

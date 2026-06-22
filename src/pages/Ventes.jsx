@@ -98,7 +98,7 @@ export default function Ventes() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="text-xl font-bold text-gray-900">Ventes</h2>
+        <h2 className="font-display text-xl font-bold text-gray-900">Ventes</h2>
         <button onClick={openNew} className="btn-primary text-sm">+ Nouvelle vente</button>
       </div>
 
@@ -132,7 +132,7 @@ export default function Ventes() {
       <div className="card p-0 overflow-x-auto">
         {loading ? (
           <div className="flex justify-center py-10">
-            <span className="w-7 h-7 border-4 border-[#388E3C] border-t-transparent rounded-full animate-spin" />
+            <span className="w-7 h-7 border-4 border-[#62bb46] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : ventes.length === 0 ? (
           <p className="text-sm text-gray-400 text-center py-10">Aucune vente trouvée</p>
@@ -202,7 +202,7 @@ export default function Ventes() {
             </div>
           </div>
           <div className="bg-gray-50 rounded-lg px-3 py-2 text-sm">
-            Montant total : <strong className="text-[#1B5E20]">{montantCalc}</strong>
+            Montant total : <strong className="text-[#1b75bc]">{montantCalc}</strong>
           </div>
           <div>
             <label className="label">Statut paiement</label>

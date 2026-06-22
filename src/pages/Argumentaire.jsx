@@ -56,7 +56,7 @@ export default function Argumentaire() {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-xl font-bold text-gray-900">Argumentaire & Entretien de vente</h2>
+        <h2 className="font-display text-xl font-bold text-gray-900">Argumentaire & Entretien de vente</h2>
         <p className="text-sm text-gray-500 mt-1">Scripts, réponses aux objections et bonnes pratiques pour vos visites commerciales.</p>
       </div>
 
@@ -75,7 +75,7 @@ export default function Argumentaire() {
               <div className="border-t border-gray-100 divide-y divide-gray-50">
                 {section.contenu.map((item, i) => (
                   <div key={i} className="px-4 py-4">
-                    <p className="text-xs font-bold text-[#1B5E20] uppercase tracking-wide mb-2">{item.q}</p>
+                    <p className="text-xs font-bold text-[#1b75bc] uppercase tracking-wide mb-2">{item.q}</p>
                     <p className="text-sm text-gray-700 leading-relaxed">{item.r}</p>
                   </div>
                 ))}

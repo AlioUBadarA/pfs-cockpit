@@ -3,10 +3,20 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import Layout from './components/Layout'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
-import VentesGroup from './pages/VentesGroup'
-import CRMGroup from './pages/CRMGroup'
-import PilotageGroup from './pages/PilotageGroup'
-import EquipeGroup from './pages/EquipeGroup'
+import PilotageSemaine from './pages/Pilotage'
+import Argumentaire from './pages/Argumentaire'
+import Ventes from './pages/Ventes'
+import Clients from './pages/Clients'
+import Prospection from './pages/Prospection'
+import Creances from './pages/Creances'
+import Rentabilite from './pages/Rentabilite'
+import Forecast from './pages/Forecast'
+import Actions from './pages/Actions'
+import Insights from './pages/Insights'
+import ContratsClients from './pages/ContratsClients'
+import ContratsPaddy from './pages/ContratsPaddy'
+import Equipe from './pages/Equipe'
+import Emplois from './pages/Emplois'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminUserDetail from './pages/admin/AdminUserDetail'
 import AdminAudit from './pages/admin/AdminAudit'
@@ -48,19 +58,24 @@ function AppRoutes() {
       <Route path="/register" element={<Navigate to="/login" replace />} />
 
       <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
-        <Route index       element={<RootRedirect />} />
-        <Route path="ventes"  element={<VentesGroup />} />
-        <Route path="crm"     element={<CRMGroup />} />
-        <Route path="pilotage" element={<PilotageGroup />} />
-        <Route path="equipe"  element={<RizierRoute><EquipeGroup /></RizierRoute>} />
+        <Route index              element={<RootRedirect />} />
+        <Route path="ventes"      element={<Ventes />} />
+        <Route path="pilotage"    element={<PilotageSemaine />} />
+        <Route path="argumentaire" element={<Argumentaire />} />
+        <Route path="clients"     element={<Clients />} />
+        <Route path="prospection" element={<Prospection />} />
+        <Route path="creances"    element={<Creances />} />
+        <Route path="rentabilite" element={<Rentabilite />} />
+        <Route path="forecast"    element={<Forecast />} />
+        <Route path="actions"     element={<Actions />} />
+        <Route path="insights"    element={<Insights />} />
+        <Route path="contrats-clients" element={<ContratsClients />} />
+        <Route path="contrats-paddy"   element={<ContratsPaddy />} />
+        <Route path="equipe"  element={<RizierRoute><Equipe /></RizierRoute>} />
+        <Route path="emplois" element={<RizierRoute><Emplois /></RizierRoute>} />
 
-        {/* Redirects anciens liens */}
-        <Route path="creances"    element={<Navigate to="/ventes" replace />} />
-        <Route path="rentabilite" element={<Navigate to="/ventes" replace />} />
-        <Route path="clients"     element={<Navigate to="/crm" replace />} />
-        <Route path="prospection" element={<Navigate to="/crm" replace />} />
-        <Route path="forecast"    element={<Navigate to="/pilotage" replace />} />
-        <Route path="actions"     element={<Navigate to="/pilotage" replace />} />
+        {/* Redirects anciens liens (anciens onglets groupés) */}
+        <Route path="crm" element={<Navigate to="/clients" replace />} />
 
         {/* Admin */}
         <Route path="admin"           element={<AdminRoute><AdminDashboard /></AdminRoute>} />

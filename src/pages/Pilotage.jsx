@@ -97,7 +97,7 @@ export default function Pilotage() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="text-xl font-bold text-gray-900">Pilotage hebdomadaire</h2>
+        <h2 className="font-display text-xl font-bold text-gray-900">Pilotage hebdomadaire</h2>
         <div className="flex items-center gap-2">
           <label className="text-sm text-gray-600 font-medium">Semaine du</label>
           <input
@@ -126,32 +126,32 @@ export default function Pilotage() {
           title="Objectif semaine"
           value={fmt(totalObjectif)}
           icon="🎯"
-          color="#1B5E20"
+          color="#1b75bc"
         />
         <KpiCard
           title="Réalisé"
           value={fmt(totalRealise)}
           icon="✅"
-          color="#388E3C"
+          color="#62bb46"
         />
         <KpiCard
           title="Écart"
           value={fmt(totalEcart)}
           icon={totalEcart >= 0 ? '📈' : '📉'}
-          color={totalEcart >= 0 ? '#1B5E20' : '#CC0000'}
+          color={totalEcart >= 0 ? '#1b75bc' : '#CC0000'}
         />
         <KpiCard
           title="Taux d'exécution"
           value={pct(tauxExec)}
           icon="📊"
-          color={tauxExec >= 80 ? '#1B5E20' : '#F9A825'}
+          color={tauxExec >= 80 ? '#1b75bc' : '#F9A825'}
         />
       </div>
 
       {/* Tableau semaine */}
       {loading ? (
         <div className="flex justify-center py-10">
-          <span className="w-7 h-7 border-4 border-[#388E3C] border-t-transparent rounded-full animate-spin" />
+          <span className="w-7 h-7 border-4 border-[#62bb46] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
         <div className="card p-0 overflow-x-auto">
@@ -171,7 +171,7 @@ export default function Pilotage() {
                     <td className="table-cell font-semibold text-gray-800 whitespace-nowrap">{row.jour}</td>
                     <td className="table-cell">
                       <input
-                        className="w-full border-0 bg-transparent text-sm focus:outline-none focus:ring-1 focus:ring-[#388E3C] rounded px-1"
+                        className="w-full border-0 bg-transparent text-sm focus:outline-none focus:ring-1 focus:ring-[#62bb46] rounded px-1"
                         value={row.zone}
                         onChange={(e) => updateRow(i, 'zone', e.target.value)}
                         placeholder="Zone..."
@@ -179,7 +179,7 @@ export default function Pilotage() {
                     </td>
                     <td className="table-cell">
                       <input
-                        className="w-full border-0 bg-transparent text-sm focus:outline-none focus:ring-1 focus:ring-[#388E3C] rounded px-1"
+                        className="w-full border-0 bg-transparent text-sm focus:outline-none focus:ring-1 focus:ring-[#62bb46] rounded px-1"
                         value={row.clients_visiter}
                         onChange={(e) => updateRow(i, 'clients_visiter', e.target.value)}
                         placeholder="Noms clients..."
@@ -189,7 +189,7 @@ export default function Pilotage() {
                       <input
                         type="number"
                         min="0"
-                        className="w-full border-0 bg-transparent text-sm text-right focus:outline-none focus:ring-1 focus:ring-[#388E3C] rounded px-1"
+                        className="w-full border-0 bg-transparent text-sm text-right focus:outline-none focus:ring-1 focus:ring-[#62bb46] rounded px-1"
                         value={row.objectif}
                         onChange={(e) => updateRow(i, 'objectif', e.target.value)}
                         placeholder="0"
@@ -199,20 +199,20 @@ export default function Pilotage() {
                       <input
                         type="number"
                         min="0"
-                        className="w-full border-0 bg-transparent text-sm text-right focus:outline-none focus:ring-1 focus:ring-[#388E3C] rounded px-1"
+                        className="w-full border-0 bg-transparent text-sm text-right focus:outline-none focus:ring-1 focus:ring-[#62bb46] rounded px-1"
                         value={row.realise}
                         onChange={(e) => updateRow(i, 'realise', e.target.value)}
                         placeholder="0"
                       />
                     </td>
-                    <td className={`table-cell text-right font-semibold whitespace-nowrap ${e >= 0 ? 'text-[#1B5E20]' : 'text-[#CC0000]'}`}>
+                    <td className={`table-cell text-right font-semibold whitespace-nowrap ${e >= 0 ? 'text-[#1b75bc]' : 'text-[#CC0000]'}`}>
                       {row.objectif !== '' || row.realise !== ''
                         ? `${e >= 0 ? '+' : ''}${e.toLocaleString('fr-FR')} F`
                         : '-'}
                     </td>
                     <td className="table-cell">
                       <input
-                        className="w-full border-0 bg-transparent text-sm focus:outline-none focus:ring-1 focus:ring-[#388E3C] rounded px-1"
+                        className="w-full border-0 bg-transparent text-sm focus:outline-none focus:ring-1 focus:ring-[#62bb46] rounded px-1"
                         value={row.note}
                         onChange={(e) => updateRow(i, 'note', e.target.value)}
                         placeholder="Note..."
@@ -226,7 +226,7 @@ export default function Pilotage() {
                 <td className="table-cell" colSpan={3}>Total</td>
                 <td className="table-cell text-right">{totalObjectif.toLocaleString('fr-FR')} F</td>
                 <td className="table-cell text-right">{totalRealise.toLocaleString('fr-FR')} F</td>
-                <td className={`table-cell text-right ${totalEcart >= 0 ? 'text-[#1B5E20]' : 'text-[#CC0000]'}`}>
+                <td className={`table-cell text-right ${totalEcart >= 0 ? 'text-[#1b75bc]' : 'text-[#CC0000]'}`}>
                   {totalEcart >= 0 ? '+' : ''}{totalEcart.toLocaleString('fr-FR')} F
                 </td>
                 <td className="table-cell" />
@@ -263,7 +263,7 @@ export default function Pilotage() {
             disabled={savingActions}
             className="btn-secondary flex items-center gap-2 text-sm"
           >
-            {savingActions && <span className="w-4 h-4 border-2 border-[#1B5E20] border-t-transparent rounded-full animate-spin" />}
+            {savingActions && <span className="w-4 h-4 border-2 border-[#1b75bc] border-t-transparent rounded-full animate-spin" />}
             {savingActions ? 'Enregistrement...' : 'Sauvegarder les actions'}
           </button>
         </div>

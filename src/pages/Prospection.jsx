@@ -1,10 +1,15 @@
 import { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
 import Modal from '../components/Modal'
+import Panel from '../components/Panel'
+import BarList from '../components/BarList'
+import KpiCard from '../components/KpiCard'
 
 const STATUTS   = ['Nouveau','En contact','Présentation faite','Devis envoyé','Gagné','Perdu']
 const PRIORITES = ['Haute','Normale','Basse']
 const TYPES     = ['Grossiste','Detaillant marche','Boutique','Restauration','Cantine/Institution']
+
+const fmt = (n) => Number(n || 0).toLocaleString('fr-FR') + ' F'
 
 const statutColor = (s) => ({
   'Nouveau':            'bg-gray-100 text-gray-700',
@@ -17,7 +22,7 @@ const statutColor = (s) => ({
 
 const INIT = {
   nom: '', type_client: '', zone: '', telephone: '',
-  statut: 'Nouveau', priorite: 'Normale', date_contact: '', note: '',
+  statut: 'Nouveau', priorite: 'Normale', date_contact: '', note: '', valeur_estimee: '',
 }
 
 export default function Prospection() {
@@ -59,6 +64,7 @@ export default function Prospection() {
       priorite:     item.priorite || 'Normale',
       date_contact: item.date_contact ? item.date_contact.slice(0, 10) : '',
       note:         item.note || '',
+      valeur_estimee: item.valeur_estimee || '',
     })
     setModalOpen(true)
   }
@@ -73,6 +79,7 @@ export default function Prospection() {
       const payload = {
         ...form,
         date_contact: form.date_contact || null,
+        valeur_estimee: Number(form.valeur_estimee) || 0,
       }
       if (editing) {
         await api.put(`/api/prospection/${editing.id}`, payload)
@@ -112,14 +119,40 @@ export default function Prospection() {
     return acc
   }, {})
 
+  const ouverts = items.filter(i => i.statut !== 'Gagné' && i.statut !== 'Perdu')
+  const valeurPipeline = ouverts.reduce((s, i) => s + Number(i.valeur_estimee || 0), 0)
+  const gagnes = items.filter(i => i.statut === 'Gagné').length
+  const perdus = items.filter(i => i.statut === 'Perdu').length
+  const tauxConversion = (gagnes + perdus) ? Math.round((gagnes / (gagnes + perdus)) * 100) : 0
+
+  const funnel = ['Nouveau','En contact','Présentation faite','Devis envoyé'].map(s => {
+    const list = items.filter(i => i.statut === s)
+    const val = list.reduce((a, i) => a + Number(i.valeur_estimee || 0), 0)
+    return { label: s, val: val || list.length, disp: `${fmt(val)} · ${list.length}` }
+  })
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="text-xl font-bold text-gray-900">Prospection - Pipeline</h2>
+        <div>
+          <h2 className="font-display text-xl font-bold text-gray-900">Pipeline</h2>
+          <p className="text-sm text-gray-500 mt-0.5">Suivi des prospects par étape</p>
+        </div>
         <button onClick={openNew} className="btn-primary text-sm">+ Nouveau prospect</button>
       </div>
 
       {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">{error}</div>}
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <KpiCard title="Prospects en cours" value={ouverts.length} color="#1b75bc" />
+        <KpiCard title="Valeur espérée" value={fmt(valeurPipeline)} color="#1565C0" />
+        <KpiCard title="Taux de signature" value={`${tauxConversion} %`} color="#62bb46" />
+        <KpiCard title="Gagnés / Perdus" value={`${gagnes} / ${perdus}`} color="#F9A825" />
+      </div>
+
+      <Panel title="Pipeline par étape" sub="valeur espérée · nombre de prospects">
+        <BarList items={funnel} labelWidth="150px" color="#5a6b7a" dense />
+      </Panel>
 
       {/* Résumé pipeline */}
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
@@ -127,7 +160,7 @@ export default function Prospection() {
           <button
             key={s}
             onClick={() => setFilterStatut(filterStatut === s ? '' : s)}
-            className={`card text-center py-2 px-1 cursor-pointer border-2 transition-all ${filterStatut === s ? 'border-[#1B5E20]' : 'border-transparent'}`}
+            className={`card text-center py-2 px-1 cursor-pointer border-2 transition-all ${filterStatut === s ? 'border-[#1b75bc]' : 'border-transparent'}`}
           >
             <p className="text-lg font-bold text-gray-800">{stats[s] || 0}</p>
             <p className="text-[10px] text-gray-500 leading-tight">{s}</p>
@@ -139,7 +172,7 @@ export default function Prospection() {
       <div className="card p-0 overflow-x-auto">
         {loading ? (
           <div className="flex justify-center py-10">
-            <span className="w-7 h-7 border-4 border-[#388E3C] border-t-transparent rounded-full animate-spin" />
+            <span className="w-7 h-7 border-4 border-[#62bb46] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : items.length === 0 ? (
           <p className="text-sm text-gray-400 text-center py-10">Aucun prospect trouvé</p>
@@ -147,7 +180,7 @@ export default function Prospection() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr>
-                {['Prospect','Type','Zone','Téléphone','Priorité','Statut','Contact','Vendeur','Actions'].map(h => (
+                {['Prospect','Type','Zone','Téléphone','Valeur espérée','Priorité','Statut','Contact','Vendeur','Actions'].map(h => (
                   <th key={h} className="table-header whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -159,6 +192,7 @@ export default function Prospection() {
                   <td className="table-cell text-xs text-gray-600">{item.type_client || '-'}</td>
                   <td className="table-cell text-xs text-gray-500">{item.zone || '-'}</td>
                   <td className="table-cell text-xs">{item.telephone || '-'}</td>
+                  <td className="table-cell text-right text-xs font-semibold text-[#1b75bc]">{fmt(item.valeur_estimee)}</td>
                   <td className="table-cell">
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                       item.priorite === 'Haute' ? 'bg-red-100 text-red-700' :
@@ -235,6 +269,10 @@ export default function Prospection() {
               <label className="label">Date dernier contact</label>
               <input type="date" className="input" value={form.date_contact} onChange={set('date_contact')} />
             </div>
+          </div>
+          <div>
+            <label className="label">Valeur espérée / an (FCFA)</label>
+            <input type="number" min="0" className="input" value={form.valeur_estimee} onChange={set('valeur_estimee')} placeholder="0" />
           </div>
           <div>
             <label className="label">Note</label>

@@ -9,18 +9,20 @@ import { useAuth } from '../../context/AuthContext'
 const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : 'jamais'
 
-const TABS = [
+const BASE_TABS = [
   { key: 'rizeries', label: 'Rizeries' },
   { key: 'comptes',  label: 'Comptes' },
 ]
 
 export default function AdminDashboard() {
-  const { user: adminUser, startImpersonation } = useAuth()
+  const { user: adminUser, startImpersonation, isSuperadmin } = useAuth()
   const navigate = useNavigate()
+  const TABS = isSuperadmin ? [...BASE_TABS, { key: 'support', label: 'Comptes support' }] : BASE_TABS
   const [tab, setTab]           = useState('rizeries')
   const [stats, setStats]       = useState(null)
   const [rizeries, setRizeries] = useState([])
   const [users, setUsers]       = useState([])
+  const [support, setSupport]   = useState([])
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState('')
   const [search, setSearch]     = useState('')
@@ -31,21 +33,28 @@ export default function AdminDashboard() {
   // Formulaires
   const RIZERIE_INIT = { nom: '', ville: '', telephone: '' }
   const COMPTE_INIT  = { nom: '', email: '', password: '', rizerie_id: '', telephone: '', ville: '' }
+  const SUPPORT_INIT = { nom: '', email: '', password: '' }
   const [rForm, setRForm] = useState(RIZERIE_INIT)
   const [cForm, setCForm] = useState(COMPTE_INIT)
+  const [sForm, setSForm] = useState(SUPPORT_INIT)
   const [suspendReason, setSuspendReason] = useState('')
 
   const load = useCallback(() => {
     setLoading(true)
-    Promise.all([
+    const calls = [
       api.get('/api/admin/stats'),
       api.get('/api/admin/rizeries'),
       api.get('/api/admin/users'),
-    ])
-      .then(([s, r, u]) => { setStats(s.data); setRizeries(r.data); setUsers(u.data) })
+    ]
+    if (isSuperadmin) calls.push(api.get('/api/admin/support'))
+    Promise.all(calls)
+      .then(([s, r, u, sup]) => {
+        setStats(s.data); setRizeries(r.data); setUsers(u.data)
+        if (sup) setSupport(sup.data)
+      })
       .catch(() => setError('Erreur de chargement'))
       .finally(() => setLoading(false))
-  }, [])
+  }, [isSuperadmin])
 
   useEffect(() => { load() }, [load])
 
@@ -97,6 +106,26 @@ export default function AdminDashboard() {
     finally { setSaving(false) }
   }
 
+  const setS = (f) => (e) => setSForm(p => ({ ...p, [f]: e.target.value }))
+
+  const handleCreateSupport = async (e) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      await api.post('/api/admin/support', sForm)
+      load(); setModal(null); setSForm(SUPPORT_INIT)
+    } catch (err) { setError(err.response?.data?.error || 'Erreur création') }
+    finally { setSaving(false) }
+  }
+
+  const handleDeleteSupport = async (s) => {
+    if (!confirm(`Supprimer définitivement le compte support "${s.nom}" ?`)) return
+    try {
+      await api.delete(`/api/admin/support/${s.id}`)
+      load()
+    } catch (err) { setError(err.response?.data?.error || 'Erreur') }
+  }
+
   const filteredUsers = users.filter((u) => {
     const q = search.toLowerCase()
     const matchSearch = !q || u.nom?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q) || u.rizerie?.toLowerCase().includes(q)
@@ -108,8 +137,8 @@ export default function AdminDashboard() {
     <div className="space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Panel Superadmin</h2>
-          <p className="text-sm text-gray-500">Gestion des rizeries et des comptes</p>
+          <h2 className="font-display text-xl font-bold text-gray-900">Administration</h2>
+          <p className="text-sm text-gray-500">Cockpit Commercial &middot; gestion des rizeries et des comptes</p>
         </div>
         <Link to="/admin/audit" className="btn-secondary text-sm">Journal d'audit</Link>
       </div>
@@ -124,10 +153,10 @@ export default function AdminDashboard() {
       {/* KPIs globaux */}
       {stats && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <KpiCard title="Rizeries" value={rizeries.length} icon="🏭" color="#1B5E20" />
-          <KpiCard title="Comptes actifs" value={stats.total_riziers} icon="👤" color="#388E3C" />
-          <KpiCard title="CA global" value={fmt(stats.ca_global)} icon="💰" color="#1B5E20" />
-          <KpiCard title="Comptes suspendus" value={stats.comptes_suspendus} icon="🚫" color={stats.comptes_suspendus > 0 ? '#CC0000' : '#388E3C'} />
+          <KpiCard title="Rizeries" value={rizeries.length} icon="🏭" color="#1b75bc" />
+          <KpiCard title="Comptes actifs" value={stats.total_riziers} icon="👤" color="#62bb46" />
+          <KpiCard title="CA global" value={fmt(stats.ca_global)} icon="💰" color="#1b75bc" />
+          <KpiCard title="Comptes suspendus" value={stats.comptes_suspendus} icon="🚫" color={stats.comptes_suspendus > 0 ? '#CC0000' : '#62bb46'} />
         </div>
       )}
 
@@ -143,7 +172,7 @@ export default function AdminDashboard() {
           </div>
           {loading ? (
             <div className="flex justify-center py-10">
-              <span className="w-7 h-7 border-4 border-[#388E3C] border-t-transparent rounded-full animate-spin" />
+              <span className="w-7 h-7 border-4 border-[#62bb46] border-t-transparent rounded-full animate-spin" />
             </div>
           ) : rizeries.length === 0 ? (
             <div className="card text-center py-10">
@@ -167,7 +196,7 @@ export default function AdminDashboard() {
                       <td className="table-cell text-sm text-gray-600">{r.ville || '-'}</td>
                       <td className="table-cell text-sm">{r.telephone || '-'}</td>
                       <td className="table-cell text-center font-medium">{r.nb_comptes}</td>
-                      <td className="table-cell text-right font-semibold text-[#1B5E20]">{fmt(r.ca_total)}</td>
+                      <td className="table-cell text-right font-semibold text-[#1b75bc]">{fmt(r.ca_total)}</td>
                       <td className="table-cell">
                         <div className="flex gap-2 whitespace-nowrap">
                           <button
@@ -206,7 +235,7 @@ export default function AdminDashboard() {
             <div className="flex gap-1">
               {[['tous','Tous'], ['actifs','Actifs'], ['suspendus','Suspendus']].map(([v, l]) => (
                 <button key={v} onClick={() => setFilter(v)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${filter === v ? 'bg-[#1B5E20] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${filter === v ? 'bg-[#1b75bc] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                   {l}
                 </button>
               ))}
@@ -219,7 +248,7 @@ export default function AdminDashboard() {
           <div className="card p-0 overflow-x-auto">
             {loading ? (
               <div className="flex justify-center py-10">
-                <span className="w-7 h-7 border-4 border-[#388E3C] border-t-transparent rounded-full animate-spin" />
+                <span className="w-7 h-7 border-4 border-[#62bb46] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : filteredUsers.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-10">Aucun compte trouvé</p>
@@ -240,7 +269,7 @@ export default function AdminDashboard() {
                       <td className="table-cell text-sm text-gray-600">
                         {u.rizerie_nom || u.rizerie || <span className="text-gray-300 italic">non rattaché</span>}
                       </td>
-                      <td className="table-cell text-right font-medium text-[#1B5E20]">{fmt(u.ca_total)}</td>
+                      <td className="table-cell text-right font-medium text-[#1b75bc]">{fmt(u.ca_total)}</td>
                       <td className="table-cell text-center">{u.nb_ventes}</td>
                       <td className="table-cell text-xs text-gray-500 whitespace-nowrap">
                         {u.derniere_vente ? fmtDate(u.derniere_vente) : <span className="text-gray-300">jamais</span>}
@@ -255,11 +284,11 @@ export default function AdminDashboard() {
                         <div className="flex items-center gap-2 whitespace-nowrap flex-wrap">
                           {!u.suspended && (
                             <button onClick={() => handleImpersonate(u)}
-                              className="text-xs bg-[#1B5E20] text-white px-2 py-1 rounded font-medium hover:bg-[#388E3C]">
+                              className="text-xs bg-[#1b75bc] text-white px-2 py-1 rounded font-medium hover:bg-[#62bb46]">
                               👁 Accéder
                             </button>
                           )}
-                          <Link to={`/admin/users/${u.id}`} className="text-xs text-[#1B5E20] font-medium hover:underline">
+                          <Link to={`/admin/users/${u.id}`} className="text-xs text-[#1b75bc] font-medium hover:underline">
                             Détails
                           </Link>
                           {u.suspended
@@ -267,6 +296,47 @@ export default function AdminDashboard() {
                             : <button onClick={() => { setModal({ type: 'suspend', user: u }); setSuspendReason('') }} className="text-xs text-red-600 font-medium hover:underline">Suspendre</button>
                           }
                         </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── ONGLET COMPTES SUPPORT (vrai superadmin uniquement) ── */}
+      {tab === 'support' && isSuperadmin && (
+        <div className="space-y-4">
+          <div className="flex justify-end">
+            <button onClick={() => { setSForm(SUPPORT_INIT); setModal({ type: 'create-support' }) }} className="btn-primary text-sm">
+              + Créer un compte support
+            </button>
+          </div>
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-3">
+            Un compte support a les mêmes accès qu'un superadmin, sauf créer ou supprimer d'autres comptes support — réservé au vrai superadmin.
+          </div>
+          <div className="card p-0 overflow-x-auto">
+            {support.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-10">Aucun compte support créé</p>
+            ) : (
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr>{['Nom', 'Email', 'Créé le', 'Actions'].map(h => (
+                    <th key={h} className="table-header whitespace-nowrap">{h}</th>
+                  ))}</tr>
+                </thead>
+                <tbody>
+                  {support.map(s => (
+                    <tr key={s.id} className="hover:bg-gray-50">
+                      <td className="table-cell font-semibold text-gray-900">{s.nom}</td>
+                      <td className="table-cell text-sm text-gray-600">{s.email}</td>
+                      <td className="table-cell text-xs text-gray-500 whitespace-nowrap">{fmtDate(s.created_at)}</td>
+                      <td className="table-cell">
+                        <button onClick={() => handleDeleteSupport(s)} className="text-xs text-red-600 font-medium hover:underline">
+                          Supprimer
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -363,6 +433,34 @@ export default function AdminDashboard() {
               <div><label className="label">Téléphone</label><input className="input" value={cForm.telephone} onChange={setC('telephone')} placeholder="77 000 00 00" /></div>
               <div><label className="label">Ville</label><input className="input" value={cForm.ville} onChange={setC('ville')} placeholder="Dakar" /></div>
             </div>
+            <div className="flex gap-3 pt-2">
+              <button type="button" className="btn-secondary flex-1" onClick={() => setModal(null)}>Annuler</button>
+              <button type="submit" disabled={saving} className="btn-primary flex-1 flex items-center justify-center gap-2">
+                {saving && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                {saving ? 'Création...' : 'Créer le compte'}
+              </button>
+            </div>
+          </form>
+        </ModalWrap>
+      )}
+
+      {/* Modal : créer un compte support */}
+      {modal?.type === 'create-support' && (
+        <ModalWrap title="Créer un compte support" onClose={() => setModal(null)}>
+          <form onSubmit={handleCreateSupport} className="space-y-3">
+            <div>
+              <label className="label">Nom complet *</label>
+              <input className="input" value={sForm.nom} onChange={setS('nom')} required placeholder="Aïssatou Ndiaye" />
+            </div>
+            <div>
+              <label className="label">Email *</label>
+              <input type="email" className="input" value={sForm.email} onChange={setS('email')} required placeholder="support@pfs.sn" />
+            </div>
+            <div>
+              <label className="label">Mot de passe provisoire *</label>
+              <input type="text" className="input" value={sForm.password} onChange={setS('password')} required minLength={6} placeholder="Min. 6 caractères" />
+            </div>
+            <p className="text-xs text-gray-400">Ce compte aura les mêmes accès admin que vous, à l'exception de la gestion des comptes support.</p>
             <div className="flex gap-3 pt-2">
               <button type="button" className="btn-secondary flex-1" onClick={() => setModal(null)}>Annuler</button>
               <button type="submit" disabled={saving} className="btn-primary flex-1 flex items-center justify-center gap-2">

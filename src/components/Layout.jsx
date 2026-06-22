@@ -1,28 +1,14 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import ImpersonationBanner from './ImpersonationBanner'
-
-const USER_NAV = [
-  { to: '/',         label: 'Dashboard', end: true },
-  { to: '/ventes',   label: 'Ventes' },
-  { to: '/crm',      label: 'CRM' },
-  { to: '/pilotage', label: 'Pilotage' },
-]
-
-const RIZIER_EXTRA = [
-  { to: '/equipe', label: 'Équipe' },
-]
-
-const ADMIN_NAV = [
-  { to: '/admin',       label: 'Utilisateurs', end: true },
-  { to: '/admin/audit', label: 'Audit' },
-]
+import Sidebar from './Sidebar'
 
 export default function Layout() {
-  const { user, logout, isAdmin, isVendeur } = useAuth()
+  const { user, logout, isAdmin, isSuperadmin, isSupport } = useAuth()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   const handleLogout = () => {
     setMenuOpen(false)
@@ -32,75 +18,56 @@ export default function Layout() {
 
   const initials = user?.nom
     ? user.nom.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
-    : 'PF'
+    : 'CC'
 
-  const navItems = isAdmin
-    ? ADMIN_NAV
-    : isVendeur
-      ? USER_NAV
-      : [...USER_NAV, ...RIZIER_EXTRA]
+  const roleBadge = isSuperadmin ? 'Superadmin' : isSupport ? 'Support' : null
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
-      <ImpersonationBanner />
-      {/* Navbar */}
-      <header className="bg-[#1B5E20] shadow-md sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center h-14 gap-6">
-          {/* Logo */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <span className="text-white font-bold text-lg tracking-tight">
-              PFS <span className="text-[#F9A825]">Commercial</span>
-            </span>
-            {isAdmin && (
-              <span className="bg-[#F9A825] text-[#1B5E20] text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wide">
-                Admin
-              </span>
-            )}
+    <div className="min-h-screen flex" style={{ background: 'var(--cc-bg)' }}>
+      {/* Sidebar — fixe sur desktop, tiroir sur mobile */}
+      <div className="hidden md:block">
+        <Sidebar />
+      </div>
+      {mobileNavOpen && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div className="fixed inset-0 bg-black/40" onClick={() => setMobileNavOpen(false)} />
+          <div className="relative z-50 w-[230px] h-full">
+            <Sidebar onNavigate={() => setMobileNavOpen(false)} />
           </div>
+        </div>
+      )}
 
-          {/* Nav tabs — desktop */}
-          <nav className="hidden md:flex items-center gap-1 flex-1">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.end}
-                className={({ isActive }) =>
-                  `px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-white text-[#1B5E20] font-semibold'
-                      : 'text-green-100 hover:bg-[#388E3C] hover:text-white'
-                  }`
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
-
-            {/* Switch de vue pour superadmin */}
-            {isAdmin && (
-              <NavLink
-                to="/"
-                end
-                className="ml-auto px-3 py-1.5 rounded-md text-xs font-medium text-green-200 hover:bg-[#388E3C] border border-green-700"
-              >
-                ← Vue rizier
-              </NavLink>
-            )}
-          </nav>
-
-          {/* Avatar + user */}
-          <div className="ml-auto flex items-center gap-3 relative">
-            <span className="hidden sm:block text-green-100 text-sm truncate max-w-[140px]">
-              {user?.rizerie || user?.nom}
+      <div className="flex-1 min-w-0 flex flex-col">
+        <ImpersonationBanner />
+        {/* Topbar */}
+        <header
+          className="sticky top-0 z-30 flex items-center gap-3 px-4 sm:px-6 h-14 border-b"
+          style={{ background: 'rgba(244,242,238,.92)', backdropFilter: 'blur(8px)', borderColor: 'var(--cc-border)' }}
+        >
+          <button
+            onClick={() => setMobileNavOpen(true)}
+            className="md:hidden w-9 h-9 flex items-center justify-center rounded-md hover:bg-black/5 flex-none"
+            aria-label="Ouvrir le menu"
+          >
+            <span className="text-lg">☰</span>
+          </button>
+          <div className="flex-1" />
+          {isAdmin && (
+            <span className="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide" style={{ background: 'var(--cc-accent)', color: '#fff' }}>
+              {roleBadge}
             </span>
+          )}
+          <span className="hidden sm:block text-sm text-gray-600 truncate max-w-[160px]">
+            {user?.rizerie || user?.nom}
+          </span>
+          <div className="relative">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="w-8 h-8 rounded-full bg-[#F9A825] text-[#1B5E20] font-bold text-sm flex items-center justify-center focus:outline-none flex-shrink-0"
+              className="w-8 h-8 rounded-full font-bold text-sm flex items-center justify-center focus:outline-none flex-none"
+              style={{ background: '#F9A825', color: '#1A1A1A' }}
             >
               {initials}
             </button>
-
             {menuOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
@@ -108,33 +75,12 @@ export default function Layout() {
                   <div className="px-4 py-3 border-b border-gray-100">
                     <p className="text-sm font-semibold text-gray-900">{user?.nom}</p>
                     <p className="text-xs text-gray-500">{user?.email}</p>
-                    {isAdmin && (
-                      <span className="inline-block mt-1 text-[10px] font-bold bg-[#F9A825] text-[#1B5E20] px-1.5 py-0.5 rounded-full uppercase">
-                        Superadmin
+                    {roleBadge && (
+                      <span className="inline-block mt-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase" style={{ background: '#F9A825', color: '#1b75bc' }}>
+                        {roleBadge}
                       </span>
                     )}
                   </div>
-
-                  {isAdmin ? (
-                    <>
-                      <NavLink
-                        to="/admin"
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                      >
-                        Panel Admin
-                      </NavLink>
-                      <NavLink
-                        to="/admin/audit"
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                      >
-                        Journal d'audit
-                      </NavLink>
-                      <div className="border-t border-gray-100" />
-                    </>
-                  ) : null}
-
                   <button
                     onClick={handleLogout}
                     className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -145,32 +91,12 @@ export default function Layout() {
               </>
             )}
           </div>
-        </div>
+        </header>
 
-        {/* Nav tabs — mobile */}
-        <div className="md:hidden border-t border-[#388E3C] flex overflow-x-auto">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              onClick={() => setMenuOpen(false)}
-              className={({ isActive }) =>
-                `flex-shrink-0 px-4 py-2 text-xs font-medium transition-colors ${
-                  isActive ? 'bg-white text-[#1B5E20] font-semibold' : 'text-green-100'
-                }`
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </div>
-      </header>
-
-      {/* Page content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
-        <Outlet />
-      </main>
+        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6">
+          <Outlet />
+        </main>
+      </div>
     </div>
   )
 }

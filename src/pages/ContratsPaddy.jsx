@@ -86,7 +86,7 @@ export default function ContratsPaddy() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="text-xl font-bold text-gray-900">Contrats paddy (amont)</h2>
+        <h2 className="font-display text-xl font-bold text-gray-900">Contrats paddy (amont)</h2>
         <button onClick={openNew} className="btn-primary text-sm">+ Nouveau contrat</button>
       </div>
 
@@ -96,7 +96,7 @@ export default function ContratsPaddy() {
       <div className="grid grid-cols-3 gap-3">
         <div className="card text-center">
           <p className="text-xs text-gray-500 mb-1">Producteurs actifs</p>
-          <p className="text-2xl font-bold text-[#1B5E20]">{items.filter(i => i.statut === 'Actif').length}</p>
+          <p className="text-2xl font-bold text-[#1b75bc]">{items.filter(i => i.statut === 'Actif').length}</p>
         </div>
         <div className="card text-center">
           <p className="text-xs text-gray-500 mb-1">Paddy contractualisé</p>
@@ -121,7 +121,7 @@ export default function ContratsPaddy() {
       {/* Tableau */}
       <div className="card p-0 overflow-x-auto">
         {loading ? (
-          <div className="flex justify-center py-10"><span className="w-7 h-7 border-4 border-[#388E3C] border-t-transparent rounded-full animate-spin" /></div>
+          <div className="flex justify-center py-10"><span className="w-7 h-7 border-4 border-[#62bb46] border-t-transparent rounded-full animate-spin" /></div>
         ) : items.length === 0 ? (
           <div className="text-center py-12 text-gray-400">
             <p className="text-sm mb-3">Aucun contrat paddy enregistré</p>

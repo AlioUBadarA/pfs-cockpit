@@ -11,6 +11,8 @@ const ACTION_LABELS = {
   PROFILE_UPDATED:          { label: 'Profil modifié',      color: 'bg-gray-100 text-gray-700' },
   LOGIN_SUCCESS:            { label: 'Connexion',           color: 'bg-green-50 text-green-700' },
   LOGIN_FAILED:             { label: 'Échec connexion',     color: 'bg-yellow-100 text-yellow-800' },
+  SUPPORT_CREATED:          { label: 'Compte support créé', color: 'bg-blue-100 text-blue-800' },
+  SUPPORT_DELETED:          { label: 'Compte support supprimé', color: 'bg-red-200 text-red-900' },
 }
 
 const fmtDatetime = (d) => d
@@ -43,7 +45,7 @@ export default function AdminAudit() {
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Journal d'audit</h2>
+          <h2 className="font-display text-xl font-bold text-gray-900">Journal d'audit</h2>
           <p className="text-sm text-gray-500">{total} événements enregistrés</p>
         </div>
         <Link to="/admin" className="btn-secondary text-sm">← Panel Admin</Link>
@@ -56,7 +58,7 @@ export default function AdminAudit() {
         <span className="text-sm text-gray-600 font-medium">Filtrer :</span>
         <button
           onClick={() => setFilterAction('')}
-          className={`px-3 py-1 rounded-full text-xs font-medium ${!filterAction ? 'bg-[#1B5E20] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+          className={`px-3 py-1 rounded-full text-xs font-medium ${!filterAction ? 'bg-[#1b75bc] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
         >
           Tous
         </button>
@@ -64,7 +66,7 @@ export default function AdminAudit() {
           <button
             key={k}
             onClick={() => setFilterAction(k)}
-            className={`px-3 py-1 rounded-full text-xs font-medium ${filterAction === k ? 'bg-[#1B5E20] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            className={`px-3 py-1 rounded-full text-xs font-medium ${filterAction === k ? 'bg-[#1b75bc] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
           >
             {v.label}
           </button>
@@ -75,7 +77,7 @@ export default function AdminAudit() {
       <div className="card p-0 overflow-x-auto">
         {loading ? (
           <div className="flex justify-center py-10">
-            <span className="w-7 h-7 border-4 border-[#388E3C] border-t-transparent rounded-full animate-spin" />
+            <span className="w-7 h-7 border-4 border-[#62bb46] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : logs.length === 0 ? (
           <p className="text-sm text-gray-400 text-center py-10">Aucun événement</p>

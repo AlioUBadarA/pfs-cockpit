@@ -77,7 +77,7 @@ export default function Emplois() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="text-xl font-bold text-gray-900">Liste des emplois</h2>
+        <h2 className="font-display text-xl font-bold text-gray-900">Liste des emplois</h2>
         <button onClick={openNew} className="btn-primary text-sm">+ Ajouter un employé</button>
       </div>
 
@@ -87,7 +87,7 @@ export default function Emplois() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="card text-center">
           <p className="text-xs text-gray-500 mb-1">Total employés</p>
-          <p className="text-2xl font-bold text-[#1B5E20]">{items.length}</p>
+          <p className="text-2xl font-bold text-[#1b75bc]">{items.length}</p>
         </div>
         <div className="card text-center">
           <p className="text-xs text-gray-500 mb-1">CDI / CDD</p>
@@ -106,7 +106,7 @@ export default function Emplois() {
       {/* Tableau */}
       <div className="card p-0 overflow-x-auto">
         {loading ? (
-          <div className="flex justify-center py-10"><span className="w-7 h-7 border-4 border-[#388E3C] border-t-transparent rounded-full animate-spin" /></div>
+          <div className="flex justify-center py-10"><span className="w-7 h-7 border-4 border-[#62bb46] border-t-transparent rounded-full animate-spin" /></div>
         ) : items.length === 0 ? (
           <div className="text-center py-12 text-gray-400">
             <p className="text-sm mb-3">Aucun employé enregistré</p>

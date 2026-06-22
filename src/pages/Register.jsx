@@ -29,7 +29,7 @@ export default function Register() {
     <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#1B5E20] mb-3">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#1b75bc] mb-3">
             <span className="text-white font-bold text-lg">PF</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Créer un compte</h1>
@@ -85,7 +85,7 @@ export default function Register() {
 
           <p className="text-center text-sm text-gray-500 mt-4">
             Déjà inscrit ?{' '}
-            <Link to="/login" className="text-[#1B5E20] font-medium hover:underline">
+            <Link to="/login" className="text-[#1b75bc] font-medium hover:underline">
               Se connecter
             </Link>
           </p>

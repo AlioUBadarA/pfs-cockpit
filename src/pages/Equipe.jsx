@@ -1,6 +1,9 @@
 import { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
 import Modal from '../components/Modal'
+import Panel from '../components/Panel'
+import DataTable from '../components/DataTable'
+import KpiCard from '../components/KpiCard'
 
 const fmt     = (n) => Number(n).toLocaleString('fr-FR') + ' F'
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-'
@@ -78,76 +81,60 @@ export default function Equipe() {
 
   const totalCA = vendeurs.reduce((s, v) => s + Number(v.ca_total || 0), 0)
 
+  const rows = vendeurs.map(v => [
+    { v: v.nom, sub: v.email },
+    v.telephone || '-',
+    v.nb_ventes,
+    { v: fmt(v.ca_total), c: '#1b75bc', bold: true },
+    fmtDate(v.derniere_vente),
+    { v: v.suspended ? 'Suspendu' : 'Actif', c: v.suspended ? '#CC0000' : '#1b75bc' },
+    {
+      v: (
+        <div className="flex gap-2 whitespace-nowrap">
+          <button onClick={() => openEdit(v)} className="text-xs text-blue-600 hover:text-blue-800 font-medium">Éditer</button>
+          <button onClick={() => { setPwdModal(v); setNewPwd('') }} className="text-xs text-yellow-700 hover:text-yellow-900 font-medium">MDP</button>
+          <button onClick={() => deleteVendeur(v.id)} className="text-xs text-red-600 hover:text-red-800 font-medium">Suppr.</button>
+        </div>
+      ),
+    },
+  ])
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="text-xl font-bold text-gray-900">Équipe de vente</h2>
+        <div>
+          <h2 className="font-display text-xl font-bold text-gray-900">Commerciaux</h2>
+          <p className="text-sm text-gray-500 mt-0.5">Performance de l'équipe de vente</p>
+        </div>
         <span className="text-xs text-gray-400 italic">Les comptes sont créés par l'administrateur</span>
       </div>
 
       {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">{error}</div>}
 
-      {/* KPIs équipe */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="card text-center">
-          <p className="text-xs text-gray-500 mb-1">Membres</p>
-          <p className="text-2xl font-bold text-[#1B5E20]">{vendeurs.length}</p>
-        </div>
-        <div className="card text-center">
-          <p className="text-xs text-gray-500 mb-1">CA équipe total</p>
-          <p className="text-lg font-bold text-blue-700">{fmt(totalCA)}</p>
-        </div>
-        <div className="card text-center">
-          <p className="text-xs text-gray-500 mb-1">Ventes équipe</p>
-          <p className="text-2xl font-bold text-gray-700">{vendeurs.reduce((s, v) => s + Number(v.nb_ventes || 0), 0)}</p>
-        </div>
+        <KpiCard title="Membres" value={vendeurs.length} color="#1b75bc" />
+        <KpiCard title="CA équipe total" value={fmt(totalCA)} color="#1565C0" />
+        <KpiCard title="Ventes équipe" value={vendeurs.reduce((s, v) => s + Number(v.nb_ventes || 0), 0)} color="#62bb46" />
       </div>
 
-      {/* Liste vendeurs */}
-      <div className="card p-0 overflow-x-auto">
+      <Panel title="Vendeurs" sub={vendeurs.length + ' membre(s)'}>
         {loading ? (
           <div className="flex justify-center py-10">
-            <span className="w-7 h-7 border-4 border-[#388E3C] border-t-transparent rounded-full animate-spin" />
+            <span className="w-7 h-7 border-4 border-[#62bb46] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : vendeurs.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-10">
             <p className="text-gray-400 text-sm">Aucun vendeur dans votre équipe pour le moment.</p>
             <p className="text-gray-300 text-xs mt-1">Contactez l'administrateur pour créer des comptes.</p>
           </div>
         ) : (
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr>{['Nom','Email','Téléphone','Ventes','CA total','Dernière vente','Statut','Actions'].map(h => (
-                <th key={h} className="table-header whitespace-nowrap">{h}</th>
-              ))}</tr>
-            </thead>
-            <tbody>
-              {vendeurs.map(v => (
-                <tr key={v.id} className="hover:bg-gray-50">
-                  <td className="table-cell font-medium">{v.nom}</td>
-                  <td className="table-cell text-sm text-gray-600">{v.email}</td>
-                  <td className="table-cell text-sm">{v.telephone || '-'}</td>
-                  <td className="table-cell text-center font-medium">{v.nb_ventes}</td>
-                  <td className="table-cell text-right font-semibold text-[#1B5E20]">{fmt(v.ca_total)}</td>
-                  <td className="table-cell whitespace-nowrap text-sm">{fmtDate(v.derniere_vente)}</td>
-                  <td className="table-cell">
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${v.suspended ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                      {v.suspended ? 'Suspendu' : 'Actif'}
-                    </span>
-                  </td>
-                  <td className="table-cell">
-                    <div className="flex gap-2 whitespace-nowrap">
-                      <button onClick={() => openEdit(v)} className="text-xs text-blue-600 hover:text-blue-800 font-medium">Éditer</button>
-                      <button onClick={() => { setPwdModal(v); setNewPwd('') }} className="text-xs text-yellow-700 hover:text-yellow-900 font-medium">MDP</button>
-                      <button onClick={() => deleteVendeur(v.id)} className="text-xs text-red-600 hover:text-red-800 font-medium">Suppr.</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <DataTable
+            headers={['Nom', 'Téléphone', 'Ventes', 'CA total', 'Dernière vente', 'Statut', 'Actions']}
+            rows={rows}
+            align={['left', 'left', 'right', 'right', 'left', 'left', 'left']}
+          />
         )}
-      </div>
+      </Panel>
 
       {/* Modal éditer vendeur */}
       <Modal open={!!editModal} onClose={() => setEditModal(null)} title="Modifier le vendeur">

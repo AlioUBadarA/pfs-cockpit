@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
+import KpiCard from '../components/KpiCard'
+import Panel from '../components/Panel'
 
 const fmt     = (n) => Number(n).toLocaleString('fr-FR') + ' F'
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-'
@@ -49,27 +51,34 @@ export default function Actions() {
 
   if (loading) return (
     <div className="flex justify-center py-16">
-      <span className="w-8 h-8 border-4 border-[#388E3C] border-t-transparent rounded-full animate-spin" />
+      <span className="w-8 h-8 border-4 border-[#62bb46] border-t-transparent rounded-full animate-spin" />
     </div>
   )
 
-  const total = (data?.creances_retard?.length || 0) +
-                (data?.clients_inactifs?.length || 0) +
-                (data?.prospects_relance?.length || 0)
+  const nbRetard = data?.creances_retard?.length || 0
+  const nbInactifs = data?.clients_inactifs?.length || 0
+  const nbProspects = data?.prospects_relance?.length || 0
+  const total = nbRetard + nbInactifs + nbProspects
+  const montantRetard = (data?.creances_retard || []).reduce((s, v) => s + Number(v.montant || 0), 0)
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h2 className="text-xl font-bold text-gray-900">Actions à faire</h2>
-        {total > 0 && (
-          <span className="bg-red-100 text-red-700 text-sm font-bold px-3 py-1 rounded-full">
-            {total} action{total > 1 ? 's' : ''} en attente
-          </span>
-        )}
+        <div>
+          <h2 className="font-display text-xl font-bold text-gray-900">Alertes</h2>
+          <p className="text-sm text-gray-500 mt-0.5">Relances calculées automatiquement</p>
+        </div>
         <button onClick={load} className="btn-secondary text-sm">Actualiser</button>
       </div>
 
       {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">{error}</div>}
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <KpiCard title="Actions en attente" value={total} color={total > 0 ? '#CC0000' : '#1b75bc'} />
+        <KpiCard title="Créances en retard" value={nbRetard} sub={fmt(montantRetard)} color="#CC0000" />
+        <KpiCard title="Clients inactifs" value={nbInactifs} color="#F9A825" />
+        <KpiCard title="Prospects à relancer" value={nbProspects} color="#5a6b7a" />
+      </div>
 
       {total === 0 && !error && (
         <div className="card text-center py-12 text-gray-400">
@@ -78,15 +87,10 @@ export default function Actions() {
         </div>
       )}
 
-      {/* Créances en retard */}
-      {data?.creances_retard?.length > 0 && (
-        <section className="space-y-3">
-          <h3 className="text-base font-bold text-red-700 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />
-            Créances en retard ({data.creances_retard.length})
-          </h3>
-          <div className="card p-0 overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+      {nbRetard > 0 && (
+        <Panel title="Créances en retard" sub={`${nbRetard} facture(s)`}>
+          <div className="overflow-x-auto -m-1">
+            <table className="w-full text-left border-collapse p-1">
               <thead>
                 <tr>{['Client','Montant','Date vente','Retard','Vendeur','Action'].map(h => (
                   <th key={h} className="table-header whitespace-nowrap">{h}</th>
@@ -114,18 +118,13 @@ export default function Actions() {
               </tbody>
             </table>
           </div>
-        </section>
+        </Panel>
       )}
 
-      {/* Clients inactifs */}
-      {data?.clients_inactifs?.length > 0 && (
-        <section className="space-y-3">
-          <h3 className="text-base font-bold text-orange-700 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-orange-400 inline-block" />
-            Clients inactifs à relancer ({data.clients_inactifs.length})
-          </h3>
-          <div className="card p-0 overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+      {nbInactifs > 0 && (
+        <Panel title="Clients inactifs à relancer" sub={`${nbInactifs} client(s)`}>
+          <div className="overflow-x-auto -m-1">
+            <table className="w-full text-left border-collapse p-1">
               <thead>
                 <tr>{['Client','Type','Zone','Téléphone','Dernière vente','Inactivité','Vendeur'].map(h => (
                   <th key={h} className="table-header whitespace-nowrap">{h}</th>
@@ -150,18 +149,13 @@ export default function Actions() {
               </tbody>
             </table>
           </div>
-        </section>
+        </Panel>
       )}
 
-      {/* Prospects à relancer */}
-      {data?.prospects_relance?.length > 0 && (
-        <section className="space-y-3">
-          <h3 className="text-base font-bold text-yellow-700 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" />
-            Prospects à relancer ({data.prospects_relance.length})
-          </h3>
-          <div className="card p-0 overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+      {nbProspects > 0 && (
+        <Panel title="Prospects à relancer" sub={`${nbProspects} prospect(s)`}>
+          <div className="overflow-x-auto -m-1">
+            <table className="w-full text-left border-collapse p-1">
               <thead>
                 <tr>{['Prospect','Statut','Priorité','Zone','Téléphone','Sans contact','Vendeur','Action'].map(h => (
                   <th key={h} className="table-header whitespace-nowrap">{h}</th>
@@ -204,7 +198,7 @@ export default function Actions() {
               </tbody>
             </table>
           </div>
-        </section>
+        </Panel>
       )}
     </div>
   )

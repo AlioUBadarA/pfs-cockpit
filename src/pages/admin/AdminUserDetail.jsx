@@ -121,7 +121,7 @@ export default function AdminUserDetail() {
     finally { setSaving(false) }
   }
 
-  if (loading) return <div className="flex justify-center py-20"><span className="w-8 h-8 border-4 border-[#388E3C] border-t-transparent rounded-full animate-spin" /></div>
+  if (loading) return <div className="flex justify-center py-20"><span className="w-8 h-8 border-4 border-[#62bb46] border-t-transparent rounded-full animate-spin" /></div>
   if (error && !data) return <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-4 text-sm">{error}</div>
 
   const { user, ventes = [], clients = [], pilotage = [], vendeurs = [] } = data
@@ -133,8 +133,8 @@ export default function AdminUserDetail() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3 flex-wrap">
-        <Link to="/admin" className="text-sm text-[#1B5E20] hover:underline">← Retour</Link>
-        <h2 className="text-xl font-bold text-gray-900 flex-1">{user.nom}</h2>
+        <Link to="/admin" className="text-sm text-[#1b75bc] hover:underline">← Retour</Link>
+        <h2 className="font-display text-xl font-bold text-gray-900 flex-1">{user.nom}</h2>
         <div className="flex gap-2 flex-wrap">
           {!user.suspended && (
             <button
@@ -181,10 +181,10 @@ export default function AdminUserDetail() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard title="CA total" value={fmt(caTotal)} icon="💰" color="#1B5E20" />
-        <KpiCard title="Créances en cours" value={fmt(creancesTotal)} icon="📋" color={creancesTotal > 0 ? '#CC0000' : '#388E3C'} />
-        <KpiCard title="Total ventes" value={ventes.length} icon="🧾" color="#388E3C" />
-        <KpiCard title="Clients" value={clients.length} icon="👥" color="#1B5E20" />
+        <KpiCard title="CA total" value={fmt(caTotal)} icon="💰" color="#1b75bc" />
+        <KpiCard title="Créances en cours" value={fmt(creancesTotal)} icon="📋" color={creancesTotal > 0 ? '#CC0000' : '#62bb46'} />
+        <KpiCard title="Total ventes" value={ventes.length} icon="🧾" color="#62bb46" />
+        <KpiCard title="Clients" value={clients.length} icon="👥" color="#1b75bc" />
       </div>
 
       {/* Ventes récentes */}
@@ -242,7 +242,7 @@ export default function AdminUserDetail() {
                   <td className="table-cell text-xs text-gray-600">{v.email}</td>
                   <td className="table-cell text-xs">{v.telephone || '-'}</td>
                   <td className="table-cell text-center">{v.nb_ventes}</td>
-                  <td className="table-cell text-right font-semibold text-[#1B5E20]">
+                  <td className="table-cell text-right font-semibold text-[#1b75bc]">
                     {Number(v.ca_total).toLocaleString('fr-FR')} F
                   </td>
                   <td className="table-cell">
@@ -303,7 +303,7 @@ export default function AdminUserDetail() {
                     <td className="table-cell font-medium">{p.semaine}</td>
                     <td className="table-cell text-right">{fmt(p.objectif_total)}</td>
                     <td className="table-cell text-right">{fmt(p.realise_total)}</td>
-                    <td className={`table-cell text-right font-semibold ${ecart >= 0 ? 'text-[#1B5E20]' : 'text-[#CC0000]'}`}>
+                    <td className={`table-cell text-right font-semibold ${ecart >= 0 ? 'text-[#1b75bc]' : 'text-[#CC0000]'}`}>
                       {ecart >= 0 ? '+' : ''}{ecart.toLocaleString('fr-FR')} F
                     </td>
                   </tr>

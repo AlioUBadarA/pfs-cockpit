@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import pfsIcon from '../assets/pfs-icon.png'
+import pfsLogo from '../assets/pfs-logo.png'
 
 export default function Login() {
   const { login, loading } = useAuth()
@@ -20,15 +22,15 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[var(--cc-bg)] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[#1B5E20] mb-4">
-            <span className="text-white font-bold text-xl">PF</span>
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white border border-gray-200 shadow-sm mb-4 p-2.5">
+            <img src={pfsIcon} alt="Partners In Food Solutions" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">PFS Commercial</h1>
-          <p className="text-gray-500 text-sm mt-1">Plateforme de pilotage commercial</p>
+          <h1 className="font-display text-2xl font-bold text-gray-900">Cockpit Commercial</h1>
+          <p className="text-gray-500 text-sm mt-1">Filière riz · PFS</p>
         </div>
 
         <div className="card shadow-sm">
@@ -88,6 +90,10 @@ export default function Login() {
             Accès sur invitation uniquement.<br />
             Contactez l'administrateur PFS pour obtenir un compte.
           </p>
+        </div>
+
+        <div className="flex items-center justify-center mt-6 opacity-60">
+          <img src={pfsLogo} alt="Partners In Food Solutions" className="h-5 object-contain" />
         </div>
       </div>
     </div>

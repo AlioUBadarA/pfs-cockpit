@@ -2,24 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Identité visuelle "Cockpit Commercial" — palette reprise du logo Partners In Food
+   Solutions (bleu #1b75bc / vert #62bb46), variables centralisées dans ce fichier. */
+:root {
+  --cc-bg: #f3f5f7;
+  --cc-sidebar: #102536;
+  --cc-sidebar-text: #9db3c2;
+  --cc-border: #dde3e8;
+  --cc-accent: #1b75bc;
+  --cc-accent-light: #62bb46;
+  --cc-text: #16212b;
+  --cc-text-muted: #6b7b87;
+}
+
 * {
   box-sizing: border-box;
 }
 
 body {
-  background-color: #F5F5F5;
-  font-family: 'Inter', system-ui, sans-serif;
-  color: #1A1A1A;
+  background-color: var(--cc-bg);
+  font-family: 'IBM Plex Sans', 'Inter', system-ui, sans-serif;
+  color: var(--cc-text);
+  -webkit-font-smoothing: antialiased;
 }
+
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-thumb { background: #c7cdd2; border-radius: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
 
 @layer components {
   .card {
-    @apply bg-white border border-gray-200 rounded-lg p-4;
+    @apply bg-white border rounded-lg p-4;
+    border-color: var(--cc-border);
   }
 
   .btn-primary {
-    @apply bg-[#1B5E20] hover:bg-[#388E3C] text-white font-medium px-4 py-2 rounded-lg transition-colors duration-150 cursor-pointer;
+    @apply text-white font-medium px-4 py-2 rounded-lg transition-colors duration-150 cursor-pointer;
+    background-color: var(--cc-accent);
   }
+  .btn-primary:hover { background-color: var(--cc-accent-light); }
 
   .btn-secondary {
     @apply bg-white hover:bg-gray-50 text-gray-700 font-medium px-4 py-2 rounded-lg border border-gray-300 transition-colors duration-150 cursor-pointer;
@@ -30,18 +51,73 @@ body {
   }
 
   .table-header {
-    @apply bg-[#1A1A1A] text-white text-xs font-semibold uppercase tracking-wider px-4 py-3;
+    @apply text-left text-[10.5px] font-semibold uppercase tracking-wider px-4 py-2.5 whitespace-nowrap;
+    color: var(--cc-text-muted);
+    border-bottom: 1.5px solid var(--cc-border);
   }
 
   .table-cell {
-    @apply px-4 py-3 text-sm text-gray-700 border-b border-gray-100;
+    @apply px-4 py-2.5 text-[13px] text-gray-700;
+    border-bottom: 1px solid #eef1f3;
   }
 
   .input {
-    @apply w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#388E3C] focus:border-transparent;
+    @apply w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1b75bc] focus:border-transparent;
   }
 
   .label {
     @apply block text-sm font-medium text-gray-700 mb-1;
+  }
+
+  /* ── Cockpit Commercial : KPI / panel / barres ── */
+  .kpi-card {
+    @apply bg-white border rounded-lg p-4 flex flex-col gap-1.5 min-w-0;
+    border-color: var(--cc-border);
+  }
+  .kpi-label {
+    @apply text-[11px] uppercase tracking-wide font-semibold flex items-center gap-1.5;
+    color: var(--cc-text-muted);
+  }
+  .kpi-value {
+    @apply font-display text-2xl font-semibold leading-none;
+    color: var(--cc-text);
+  }
+  .kpi-sub {
+    @apply text-xs flex items-center gap-1;
+    color: var(--cc-text-muted);
+  }
+
+  .panel {
+    @apply bg-white border rounded-lg p-5 flex flex-col gap-3.5 min-w-0;
+    border-color: var(--cc-border);
+  }
+  .panel-header {
+    @apply flex items-baseline justify-between gap-3 pb-2.5 border-b;
+    border-color: #e9edf0;
+  }
+  .panel-title {
+    @apply font-display text-base font-semibold;
+    color: var(--cc-text);
+  }
+  .panel-sub {
+    @apply text-[11.5px] mt-0.5;
+    color: var(--cc-text-muted);
+  }
+
+  .bar-row-track {
+    @apply h-2.5 rounded-full overflow-hidden;
+    background: #eef1f3;
+  }
+
+  /* Navigation latérale */
+  .sidebar-link {
+    @apply flex items-center gap-2.5 w-full px-2.5 py-2 mb-0.5 rounded-md text-[13px] text-left transition-colors duration-150 cursor-pointer;
+    color: var(--cc-sidebar-text);
+  }
+  .sidebar-link:hover { background: rgba(255,255,255,0.06); }
+  .sidebar-link.active {
+    background: var(--cc-accent);
+    color: #fff;
+    font-weight: 600;
   }
 }

@@ -8,7 +8,7 @@ export default function PageTabs({ tabs, active, setActive }) {
             onClick={() => setActive(tab.key)}
             className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors flex items-center gap-2 ${
               active === tab.key
-                ? 'border-[#1B5E20] text-[#1B5E20] bg-green-50'
+                ? 'border-[#1b75bc] text-[#1b75bc] bg-green-50'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
