@@ -5,7 +5,7 @@ import ImpersonationBanner from './ImpersonationBanner'
 import Sidebar from './Sidebar'
 
 export default function Layout() {
-  const { user, logout, isAdmin, isSuperadmin, isSupport } = useAuth()
+  const { user, logout, isSuperadmin, isSupport, isManager } = useAuth()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
@@ -20,7 +20,7 @@ export default function Layout() {
     ? user.nom.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
     : 'CC'
 
-  const roleBadge = isSuperadmin ? 'Superadmin' : isSupport ? 'Support' : null
+  const roleBadge = isSuperadmin ? 'Superadmin' : isSupport ? 'Support' : isManager ? 'Manager' : null
 
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--cc-bg)' }}>
@@ -52,7 +52,7 @@ export default function Layout() {
             <span className="text-lg">☰</span>
           </button>
           <div className="flex-1" />
-          {isAdmin && (
+          {roleBadge && (
             <span className="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide" style={{ background: 'var(--cc-accent)', color: '#fff' }}>
               {roleBadge}
             </span>
