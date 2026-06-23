@@ -37,6 +37,7 @@ export default function Insights() {
   const [prospects, setProspects] = useState([])
   const [rentabilite, setRentabilite] = useState(null)
   const [actions, setActions] = useState(null)
+  const [clients, setClients] = useState([])
 
   useEffect(() => {
     Promise.all([
@@ -44,12 +45,14 @@ export default function Insights() {
       api.get('/api/prospection'),
       api.get('/api/rentabilite'),
       api.get('/api/actions'),
+      api.get('/api/clients'),
     ])
-      .then(([d, p, r, a]) => {
+      .then(([d, p, r, a, c]) => {
         setDash(d.data)
         setProspects(p.data || [])
         setRentabilite(r.data)
         setActions(a.data)
+        setClients(c.data || [])
       })
       .catch(() => setError('Erreur de chargement'))
       .finally(() => setLoading(false))
@@ -67,50 +70,65 @@ export default function Insights() {
     .sort((a, b) => Number(b.valeur_estimee || 0) - Number(a.valeur_estimee || 0))
     .slice(0, 5)
 
-  const clientsRisque = (actions?.clients_inactifs || []).slice(0, 5)
-  const creancesCritiques = (actions?.creances_retard || [])
-    .filter((c) => c.jours_retard > 30)
-    .slice(0, 5)
+  const alertes = actions?.alertes || []
+  const clientsRisque = alertes.filter((a) => a.cat === 'Client inactif' && !a.traitee).slice(0, 5)
+  const creancesCritiques = alertes.filter((a) => a.cat === 'Créance en retard' && a.niveau === 'rouge' && !a.traitee)
 
   const topRentables = [...(rentabilite?.par_client || [])]
     .sort((a, b) => b.taux_marge - a.taux_marge)
-    .slice(0, 5)
+    .slice(0, 3)
+  const produitsDeclin = (rentabilite?.par_produit || []).filter((p) => p.tendance === 'déclin').slice(0, 2)
+
+  const zonePot = {}
+  clients.forEach((c) => { if (c.region) zonePot[c.region] = (zonePot[c.region] || 0) + Number(c.potentiel_annuel || 0) })
+  const zoneCa = {}
+  ;(rentabilite?.par_region || []).forEach((r) => { zoneCa[r.region] = r.ca })
+  const zones = Object.entries(zonePot)
+    .map(([region, pot]) => ({ region, pot, ca: zoneCa[region] || 0, gap: pot - (zoneCa[region] || 0) }))
+    .sort((a, b) => b.gap - a.gap)
+    .slice(0, 4)
 
   const kpis = dash?.kpis || {}
-  const negociation = prospects.filter((p) => p.statut === 'Devis envoyé' || p.statut === 'Présentation faite')
+  const negociation = prospects.filter((p) => p.statut === 'Négociation' || p.statut === 'Proposition')
   const valeurNegociation = negociation.reduce((s, p) => s + Number(p.valeur_estimee || 0), 0)
+  const sousObjectif = alertes.find((a) => a.cat === 'Objectif sous cible' && !a.traitee)
 
   const actionsPrioritaires = [
     {
       n: '1', c: '#CC0000',
-      t: `Relancer les ${creancesCritiques.length} créance(s) critique(s) (+30 jours de retard)`,
-      w: 'Recouvrement',
+      t: `Relancer les ${creancesCritiques.length} créance(s) critique(s) (+90 jours de retard)`,
+      w: `Recouvrement · ${fmt(creancesCritiques.reduce((s, a) => s + a.valeur, 0))}`,
     },
     {
       n: '2', c: '#F9A825',
-      t: `Réactiver ${clientsRisque.length} client(s) inactif(s) par une offre ciblée`,
-      w: 'Portefeuille',
+      t: `Réactiver ${clientsRisque.length} client(s) dormant(s) par une offre ciblée`,
+      w: 'Portefeuille · LTV à protéger',
     },
     {
-      n: '3', c: '#1b75bc',
-      t: `Accélérer les ${negociation.length} prospect(s) en négociation pour sécuriser ${fmt(valeurNegociation)}`,
-      w: 'Pipeline',
+      n: '3', c: '#1B5E20',
+      t: `Accélérer les ${negociation.length} prospect(s) en négociation pour sécuriser la projection`,
+      w: `Pipeline · ${fmt(valeurNegociation)}`,
     },
     {
       n: '4', c: '#5a6b7a',
-      t: `Taux de recouvrement actuel : ${kpis.taux_recouvrement != null ? kpis.taux_recouvrement + ' %' : 'n/a'} — surveiller les nouveaux encours`,
-      w: 'Direction',
+      t: sousObjectif ? `Soutenir ${sousObjectif.owner_nom} (sous objectif) par de l'accompagnement terrain` : 'Toute l\'équipe est dans ses objectifs',
+      w: 'Management',
+    },
+    {
+      n: '5', c: '#7a6a52',
+      t: produitsDeclin.length ? `Arbitrer la gamme en déclin (${produitsDeclin.map((p) => p.produit).join(', ')}) vs produits à forte marge` : 'Aucun produit en déclin détecté',
+      w: 'Rentabilité',
     },
   ]
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-display text-xl font-bold text-gray-900">Insights</h2>
+        <h2 className="font-display text-xl font-bold text-gray-900">Analyses & Actions</h2>
         <p className="text-sm text-gray-500 mt-0.5">Opportunités, risques et plan d'actions prioritaires</p>
       </div>
 
-      <Panel title="Plan d'actions prioritaires" sub="généré à partir des signaux du cockpit">
+      <Panel title="Plan d'actions prioritaires" sub="recommandations générées à partir des signaux du cockpit">
         <div className="flex flex-col gap-2.5">
           {actionsPrioritaires.map((a) => (
             <div key={a.n} className="flex gap-3.5 items-center px-3.5 py-3 rounded-lg" style={{ background: '#faf8f4', border: '1px solid #f0ebe1' }}>
@@ -126,7 +144,7 @@ export default function Insights() {
       </Panel>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <Block title="Top prospects" color="#1b75bc" empty="Aucun prospect en cours.">
+        <Block title="Top prospects" color="#1B5E20" empty="Aucun prospect en cours.">
           {topProspects.map((p) => (
             <Li key={p.id} main={p.nom} sub={p.statut} val={fmt(p.valeur_estimee)} />
           ))}
@@ -134,14 +152,31 @@ export default function Insights() {
 
         <Block title="Clients à risque" color="#CC0000" empty="Aucun client inactif détecté.">
           {clientsRisque.map((c) => (
-            <Li key={c.id} main={c.nom} sub={c.jours_inactif != null ? `inactif depuis ${c.jours_inactif} j` : 'jamais acheté'} val={c.vendeur_nom || '-'} color="#CC0000" />
+            <Li key={c.key} main={c.msg} sub={c.cat} val={c.owner_nom || '-'} color="#CC0000" />
           ))}
         </Block>
 
-        <Block title="Meilleurs taux de marge" color="#1565C0" empty="Pas encore de données de rentabilité.">
-          {topRentables.map((r, i) => (
-            <Li key={i} main={r.client_nom} sub={`marge ${fmt(r.marge)}`} val={`${r.taux_marge} %`} color="#1565C0" />
-          ))}
+        <Block title="Prévision mois prochain" color="#F9A825" empty="Pas encore de données.">
+          {[
+            { main: 'CA attendu', sub: 'rythme des 3 derniers mois', val: fmt(kpis.projection_annuel ? kpis.projection_annuel / 12 : 0) },
+            { main: 'À signer bientôt', sub: 'signature prévue < 30 j', val: fmt(valeurNegociation) },
+            { main: 'Objectif mensuel', sub: 'groupe', val: fmt(kpis.objectif_annuel ? kpis.objectif_annuel / 12 : 0) },
+            { main: 'Reste à faire', sub: "pour l'objectif annuel", val: fmt(Math.max(0, (kpis.objectif_annuel || 0) - (kpis.ca_ytd || 0))), color: '#F9A825' },
+          ].map((li, i) => <Li key={i} {...li} />)}
+        </Block>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <Block title="Produits les plus rentables" color="#1B5E20" empty="Pas encore de données de rentabilité.">
+          {topRentables.map((r, i) => <Li key={i} main={r.client_nom} sub={`taux net ${r.taux_marge} %`} val={fmt(r.marge)} />)}
+        </Block>
+
+        <Block title="Produits en déclin" color="#CC0000" empty="Aucun produit en déclin détecté.">
+          {produitsDeclin.map((p, i) => <Li key={i} main={p.produit} sub="tendance baissière" val={`${p.taux_marge} %`} color="#CC0000" />)}
+        </Block>
+
+        <Block title="Zones à fort potentiel" color="#5a6b7a" empty="Renseignez la région et le potentiel annuel des clients pour activer ce panneau.">
+          {zones.map((z, i) => <Li key={i} main={z.region} sub={`CA actuel ${fmt(z.ca)}`} val={`+${fmt(z.gap)} pot.`} color="#1B5E20" />)}
         </Block>
       </div>
     </div>

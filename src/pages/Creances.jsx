@@ -3,26 +3,26 @@ import api from '../services/api'
 import KpiCard from '../components/KpiCard'
 import Panel from '../components/Panel'
 import BarList from '../components/BarList'
-import StatutBadge from '../components/StatutBadge'
 
 const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '0 F'
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-'
 
-const BUCKETS = ['Non échu', '1-30 j', '31-60 j', '61-90 j', '> 90 j']
-const BUCKET_COLOR = { 'Non échu': '#1b75bc', '1-30 j': '#7a9a4e', '31-60 j': '#F9A825', '61-90 j': '#d98324', '> 90 j': '#CC0000' }
+const BUCKETS = ['Non échu', '1-30 j', '31-60 j', '61-90 j', '91-120 j', '>120 j']
+const BUCKET_COLOR = { 'Non échu': '#1B5E20', '1-30 j': '#7a9a4e', '31-60 j': '#F9A825', '61-90 j': '#d98324', '91-120 j': '#c1521d', '>120 j': '#CC0000' }
 
-function bucketOf(joursRetard) {
-  if (joursRetard == null || joursRetard <= 0) return 'Non échu'
-  if (joursRetard <= 30) return '1-30 j'
-  if (joursRetard <= 60) return '31-60 j'
-  if (joursRetard <= 90) return '61-90 j'
-  return '> 90 j'
+function bucketOf(age) {
+  if (age == null || age <= 0) return 'Non échu'
+  if (age <= 30) return '1-30 j'
+  if (age <= 60) return '31-60 j'
+  if (age <= 90) return '61-90 j'
+  if (age <= 120) return '91-120 j'
+  return '>120 j'
 }
 
-function risqueOf(joursRetard) {
-  if (joursRetard == null || joursRetard <= 0) return { label: 'Faible', color: '#1b75bc' }
-  if (joursRetard <= 30) return { label: 'À surveiller', color: '#F9A825' }
-  if (joursRetard <= 90) return { label: 'Élevé', color: '#d98324' }
+function risqueOf(age) {
+  if (age == null || age <= 0) return { label: 'Faible', color: '#1B5E20' }
+  if (age <= 30) return { label: 'Surveiller', color: '#F9A825' }
+  if (age <= 90) return { label: 'Élevé', color: '#d98324' }
   return { label: 'Critique', color: '#CC0000' }
 }
 
@@ -54,8 +54,8 @@ export default function Creances() {
 
         const enAttente = [...listEnRetard, ...listEnCours].map((v) => {
           const echeance = v.date_echeance ? new Date(v.date_echeance) : new Date(new Date(v.date_vente).getTime() + 30 * 86400000)
-          const joursRetard = Math.round((now - echeance) / 86400000)
-          return { ...v, joursRetard, bucket: bucketOf(joursRetard), risque: risqueOf(joursRetard) }
+          const age = Math.round((now - echeance) / 86400000)
+          return { ...v, age, bucket: bucketOf(age), risque: risqueOf(age) }
         })
 
         setData({
@@ -87,6 +87,18 @@ export default function Creances() {
     }
   }
 
+  const relancer = async (id) => {
+    setUpdating(id)
+    try {
+      await api.post(`/api/ventes/${id}/relances`, {})
+      load()
+    } catch {
+      setError('Erreur lors de la relance')
+    } finally {
+      setUpdating(null)
+    }
+  }
+
   const { creances, kpis } = data
 
   const buckets = BUCKETS.map((b) => {
@@ -95,33 +107,44 @@ export default function Creances() {
     return { label: b, val: val || list.length, disp: fmt(val), color: BUCKET_COLOR[b] }
   })
 
-  const filtered = filterRisque === 'Tous' ? creances : creances.filter((c) => c.risque.label === filterRisque)
+  const parVendeur = {}
+  creances.forEach((c) => { const n = c.vendeur_nom || 'Moi'; parVendeur[n] = (parVendeur[n] || 0) + Number(c.montant || 0) })
+  const vendeurArr = Object.entries(parVendeur).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).map(([label, val]) => ({ label, val, disp: fmt(val), color: '#CC0000' }))
+
+  const filtered = [...(filterRisque === 'Tous' ? creances : creances.filter((c) => c.risque.label === filterRisque))].sort((a, b) => b.age - a.age)
   const critique = creances.filter((c) => c.risque.label === 'Critique').reduce((s, c) => s + Number(c.montant || 0), 0)
+  const encours = creances.reduce((s, c) => s + Number(c.montant || 0), 0)
 
   return (
     <div className="space-y-5">
       <div>
         <h2 className="font-display text-xl font-bold text-gray-900">Recouvrement</h2>
-        <p className="text-sm text-gray-500 mt-0.5">Balance âgée et niveau de risque des créances</p>
+        <p className="text-sm text-gray-500 mt-0.5">Balance âgée, niveau de risque et suivi des relances</p>
       </div>
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">{error}</div>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <KpiCard title="Encours total" value={fmt(encours)} sub={`${creances.length} facture(s)`} color="#CC0000" />
         <KpiCard title="En retard"   value={fmt(kpis.en_retard)} sub={`${kpis.nb_retard ?? 0} vente(s)`} color="#CC0000" />
         <KpiCard title="En cours"    value={fmt(kpis.en_cours)}  sub={`${kpis.nb_cours ?? 0} vente(s)`}  color="#F9A825" />
-        <KpiCard title="Payé ce mois" value={fmt(kpis.paye_mois)} color="#1b75bc" />
+        <KpiCard title="Payé ce mois" value={fmt(kpis.paye_mois)} color="#1B5E20" />
         <KpiCard title="Risque critique (+90j)" value={fmt(critique)} color="#CC0000" />
       </div>
 
-      <Panel title="Balance âgée" sub="répartition de l'encours par ancienneté">
-        <BarList items={buckets} labelWidth="90px" dense />
-      </Panel>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Panel title="Balance âgée" sub="répartition de l'encours par ancienneté">
+          <BarList items={buckets} labelWidth="90px" dense />
+        </Panel>
+        <Panel title="Encours par commercial" sub="responsable recouvrement">
+          <BarList items={vendeurArr} labelWidth="120px" dense />
+        </Panel>
+      </div>
 
       <div className="flex gap-2 flex-wrap">
-        {['Tous', 'Faible', 'À surveiller', 'Élevé', 'Critique'].map((r) => (
+        {['Tous', 'Faible', 'Surveiller', 'Élevé', 'Critique'].map((r) => (
           <button
             key={r}
             onClick={() => setFilterRisque(r)}
@@ -147,42 +170,45 @@ export default function Creances() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr>
-                {['Date','Client','Produit','Montant','Ancienneté','Risque','Statut','Action'].map(h => (
+                {['Client', 'Resp.', 'Montant dû', 'Échéance', 'Ancienneté', 'Risque', 'Relances', 'Action'].map(h => (
                   <th key={h} className="table-header">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {filtered.map((v) => (
+              {filtered.slice(0, 50).map((v) => (
                 <tr key={v.id} className="hover:bg-gray-50">
-                  <td className="table-cell whitespace-nowrap">{fmtDate(v.date_vente)}</td>
-                  <td className="table-cell font-medium">{v.client_nom}</td>
-                  <td className="table-cell">{v.produit}</td>
-                  <td className="table-cell text-right font-semibold">
-                    {Number(v.montant).toLocaleString('fr-FR')} F
-                  </td>
-                  <td className="table-cell text-xs">
-                    {v.joursRetard > 0 ? `${v.joursRetard} j de retard` : 'à échoir'}
-                  </td>
+                  <td className="table-cell font-medium">{v.client_nom}<div className="text-[10.5px] text-gray-400">{v.produit}</div></td>
+                  <td className="table-cell text-xs text-gray-500">{v.vendeur_nom || '-'}</td>
+                  <td className="table-cell text-right font-semibold">{Number(v.montant).toLocaleString('fr-FR')} F</td>
+                  <td className="table-cell whitespace-nowrap text-xs">{fmtDate(v.date_echeance)}</td>
+                  <td className="table-cell text-xs">{v.age > 0 ? `${v.age} j de retard` : 'à échoir'}</td>
                   <td className="table-cell">
                     <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: `${v.risque.color}1a`, color: v.risque.color }}>
                       {v.risque.label}
                     </span>
                   </td>
-                  <td className="table-cell">
-                    <StatutBadge statut={v.statut_paiement} />
+                  <td className="table-cell text-xs">
+                    {v.nb_relances > 0 ? `${v.nb_relances} · ${fmtDate(v.derniere_relance)}` : '-'}
                   </td>
                   <td className="table-cell">
-                    <button
-                      onClick={() => marquerPaye(v.id)}
-                      disabled={updating === v.id}
-                      className="text-xs btn-primary py-1 px-3 flex items-center gap-1"
-                    >
-                      {updating === v.id && (
-                        <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      )}
-                      Marquer payé
-                    </button>
+                    <div className="flex gap-1.5">
+                      <button
+                        onClick={() => relancer(v.id)}
+                        disabled={updating === v.id}
+                        className="text-xs btn-secondary py-1 px-2.5"
+                      >
+                        Relancer
+                      </button>
+                      <button
+                        onClick={() => marquerPaye(v.id)}
+                        disabled={updating === v.id}
+                        className="text-xs btn-primary py-1 px-2.5 flex items-center gap-1"
+                      >
+                        {updating === v.id && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                        Payé
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

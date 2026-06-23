@@ -4,6 +4,7 @@ import api from '../services/api'
 import KpiCard from '../components/KpiCard'
 import Panel from '../components/Panel'
 import DataTable from '../components/DataTable'
+import BarList from '../components/BarList'
 
 const fmt = (n) => Number(n).toLocaleString('fr-FR') + ' F'
 
@@ -50,6 +51,21 @@ export default function Rentabilite() {
     { v: <TauxBadge taux={r.taux_marge} /> },
     r.nb_ventes,
     { v: r.vendeur_nom || '-', c: '#9a8f7e' },
+  ])
+
+  const regionArr  = (data?.par_region  || []).map((r) => ({ label: r.region,  val: r.marge, disp: fmt(r.marge) }))
+  const segmentArr = (data?.par_segment || []).map((r) => ({ label: r.segment, val: r.marge, disp: fmt(r.marge) }))
+
+  const prodRows = (data?.par_produit || []).map((r) => [
+    { v: r.produit, sub: r.tendance },
+    fmt(r.ca), fmt(r.marge),
+    { v: <TauxBadge taux={r.taux_marge} /> },
+    { v: r.tendance || '-', c: r.tendance === 'hausse' ? '#1B5E20' : r.tendance === 'déclin' ? '#CC0000' : '#8a7f6e' },
+  ])
+
+  const vendeurRows = (data?.par_vendeur || []).map((r) => [
+    r.vendeur_nom || '-', fmt(r.ca), fmt(r.marge),
+    { v: <TauxBadge taux={r.taux_marge} /> },
   ])
 
   return (
@@ -107,13 +123,33 @@ export default function Rentabilite() {
       )}
 
       {!loading && (
-        <Panel title="Détail par client">
-          <DataTable
-            headers={['Client', 'Type', 'CA', 'Coût', 'Marge', 'Taux', 'Ventes', 'Vendeur']}
-            rows={rows}
-            align={['left', 'left', 'right', 'right', 'right', 'left', 'right', 'left']}
-          />
-        </Panel>
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Panel title="Marge nette par région">
+              <BarList items={regionArr} labelWidth="130px" color="#1B5E20" dense />
+            </Panel>
+            <Panel title="Marge nette par segment">
+              <BarList items={segmentArr} labelWidth="150px" color="#1B5E20" dense />
+            </Panel>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Panel title="Rentabilité par produit" sub="marge & tendance gamme">
+              <DataTable headers={['Produit', 'CA', 'Marge', 'Taux', 'Tendance']} rows={prodRows} align={['left', 'right', 'right', 'left', 'left']} />
+            </Panel>
+            <Panel title="Marge par commercial">
+              <DataTable headers={['Commercial', 'CA', 'Marge', 'Taux']} rows={vendeurRows} align={['left', 'right', 'right', 'left']} />
+            </Panel>
+          </div>
+
+          <Panel title="Détail par client">
+            <DataTable
+              headers={['Client', 'Type', 'CA', 'Coût', 'Marge', 'Taux', 'Ventes', 'Vendeur']}
+              rows={rows}
+              align={['left', 'left', 'right', 'right', 'right', 'left', 'right', 'left']}
+            />
+          </Panel>
+        </>
       )}
     </div>
   )

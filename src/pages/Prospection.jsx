@@ -5,23 +5,24 @@ import Panel from '../components/Panel'
 import BarList from '../components/BarList'
 import KpiCard from '../components/KpiCard'
 
-const STATUTS   = ['Nouveau','En contact','Présentation faite','Devis envoyé','Gagné','Perdu']
+const STATUTS   = ['Nouveau','Qualifié','Proposition','Négociation','Gagné','Perdu']
 const PRIORITES = ['Haute','Normale','Basse']
 const TYPES     = ['Grossiste','Detaillant marche','Boutique','Restauration','Cantine/Institution']
+const SOURCES   = ['Recommandation','Marché','Réseau','Appel entrant','Visite terrain','Autre']
 
 const fmt = (n) => Number(n || 0).toLocaleString('fr-FR') + ' F'
 
 const statutColor = (s) => ({
-  'Nouveau':            'bg-gray-100 text-gray-700',
-  'En contact':         'bg-blue-100 text-blue-700',
-  'Présentation faite': 'bg-purple-100 text-purple-700',
-  'Devis envoyé':       'bg-yellow-100 text-yellow-700',
-  'Gagné':              'bg-green-100 text-green-700',
-  'Perdu':              'bg-red-100 text-red-700',
+  'Nouveau':     'bg-gray-100 text-gray-700',
+  'Qualifié':    'bg-blue-100 text-blue-700',
+  'Proposition': 'bg-purple-100 text-purple-700',
+  'Négociation': 'bg-yellow-100 text-yellow-700',
+  'Gagné':       'bg-green-100 text-green-700',
+  'Perdu':       'bg-red-100 text-red-700',
 }[s] || 'bg-gray-100 text-gray-700')
 
 const INIT = {
-  nom: '', type_client: '', zone: '', telephone: '',
+  nom: '', type_client: '', zone: '', region: '', source: '', telephone: '',
   statut: 'Nouveau', priorite: 'Normale', date_contact: '', note: '', valeur_estimee: '',
 }
 
@@ -59,6 +60,8 @@ export default function Prospection() {
       nom:          item.nom,
       type_client:  item.type_client || '',
       zone:         item.zone || '',
+      region:       item.region || '',
+      source:       item.source || '',
       telephone:    item.telephone || '',
       statut:       item.statut,
       priorite:     item.priorite || 'Normale',
@@ -125,11 +128,15 @@ export default function Prospection() {
   const perdus = items.filter(i => i.statut === 'Perdu').length
   const tauxConversion = (gagnes + perdus) ? Math.round((gagnes / (gagnes + perdus)) * 100) : 0
 
-  const funnel = ['Nouveau','En contact','Présentation faite','Devis envoyé'].map(s => {
+  const funnel = ['Nouveau','Qualifié','Proposition','Négociation'].map(s => {
     const list = items.filter(i => i.statut === s)
     const val = list.reduce((a, i) => a + Number(i.valeur_estimee || 0), 0)
     return { label: s, val: val || list.length, disp: `${fmt(val)} · ${list.length}` }
   })
+
+  const bySrc = {}
+  items.forEach((i) => { const s = i.source || 'Autre'; bySrc[s] = (bySrc[s] || 0) + 1 })
+  const srcArr = Object.entries(bySrc).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ label: k, val: v, disp: `${v} prospect(s)` }))
 
   return (
     <div className="space-y-5">
@@ -150,9 +157,14 @@ export default function Prospection() {
         <KpiCard title="Gagnés / Perdus" value={`${gagnes} / ${perdus}`} color="#F9A825" />
       </div>
 
-      <Panel title="Pipeline par étape" sub="valeur espérée · nombre de prospects">
-        <BarList items={funnel} labelWidth="150px" color="#5a6b7a" dense />
-      </Panel>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Panel title="Prospects par étape" sub="valeur espérée · nombre de prospects">
+          <BarList items={funnel} labelWidth="120px" color="#5a6b7a" dense />
+        </Panel>
+        <Panel title="Prospects par origine">
+          <BarList items={srcArr} labelWidth="140px" color="#7a6a52" dense />
+        </Panel>
+      </div>
 
       {/* Résumé pipeline */}
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
@@ -180,7 +192,7 @@ export default function Prospection() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr>
-                {['Prospect','Type','Zone','Téléphone','Valeur espérée','Priorité','Statut','Contact','Vendeur','Actions'].map(h => (
+                {['Prospect','Région','Origine','Valeur espérée','Priorité','Statut','Contact','Vendeur','Actions'].map(h => (
                   <th key={h} className="table-header whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -188,10 +200,9 @@ export default function Prospection() {
             <tbody>
               {items.map(item => (
                 <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="table-cell font-medium">{item.nom}</td>
-                  <td className="table-cell text-xs text-gray-600">{item.type_client || '-'}</td>
-                  <td className="table-cell text-xs text-gray-500">{item.zone || '-'}</td>
-                  <td className="table-cell text-xs">{item.telephone || '-'}</td>
+                  <td className="table-cell font-medium">{item.nom}<div className="text-[10.5px] text-gray-400">{item.zone}</div></td>
+                  <td className="table-cell text-xs text-gray-600">{item.region || '-'}</td>
+                  <td className="table-cell text-xs text-gray-500">{item.source || '-'}</td>
                   <td className="table-cell text-right text-xs font-semibold text-[#1b75bc]">{fmt(item.valeur_estimee)}</td>
                   <td className="table-cell">
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
@@ -254,8 +265,21 @@ export default function Prospection() {
               <input className="input" value={form.zone} onChange={set('zone')} placeholder="Ex: Dakar Plateau" />
             </div>
             <div>
+              <label className="label">Région</label>
+              <input className="input" value={form.region} onChange={set('region')} placeholder="Ex: Dakar" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
               <label className="label">Téléphone</label>
               <input className="input" value={form.telephone} onChange={set('telephone')} />
+            </div>
+            <div>
+              <label className="label">Origine</label>
+              <select className="input" value={form.source} onChange={set('source')}>
+                <option value="">Choisir...</option>
+                {SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">

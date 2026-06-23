@@ -1,33 +1,44 @@
 import { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
 import Modal from '../components/Modal'
-import StatutBadge from '../components/StatutBadge'
+import Panel from '../components/Panel'
+import BarList from '../components/BarList'
+import DataTable from '../components/DataTable'
 import KpiCard from '../components/KpiCard'
+import RfmGrid from '../components/RfmGrid'
 
 const TYPES = ['Grossiste', 'Détaillant marché', 'Boutique', 'Restauration', 'Cantine-Institution']
 const STATUTS_CLIENT = ['Actif', 'Prospect', 'Dormant']
-const TABS = ['Tous', 'Actif', 'Prospect', 'Dormant']
 
 const CLIENT_INIT = {
-  nom: '', type: 'Boutique', statut: 'Prospect', zone: '',
+  nom: '', type: 'Boutique', statut: 'Prospect', zone: '', region: '', segment: '', potentiel_annuel: '',
   telephone: '', volume_estime: '', valorise: '', horaire: '',
 }
 
 const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
+const fmtM = (n) => (Number(n || 0) / 1e6).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' M'
 
-// Profil simplifié basé sur la récence du dernier achat (proxy Récence/Fréquence/Montant).
-function profilOf(c) {
-  if (c.nb_ventes === 0) return { label: 'Pas encore acheté', color: '#8a7f6e' }
-  if (c.recence == null) return { label: 'Pas encore acheté', color: '#8a7f6e' }
-  if (c.recence <= 30) return { label: 'Actif récent', color: '#1b75bc' }
-  if (c.recence <= 60) return { label: 'À relancer', color: '#F9A825' }
-  return { label: 'Inactif', color: '#CC0000' }
+// Scoring RFM identique au HTML de référence : récence (jours depuis dernier achat),
+// fréquence (nb de ventes), montant (CA total) → segment Champion/Fidèle/À développer/Dormant/À reconquérir.
+function computeRfm(c) {
+  const recence = c.derniere_vente ? Math.round((new Date() - new Date(c.derniere_vente)) / 86400000) : 999
+  const nbCmd = c.nb_ventes || 0
+  const caTotal = c.ca_total || 0
+  const rScore = recence <= 15 ? 5 : recence <= 30 ? 4 : recence <= 60 ? 3 : recence <= 120 ? 2 : 1
+  const fScore = nbCmd >= 10 ? 5 : nbCmd >= 6 ? 4 : nbCmd >= 3 ? 3 : nbCmd >= 1 ? 2 : 1
+  const mScore = caTotal >= 20e6 ? 5 : caTotal >= 10e6 ? 4 : caTotal >= 5e6 ? 3 : caTotal >= 1e6 ? 2 : 1
+  const rfm = Math.round((rScore + fScore + mScore) / 15 * 100)
+  const rfmSeg = recence > 90 ? 'À reconquérir' : recence > 60 ? 'Dormant'
+    : (rScore >= 4 && fScore >= 4 ? 'Champion' : fScore >= 3 ? 'Fidèle' : 'À développer')
+  return { ...c, recence, rScore, fScore, mScore, rfm, rfmSeg }
 }
+
+const SEG_COLOR = { Champion: '#1B5E20', Fidèle: '#1b75bc', 'À développer': '#5a6b7a', Dormant: '#CC0000', 'À reconquérir': '#CC0000' }
 
 export default function Clients() {
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState('Tous')
+  const [sortKey, setSortKey] = useState('caTotal')
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(CLIENT_INIT)
@@ -42,7 +53,6 @@ export default function Clients() {
     ])
       .then(([rc, rv]) => {
         const ventes = Array.isArray(rv.data) ? rv.data : []
-        const today = new Date()
         const byClient = {}
         ventes.forEach((v) => {
           if (!v.client_id) return
@@ -52,11 +62,7 @@ export default function Clients() {
           if (!e.derniere_vente || v.date_vente > e.derniere_vente) e.derniere_vente = v.date_vente
           byClient[v.client_id] = e
         })
-        const enriched = (rc.data || []).map((c) => {
-          const e = byClient[c.id] || { ca_total: 0, nb_ventes: 0, derniere_vente: null }
-          const recence = e.derniere_vente ? Math.round((today - new Date(e.derniere_vente)) / 86400000) : null
-          return { ...c, ...e, recence }
-        })
+        const enriched = (rc.data || []).map((c) => computeRfm({ ...c, ...(byClient[c.id] || { ca_total: 0, nb_ventes: 0, derniere_vente: null }) }))
         setClients(enriched)
       })
       .catch(() => setError('Erreur de chargement'))
@@ -64,10 +70,6 @@ export default function Clients() {
   }, [])
 
   useEffect(() => { load() }, [load])
-
-  const filtered = tab === 'Tous' ? clients : clients.filter((c) => c.statut === tab)
-  const caPortefeuille = clients.reduce((s, c) => s + c.ca_total, 0)
-  const aRelancer = clients.filter((c) => c.recence != null && c.recence > 30).length
 
   const openNew = () => {
     setEditing(null)
@@ -79,14 +81,9 @@ export default function Clients() {
   const openEdit = (c) => {
     setEditing(c)
     setForm({
-      nom: c.nom || '',
-      type: c.type || 'Boutique',
-      statut: c.statut || 'Prospect',
-      zone: c.zone || '',
-      telephone: c.telephone || '',
-      volume_estime: c.volume_estime || '',
-      valorise: c.valorise || '',
-      horaire: c.horaire || '',
+      nom: c.nom || '', type: c.type || 'Boutique', statut: c.statut || 'Prospect',
+      zone: c.zone || '', region: c.region || '', segment: c.segment || '', potentiel_annuel: c.potentiel_annuel || '',
+      telephone: c.telephone || '', volume_estime: c.volume_estime || '', valorise: c.valorise || '', horaire: c.horaire || '',
     })
     setError('')
     setModalOpen(true)
@@ -99,13 +96,10 @@ export default function Clients() {
       const body = {
         ...form,
         volume_estime: form.volume_estime ? Number(form.volume_estime) : null,
-        valorise: form.valorise ? Number(form.valorise) : null,
+        potentiel_annuel: form.potentiel_annuel ? Number(form.potentiel_annuel) : 0,
       }
-      if (editing) {
-        await api.put(`/api/clients/${editing.id}`, body)
-      } else {
-        await api.post('/api/clients', body)
-      }
+      if (editing) await api.put(`/api/clients/${editing.id}`, body)
+      else await api.post('/api/clients', body)
       setModalOpen(false)
       load()
     } catch (err) {
@@ -126,75 +120,104 @@ export default function Clients() {
 
   const set = (f) => (e) => setForm({ ...form, [f]: e.target.value })
 
+  const nbCl = clients.length || 1
+  const nbActifs = clients.filter((c) => c.statut === 'Actif').length
+  const nbInactifs = clients.filter((c) => c.rfmSeg === 'Dormant' || c.rfmSeg === 'À reconquérir').length
+  const retPct = 100 - (nbInactifs / nbCl * 100)
+  const caMoyen = clients.reduce((s, c) => s + c.ca_total, 0) / nbCl
+  const nbChampions = clients.filter((c) => c.rfmSeg === 'Champion').length
+
+  const segCount = {}
+  clients.forEach((c) => { segCount[c.rfmSeg] = (segCount[c.rfmSeg] || 0) + 1 })
+  const segArr = Object.entries(segCount).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ label: k, val: v, disp: `${v} clients`, color: SEG_COLOR[k] }))
+
+  const sorted = [...clients].sort((a, b) => (b[sortKey] || 0) - (a[sortKey] || 0)).slice(0, 40)
+  const rows = sorted.map((c) => [
+    { v: c.nom, sub: [c.id?.slice(0, 8), c.zone].filter(Boolean).join(' · ') },
+    c.segment || '-',
+    { v: c.rfmSeg, c: SEG_COLOR[c.rfmSeg] },
+    { v: String(c.rfm), sub: 'sur 100' },
+    fmt(c.ca_total),
+    { v: c.recence > 900 ? 'jamais' : `il y a ${c.recence} j`, c: c.recence > 120 ? '#CC0000' : c.recence > 60 ? '#F9A825' : '#1B5E20' },
+    { v: fmt(c.potentiel_annuel), sub: c.potentiel_annuel ? `${Math.round(Math.min(100, c.ca_total / c.potentiel_annuel * 100))} % exploité` : '' },
+    {
+      v: (
+        <select
+          value={c.statut}
+          onChange={(e) => changeStatut(c.id, e.target.value)}
+          onClick={(e) => e.stopPropagation()}
+          className="text-xs border border-gray-200 rounded px-1.5 py-0.5 cursor-pointer focus:outline-none"
+        >
+          {STATUTS_CLIENT.map((s) => <option key={s}>{s}</option>)}
+        </select>
+      ),
+    },
+  ])
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h2 className="font-display text-xl font-bold text-gray-900">Portefeuille</h2>
-          <p className="text-sm text-gray-500 mt-0.5">Valeur, fidélisation et relance des clients</p>
+          <p className="text-sm text-gray-500 mt-0.5">Carte RFM, valeur et fidélisation des clients</p>
         </div>
-        <button onClick={openNew} className="btn-primary text-sm">
-          + Ajouter un client
-        </button>
+        <button onClick={openNew} className="btn-primary text-sm">+ Ajouter un client</button>
       </div>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
-          {error}
-        </div>
-      )}
+      {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">{error}</div>}
 
-      <div className="grid grid-cols-3 gap-4">
-        <KpiCard title="Clients" value={clients.length} color="#1b75bc" />
-        <KpiCard title="CA portefeuille" value={fmt(caPortefeuille)} color="#1565C0" />
-        <KpiCard title="À relancer (+30j)" value={aRelancer} color="#F9A825" />
-      </div>
-
-      {/* Tabs filtre */}
-      <div className="flex gap-2 border-b border-gray-200">
-        {TABS.map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              tab === t
-                ? 'border-[#1b75bc] text-[#1b75bc]'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            {t}
-            <span className="ml-1.5 text-xs text-gray-400">
-              ({t === 'Tous' ? clients.length : clients.filter((c) => c.statut === t).length})
-            </span>
-          </button>
-        ))}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <KpiCard title="Base clients" value={clients.length} sub={`${nbActifs} actifs`} color="#1b75bc" />
+        <KpiCard title="Clients fidèles" value={`${Math.round(retPct)} %`} sub="encore actifs" color="#1B5E20" />
+        <KpiCard title="Clients perdus" value={`${Math.round(100 - retPct)} %`} sub={`${nbInactifs} inactifs`} color="#CC0000" />
+        <KpiCard title="CA moyen / client" value={fmtM(caMoyen)} sub="depuis le début" />
+        <KpiCard title="Meilleurs clients" value={nbChampions} sub="à fidéliser en priorité" color="#1B5E20" />
       </div>
 
       {loading ? (
         <div className="flex justify-center py-10">
-          <span className="w-7 h-7 border-4 border-[#62bb46] border-t-transparent rounded-full animate-spin" />
+          <span className="w-7 h-7 border-4 border-[#388E3C] border-t-transparent rounded-full animate-spin" />
         </div>
-      ) : filtered.length === 0 ? (
-        <p className="text-sm text-gray-400 text-center py-10">Aucun client dans cette catégorie</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((c) => (
-            <ClientCard
-              key={c.id}
-              client={c}
-              onEdit={() => openEdit(c)}
-              onChangeStatut={(s) => changeStatut(c.id, s)}
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Panel title="Carte des clients" sub="ancienneté du dernier achat × nb d'achats · taille = nb clients">
+              <RfmGrid clients={clients} />
+            </Panel>
+            <Panel title="Catégories de clients" sub="selon leur comportement d'achat">
+              <BarList items={segArr} labelWidth="140px" color="#5a6b7a" />
+            </Panel>
+          </div>
+
+          <Panel
+            title="Portefeuille clients"
+            sub={`Top 40 par ${sortKey === 'ca_total' ? 'CA' : sortKey === 'potentiel_annuel' ? 'potentiel/an' : 'score'}`}
+            footer={
+              <div className="flex gap-2 flex-wrap">
+                {[['ca_total', 'CA'], ['potentiel_annuel', 'Potentiel/an'], ['rfm', 'Score RFM']].map(([k, l]) => (
+                  <button
+                    key={k}
+                    onClick={() => setSortKey(k)}
+                    className={`text-xs px-2.5 py-1 rounded-md border ${sortKey === k ? 'text-white' : 'bg-white text-gray-600 border-gray-300'}`}
+                    style={sortKey === k ? { background: 'var(--cc-accent)', borderColor: 'var(--cc-accent)' } : undefined}
+                  >
+                    Trier : {l}
+                  </button>
+                ))}
+              </div>
+            }
+          >
+            <DataTable
+              headers={['Client', 'Segment', 'Profil', 'Score', 'CA total', 'Dernier achat', 'Potentiel / an', 'Statut']}
+              rows={rows}
+              align={['left', 'left', 'left', 'left', 'right', 'left', 'right', 'left']}
+              onRowClick={(ri) => openEdit(sorted[ri])}
             />
-          ))}
-        </div>
+          </Panel>
+        </>
       )}
 
-      {/* Modal */}
-      <Modal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title={editing ? `Modifier : ${editing.nom}` : 'Nouveau client'}
-      >
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? `Modifier : ${editing.nom}` : 'Nouveau client'}>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="label">Nom du client</label>
@@ -226,13 +249,27 @@ export default function Clients() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label">Volume estimé (FCFA)</label>
+              <label className="label">Région</label>
+              <input className="input" placeholder="Dakar" value={form.region} onChange={set('region')} />
+            </div>
+            <div>
+              <label className="label">Segment</label>
+              <input className="input" placeholder="Grand compte, PME..." value={form.segment} onChange={set('segment')} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Volume estimé (FCFA/mois)</label>
               <input type="number" min="0" className="input" value={form.volume_estime} onChange={set('volume_estime')} />
             </div>
             <div>
-              <label className="label">Valorisé (FCFA)</label>
-              <input type="number" min="0" className="input" value={form.valorise} onChange={set('valorise')} />
+              <label className="label">Potentiel annuel (FCFA)</label>
+              <input type="number" min="0" className="input" value={form.potentiel_annuel} onChange={set('potentiel_annuel')} />
             </div>
+          </div>
+          <div>
+            <label className="label">Ce qu'il valorise</label>
+            <input className="input" placeholder="Prix, régularité, livraison..." value={form.valorise} onChange={set('valorise')} />
           </div>
           <div>
             <label className="label">Horaire de visite</label>
@@ -240,9 +277,7 @@ export default function Clients() {
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-2">
-            <button type="button" className="btn-secondary flex-1" onClick={() => setModalOpen(false)}>
-              Annuler
-            </button>
+            <button type="button" className="btn-secondary flex-1" onClick={() => setModalOpen(false)}>Annuler</button>
             <button type="submit" disabled={saving} className="btn-primary flex-1 flex items-center justify-center gap-2">
               {saving && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
               {saving ? 'Enregistrement...' : 'Sauvegarder'}
@@ -250,61 +285,6 @@ export default function Clients() {
           </div>
         </form>
       </Modal>
-    </div>
-  )
-}
-
-function ClientCard({ client: c, onEdit, onChangeStatut }) {
-  const profil = profilOf(c)
-  return (
-    <div className="card hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-2">
-        <div>
-          <h3 className="font-semibold text-gray-900">{c.nom}</h3>
-          <p className="text-xs text-gray-500">{c.type} · {c.zone || 'Zone n/a'}</p>
-        </div>
-        <StatutBadge statut={c.statut} />
-      </div>
-
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-[10.5px] font-semibold px-2 py-0.5 rounded-full" style={{ background: `${profil.color}1a`, color: profil.color }}>
-          {profil.label}
-        </span>
-        {c.nb_ventes > 0 && (
-          <span className="text-[11px] text-gray-500">{fmt(c.ca_total)} · {c.nb_ventes} vente(s)</span>
-        )}
-      </div>
-
-      <div className="space-y-1 text-xs text-gray-600 mb-3">
-        {c.telephone && (
-          <p>📞 {c.telephone}</p>
-        )}
-        {c.volume_estime && (
-          <p>📦 Volume estimé : <span className="font-medium">{fmt(c.volume_estime)}</span></p>
-        )}
-        {c.valorise && (
-          <p>💰 Valorisé : <span className="font-medium text-[#1b75bc]">{fmt(c.valorise)}</span></p>
-        )}
-        {c.horaire && (
-          <p>🕐 {c.horaire}</p>
-        )}
-      </div>
-
-      <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
-        <select
-          value={c.statut}
-          onChange={(e) => onChangeStatut(e.target.value)}
-          className="text-xs border border-gray-200 rounded px-2 py-1 flex-1 focus:outline-none cursor-pointer"
-        >
-          {['Actif', 'Prospect', 'Dormant'].map((s) => <option key={s}>{s}</option>)}
-        </select>
-        <button
-          onClick={onEdit}
-          className="text-xs text-[#1b75bc] font-medium hover:underline"
-        >
-          Modifier
-        </button>
-      </div>
     </div>
   )
 }

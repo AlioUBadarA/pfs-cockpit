@@ -2,11 +2,12 @@ import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import pfsIcon from '../assets/pfs-icon.png'
 
+// Reprend exactement navConfig() du HTML de référence "Cockpit Commercial".
 const GROUPS_USER = [
   { title: 'Pilotage', items: [
     { to: '/', label: 'Direction', end: true },
-    { to: '/ventes', label: 'Ventes' },
-    { to: '/pilotage', label: 'Planning semaine' },
+    { to: '/managers', label: 'Managers' },
+    { to: '/equipe', label: 'Commerciaux' },
   ] },
   { title: 'Clients', items: [
     { to: '/clients', label: 'Portefeuille' },
@@ -14,26 +15,29 @@ const GROUPS_USER = [
     { to: '/creances', label: 'Recouvrement' },
   ] },
   { title: 'Analyse', items: [
+    { to: '/journal', label: 'Journal du jour' },
     { to: '/rentabilite', label: 'Rentabilité' },
     { to: '/forecast', label: 'Prévisions' },
-    { to: '/insights', label: 'Insights' },
+    { to: '/activites', label: 'Activités' },
   ] },
   { title: 'Décision', items: [
     { to: '/actions', label: 'Alertes' },
+    { to: '/insights', label: 'Analyses & Actions' },
   ] },
   { title: 'Référentiel', items: [
+    { to: '/ventes', label: 'Ventes' },
+    { to: '/pilotage', label: 'Planning semaine' },
     { to: '/contrats-clients', label: 'Contrats clients' },
     { to: '/contrats-paddy', label: 'Contrats paddy' },
+    { to: '/emplois', label: 'Emplois' },
     { to: '/argumentaire', label: 'Argumentaire de vente' },
   ] },
 ]
 
-const GROUP_EQUIPE = {
-  title: 'Équipe', items: [
-    { to: '/equipe', label: 'Vendeurs' },
-    { to: '/emplois', label: 'Emplois' },
-  ],
-}
+// Un vendeur n'a ni équipe ni managers à piloter : on retire ces deux items.
+const GROUPS_VENDEUR = GROUPS_USER.map((g) =>
+  g.title === 'Pilotage' ? { ...g, items: g.items.filter((it) => it.to === '/') } : g
+)
 
 const GROUPS_ADMIN = [
   { title: 'Administration', items: [
@@ -44,7 +48,7 @@ const GROUPS_ADMIN = [
 
 export default function Sidebar({ onNavigate }) {
   const { isAdmin, isVendeur } = useAuth()
-  const groups = isAdmin ? GROUPS_ADMIN : isVendeur ? GROUPS_USER : [...GROUPS_USER, GROUP_EQUIPE]
+  const groups = isAdmin ? GROUPS_ADMIN : isVendeur ? GROUPS_VENDEUR : GROUPS_USER
 
   return (
     <aside

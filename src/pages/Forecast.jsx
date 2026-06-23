@@ -3,6 +3,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import api from '../services/api'
 import KpiCard from '../components/KpiCard'
 import Panel from '../components/Panel'
+import BarList from '../components/BarList'
+import DataTable from '../components/DataTable'
 
 const MOIS_LABELS = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc']
 const fmt = (n) => Number(n).toLocaleString('fr-FR') + ' F'
@@ -10,6 +12,8 @@ const fmt = (n) => Number(n).toLocaleString('fr-FR') + ' F'
 export default function Forecast() {
   const [annee, setAnnee]     = useState(new Date().getFullYear())
   const [data, setData]       = useState([])
+  const [parVendeur, setParVendeur] = useState([])
+  const [quarterly, setQuarterly]   = useState([])
   const [editing, setEditing] = useState({})
   const [saving, setSaving]   = useState(null)
   const [loading, setLoading] = useState(true)
@@ -20,6 +24,8 @@ export default function Forecast() {
     api.get('/api/forecast', { params: { annee } })
       .then(r => {
         setData(r.data.months || [])
+        setParVendeur(r.data.par_vendeur || [])
+        setQuarterly(r.data.quarterly || [])
         const init = {}
         r.data.months.forEach(m => { init[m.mois] = String(m.objectif || '') })
         setEditing(init)
@@ -103,6 +109,24 @@ export default function Forecast() {
             </BarChart>
           </ResponsiveContainer>
         </Panel>
+      )}
+
+      {!loading && parVendeur.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <Panel title="Projection par commercial" sub="projection vs objectif annuel">
+            <DataTable
+              headers={['Commercial', 'Réalisé YTD', 'Projection', 'Objectif', 'Écart']}
+              rows={parVendeur.map((p) => [
+                p.nom, fmt(p.ca_ytd), fmt(p.forecast), fmt(p.objectif),
+                { v: (p.ecart >= 0 ? '+' : '') + fmt(p.ecart), c: p.ecart >= 0 ? '#1B5E20' : '#CC0000' },
+              ])}
+              align={['left', 'right', 'right', 'right', 'right']}
+            />
+          </Panel>
+          <Panel title="Projection trimestrielle" sub="réalisé par trimestre">
+            <BarList items={quarterly.map((q) => ({ label: q.trimestre, val: q.valeur, disp: fmt(q.valeur) }))} labelWidth="100px" />
+          </Panel>
+        </div>
       )}
 
       <Panel title="Saisie des objectifs mensuels">
