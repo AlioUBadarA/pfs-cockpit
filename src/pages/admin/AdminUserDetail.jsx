@@ -27,7 +27,7 @@ export default function AdminUserDetail() {
   const [suspendReason, setSuspendReason] = useState('')
   const [newPassword, setNewPassword]     = useState('')
   const [editForm, setEditForm]           = useState({})
-  const [vendeurForm, setVendeurForm]     = useState({ nom: '', email: '', password: '', telephone: '' })
+  const [vendeurForm, setVendeurForm]     = useState({ nom: '', email: '', password: '', telephone: '', role: 'vendeur', zone: '', manager_id: '' })
   const [saving, setSaving]               = useState(false)
 
   const load = () => {
@@ -104,8 +104,8 @@ export default function AdminUserDetail() {
       await api.post(`/api/admin/users/${id}/vendeurs`, vendeurForm)
       load()
       setShowAddVendeur(false)
-      setVendeurForm({ nom: '', email: '', password: '', telephone: '' })
-      flash('Vendeur créé')
+      setVendeurForm({ nom: '', email: '', password: '', telephone: '', role: 'vendeur', zone: '', manager_id: '' })
+      flash(vendeurForm.role === 'manager' ? 'Manager créé' : 'Vendeur créé')
     } catch (err) { setError(err.response?.data?.error || 'Erreur') }
     finally { setSaving(false) }
   }
@@ -124,7 +124,7 @@ export default function AdminUserDetail() {
   if (loading) return <div className="flex justify-center py-20"><span className="w-8 h-8 border-4 border-[#62bb46] border-t-transparent rounded-full animate-spin" /></div>
   if (error && !data) return <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-4 text-sm">{error}</div>
 
-  const { user, ventes = [], clients = [], pilotage = [], vendeurs = [] } = data
+  const { user, ventes = [], clients = [], pilotage = [], vendeurs = [], managers = [] } = data
   const caTotal = ventes.reduce((s, v) => s + Number(v.montant || 0), 0)
   const creances = ventes.filter((v) => ['En cours', 'En retard'].includes(v.statut_paiement))
   const creancesTotal = creances.reduce((s, v) => s + Number(v.montant || 0), 0)
@@ -215,15 +215,48 @@ export default function AdminUserDetail() {
         )}
       </div>
 
+      {/* Managers */}
+      <div className="card p-0">
+        <div className="px-4 py-3 border-b border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-700">Managers ({managers.length})</h3>
+        </div>
+        {managers.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-6">Aucun manager rattaché à ce rizier</p>
+        ) : (
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr>{['Nom', 'Email', 'Zone', 'Créé le', 'Actions'].map(h => (
+                <th key={h} className="table-header whitespace-nowrap">{h}</th>
+              ))}</tr>
+            </thead>
+            <tbody>
+              {managers.map((m) => (
+                <tr key={m.id} className="hover:bg-gray-50">
+                  <td className="table-cell font-medium">{m.nom}</td>
+                  <td className="table-cell text-xs text-gray-600">{m.email}</td>
+                  <td className="table-cell text-xs">{m.zone || '-'}</td>
+                  <td className="table-cell text-xs text-gray-500">{fmtDate(m.created_at)}</td>
+                  <td className="table-cell">
+                    <button onClick={() => doDeleteVendeur(m.id, m.nom)} className="text-xs text-red-600 hover:text-red-800 font-medium">
+                      Supprimer
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
       {/* Équipe vendeurs */}
       <div className="card p-0">
         <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-700">Équipe vendeurs ({vendeurs.length})</h3>
+          <h3 className="text-sm font-semibold text-gray-700">Équipe commerciale ({vendeurs.length})</h3>
           <button
             onClick={() => setShowAddVendeur(true)}
             className="text-xs btn-primary"
           >
-            + Ajouter un vendeur
+            + Ajouter
           </button>
         </div>
         {vendeurs.length === 0 ? (
@@ -231,7 +264,7 @@ export default function AdminUserDetail() {
         ) : (
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr>{['Nom','Email','Téléphone','Ventes','CA total','Statut','Actions'].map(h => (
+              <tr>{['Nom','Manager','Email','Téléphone','Ventes','CA total','Statut','Actions'].map(h => (
                 <th key={h} className="table-header whitespace-nowrap">{h}</th>
               ))}</tr>
             </thead>
@@ -239,6 +272,7 @@ export default function AdminUserDetail() {
               {vendeurs.map(v => (
                 <tr key={v.id} className="hover:bg-gray-50">
                   <td className="table-cell font-medium">{v.nom}</td>
+                  <td className="table-cell text-xs text-gray-500">{v.manager_nom || '-'}</td>
                   <td className="table-cell text-xs text-gray-600">{v.email}</td>
                   <td className="table-cell text-xs">{v.telephone || '-'}</td>
                   <td className="table-cell text-center">{v.nb_ventes}</td>
@@ -370,10 +404,32 @@ export default function AdminUserDetail() {
         </ModalWrap>
       )}
 
-      {/* Modal : ajouter un vendeur */}
+      {/* Modal : ajouter un commercial */}
       {showAddVendeur && (
-        <ModalWrap title="Créer un vendeur" onClose={() => setShowAddVendeur(false)}>
+        <ModalWrap title="Créer un commercial" onClose={() => setShowAddVendeur(false)}>
           <form onSubmit={doAddVendeur} className="space-y-3">
+            <div>
+              <label className="label">Rôle</label>
+              <select className="input" value={vendeurForm.role} onChange={e => setVendeurForm({...vendeurForm, role: e.target.value})}>
+                <option value="vendeur">Commercial (vendeur)</option>
+                <option value="manager">Manager</option>
+              </select>
+            </div>
+            {vendeurForm.role === 'manager' && (
+              <div>
+                <label className="label">Zone</label>
+                <input className="input" value={vendeurForm.zone} onChange={e => setVendeurForm({...vendeurForm, zone: e.target.value})} placeholder="Ex: Dakar Nord" />
+              </div>
+            )}
+            {vendeurForm.role === 'vendeur' && managers.length > 0 && (
+              <div>
+                <label className="label">Rattacher à un manager (optionnel)</label>
+                <select className="input" value={vendeurForm.manager_id} onChange={e => setVendeurForm({...vendeurForm, manager_id: e.target.value})}>
+                  <option value="">Aucun (rattaché directement au rizier)</option>
+                  {managers.map((m) => <option key={m.id} value={m.id}>{m.nom} ({m.zone || 'zone n/a'})</option>)}
+                </select>
+              </div>
+            )}
             <div>
               <label className="label">Nom complet *</label>
               <input className="input" value={vendeurForm.nom} onChange={e => setVendeurForm({...vendeurForm, nom: e.target.value})} required />
@@ -390,7 +446,7 @@ export default function AdminUserDetail() {
               <label className="label">Mot de passe provisoire * (min. 6 caractères)</label>
               <input type="text" className="input" value={vendeurForm.password} onChange={e => setVendeurForm({...vendeurForm, password: e.target.value})} required minLength={6} />
             </div>
-            <p className="text-xs text-gray-400">Ce vendeur sera rattaché à <strong>{user.rizerie || user.nom}</strong>.</p>
+            <p className="text-xs text-gray-400">Ce compte sera rattaché à <strong>{user.rizerie || user.nom}</strong>.</p>
             <div className="flex gap-3 pt-2">
               <button type="button" className="btn-secondary flex-1" onClick={() => setShowAddVendeur(false)}>Annuler</button>
               <button type="submit" disabled={saving} className="btn-primary flex-1 flex items-center justify-center gap-2">
