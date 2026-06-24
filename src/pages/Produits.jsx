@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
 import Modal from '../components/Modal'
+import { useAuth } from '../context/AuthContext'
 
 const TENDANCES = ['hausse', 'stable', 'déclin']
 const fmt = (n) => n ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
@@ -14,6 +15,7 @@ const tendanceColor = (t) => ({
 const INIT = { ref: '', nom: '', prix_kg: '', cout_kg: '', tendance: 'stable' }
 
 export default function Produits() {
+  const { isVendeur } = useAuth()
   const [items, setItems]     = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState('')
@@ -76,7 +78,7 @@ export default function Produits() {
           <h2 className="font-display text-xl font-bold text-gray-900">Produits</h2>
           <p className="text-sm text-gray-500 mt-0.5">Catalogue de la gamme riz : prix, coût et tendance</p>
         </div>
-        <button onClick={openNew} className="btn-primary text-sm">+ Ajouter un produit</button>
+        {!isVendeur && <button onClick={openNew} className="btn-primary text-sm">+ Ajouter un produit</button>}
       </div>
 
       {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">{error}</div>}
@@ -102,18 +104,18 @@ export default function Produits() {
         ) : items.length === 0 ? (
           <div className="text-center py-12 text-gray-400">
             <p className="text-sm mb-3">Aucun produit enregistré</p>
-            <button onClick={openNew} className="btn-primary text-sm">+ Premier produit</button>
+            {!isVendeur && <button onClick={openNew} className="btn-primary text-sm">+ Premier produit</button>}
           </div>
         ) : (
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr>{['Référence','Nom','Prix/kg','Coût/kg','Marge/kg','Tendance','Actions'].map(h => (
+              <tr>{['Référence','Nom','Prix/kg','Coût/kg','Marge/kg','Tendance', ...(!isVendeur ? ['Actions'] : [])].map(h => (
                 <th key={h} className="table-header whitespace-nowrap">{h}</th>
               ))}</tr>
             </thead>
             <tbody>
               {items.map(item => (
-                <tr key={item.id} className="hover:bg-gray-50">
+                <tr key={item.id} className={!isVendeur ? 'hover:bg-gray-50 cursor-pointer' : ''} onClick={!isVendeur ? () => openEdit(item) : undefined}>
                   <td className="table-cell font-mono text-xs text-gray-500">{item.ref}</td>
                   <td className="table-cell font-medium">{item.nom}</td>
                   <td className="table-cell text-right">{fmt(item.prix_kg)}</td>
@@ -124,12 +126,14 @@ export default function Produits() {
                       {item.tendance}
                     </span>
                   </td>
-                  <td className="table-cell">
-                    <div className="flex gap-2">
-                      <button onClick={() => openEdit(item)} className="text-xs text-blue-600 hover:text-blue-800 font-medium">Éditer</button>
-                      <button onClick={() => del(item.id)} className="text-xs text-red-600 hover:text-red-800 font-medium">Suppr.</button>
-                    </div>
-                  </td>
+                  {!isVendeur && (
+                    <td className="table-cell">
+                      <div className="flex gap-2">
+                        <button onClick={(e) => { e.stopPropagation(); openEdit(item) }} className="text-xs text-blue-600 hover:text-blue-800 font-medium">Éditer</button>
+                        <button onClick={(e) => { e.stopPropagation(); del(item.id) }} className="text-xs text-red-600 hover:text-red-800 font-medium">Suppr.</button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

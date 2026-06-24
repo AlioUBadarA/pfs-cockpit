@@ -6,6 +6,7 @@ import BarList from '../components/BarList'
 import DataTable from '../components/DataTable'
 import KpiCard from '../components/KpiCard'
 import RfmGrid from '../components/RfmGrid'
+import { useAuth } from '../context/AuthContext'
 
 const TYPES = ['Grossiste', 'Détaillant marché', 'Boutique', 'Restauration', 'Cantine-Institution']
 const STATUTS_CLIENT = ['Actif', 'Prospect', 'Dormant']
@@ -36,6 +37,7 @@ function computeRfm(c) {
 const SEG_COLOR = { Champion: '#1B5E20', Fidèle: '#1b75bc', 'À développer': '#5a6b7a', Dormant: '#CC0000', 'À reconquérir': '#CC0000' }
 
 export default function Clients() {
+  const { user } = useAuth()
   const [clients, setClients] = useState([])
   const [produits, setProduits] = useState([])
   const [loading, setLoading] = useState(true)
@@ -45,6 +47,7 @@ export default function Clients() {
   const [form, setForm] = useState(CLIENT_INIT)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [dupInfo, setDupInfo] = useState(null)
 
   useEffect(() => { api.get('/api/produits').then((r) => setProduits(r.data)).catch(() => {}) }, [])
 
@@ -78,11 +81,14 @@ export default function Clients() {
     setEditing(null)
     setForm(CLIENT_INIT)
     setError('')
+    setDupInfo(null)
     setModalOpen(true)
   }
 
   const openEdit = (c) => {
+    if (!c.can_edit) return
     setEditing(c)
+    setDupInfo(null)
     setForm({
       nom: c.nom || '', type: c.type || 'Boutique', statut: c.statut || 'Prospect',
       zone: c.zone || '', region: c.region || '', segment: c.segment || '', potentiel_annuel: c.potentiel_annuel || '',
@@ -95,7 +101,7 @@ export default function Clients() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setSaving(true)
+    setSaving(true); setDupInfo(null)
     try {
       const body = {
         ...form,
@@ -107,9 +113,26 @@ export default function Clients() {
       setModalOpen(false)
       load()
     } catch (err) {
-      setError(err.response?.data?.error || 'Erreur lors de la sauvegarde')
+      const d = err.response?.data
+      if (d?.error === 'client_existe') {
+        setDupInfo(d.client)
+        setError(d.message)
+      } else {
+        setError(d?.error || 'Erreur lors de la sauvegarde')
+      }
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleDelete = async (id) => {
+    if (!confirm('Supprimer définitivement ce client et toutes ses données ?')) return
+    try {
+      await api.delete(`/api/clients/${id}`)
+      setModalOpen(false)
+      load()
+    } catch (err) {
+      setError(err.response?.data?.error || 'Erreur suppression')
     }
   }
 
@@ -232,6 +255,17 @@ export default function Clients() {
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? `Modifier : ${editing.nom}` : 'Nouveau client'}>
         <form onSubmit={handleSubmit} className="space-y-3">
+          {dupInfo && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm">
+              <p className="font-semibold text-amber-800">Ce numéro est déjà enregistré</p>
+              <p className="text-amber-700 mt-1">
+                Client : <strong>{dupInfo.nom}</strong><br />
+                Assigné à : <strong>{dupInfo.assigne_a || 'non assigné'}</strong><br />
+                Tél : {dupInfo.telephone}
+              </p>
+              <p className="text-xs text-amber-600 mt-1">Vous ne pouvez pas créer un doublon. Contactez votre manager si nécessaire.</p>
+            </div>
+          )}
           <div>
             <label className="label">Nom du client</label>
             <input className="input" placeholder="Boutique Diallo" value={form.nom} onChange={set('nom')} required />
@@ -309,13 +343,20 @@ export default function Clients() {
               </div>
             </div>
           )}
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && !dupInfo && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-2">
+            {editing?.can_delete && (
+              <button type="button" onClick={() => handleDelete(editing.id)} className="text-xs text-red-600 hover:text-red-800 font-medium px-2">
+                Supprimer
+              </button>
+            )}
             <button type="button" className="btn-secondary flex-1" onClick={() => setModalOpen(false)}>Annuler</button>
-            <button type="submit" disabled={saving} className="btn-primary flex-1 flex items-center justify-center gap-2">
-              {saving && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-              {saving ? 'Enregistrement...' : 'Sauvegarder'}
-            </button>
+            {!dupInfo && (
+              <button type="submit" disabled={saving} className="btn-primary flex-1 flex items-center justify-center gap-2">
+                {saving && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                {saving ? 'Enregistrement...' : 'Sauvegarder'}
+              </button>
+            )}
           </div>
         </form>
       </Modal>
