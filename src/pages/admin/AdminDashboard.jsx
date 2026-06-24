@@ -38,14 +38,16 @@ export default function AdminDashboard() {
   const [saving, setSaving]     = useState(false)
 
   // Formulaires
-  const RIZERIE_INIT = { nom: '', pays: '', region: '', ville: '', telephone: '', emplois_baseline: '', masse_salariale_baseline: '', ca_baseline: '' }
-  const COMPTE_INIT  = { nom: '', email: '', password: '', rizerie_id: '', telephone: '', ville: '' }
-  const SUPPORT_INIT = { nom: '', email: '', password: '' }
+  const RIZERIE_INIT    = { nom: '', pays: '', region: '', ville: '', telephone: '', emplois_baseline: '', masse_salariale_baseline: '', ca_baseline: '' }
+  const COMPTE_INIT     = { nom: '', email: '', password: '', rizerie_id: '', telephone: '', ville: '' }
+  const SUPPORT_INIT    = { nom: '', email: '', password: '' }
   const SUPERADMIN_INIT = { nom: '', email: '', password: '' }
-  const [rForm, setRForm] = useState(RIZERIE_INIT)
-  const [cForm, setCForm] = useState(COMPTE_INIT)
-  const [sForm, setSForm] = useState(SUPPORT_INIT)
+  const EXPORT_INIT     = { type: 'ventes', periode: 'mois', annee: new Date().getFullYear(), valeur: new Date().getMonth() + 1, rizerie_id: '' }
+  const [rForm, setRForm]   = useState(RIZERIE_INIT)
+  const [cForm, setCForm]   = useState(COMPTE_INIT)
+  const [sForm, setSForm]   = useState(SUPPORT_INIT)
   const [saForm, setSaForm] = useState(SUPERADMIN_INIT)
+  const [eForm, setEForm]   = useState(EXPORT_INIT)
   const [suspendReason, setSuspendReason] = useState('')
 
   const load = useCallback(() => {
@@ -161,6 +163,50 @@ export default function AdminDashboard() {
     } catch (err) { setError(err.response?.data?.error || 'Erreur') }
   }
 
+  const handleEditSuperadmin = async (e) => {
+    e.preventDefault(); setSaving(true)
+    try {
+      const payload = { nom: saForm.nom, email: saForm.email }
+      if (saForm.password) payload.new_password = saForm.password
+      await api.put(`/api/admin/superadmins/${modal.id}`, payload)
+      load(); setModal(null)
+    } catch (err) { setError(err.response?.data?.error || 'Erreur') }
+    finally { setSaving(false) }
+  }
+
+  const handleEditSupport = async (e) => {
+    e.preventDefault(); setSaving(true)
+    try {
+      const payload = { nom: sForm.nom, email: sForm.email }
+      if (sForm.password) payload.new_password = sForm.password
+      await api.put(`/api/admin/support/${modal.id}`, payload)
+      load(); setModal(null)
+    } catch (err) { setError(err.response?.data?.error || 'Erreur') }
+    finally { setSaving(false) }
+  }
+
+  const setE = (f) => (e) => setEForm(p => ({ ...p, [f]: e.target.value }))
+
+  const handleExport = (e) => {
+    e.preventDefault()
+    const { type, periode, annee, valeur, rizerie_id } = eForm
+    const params = new URLSearchParams({ type, periode, annee, valeur })
+    if (rizerie_id) params.set('rizerie_id', rizerie_id)
+    const token = localStorage.getItem('pfs_token')
+    // Téléchargement via lien temporaire (le token est dans le header d'API mais
+    // pour un téléchargement de fichier on passe par fetch+blob)
+    const url = `/api/admin/export?${params.toString()}`
+    api.get(url, { responseType: 'blob' }).then(({ data }) => {
+      const blob = new Blob([data], { type: 'text/csv' })
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = `export_${type}_${periode}_${annee}.csv`
+      a.click()
+      URL.revokeObjectURL(a.href)
+      setModal(null)
+    }).catch(() => setError('Erreur lors de l\'export'))
+  }
+
   const filteredUsers = users.filter((u) => {
     const q = search.toLowerCase()
     const matchSearch = !q || u.nom?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q) || u.rizerie?.toLowerCase().includes(q)
@@ -175,7 +221,12 @@ export default function AdminDashboard() {
           <h2 className="font-display text-xl font-bold text-gray-900">Administration</h2>
           <p className="text-sm text-gray-500">Cockpit Commercial &middot; gestion des rizeries et des comptes</p>
         </div>
-        <Link to="/admin/audit" className="btn-secondary text-sm">Journal d'audit</Link>
+        <div className="flex gap-2">
+          <button onClick={() => { setEForm(EXPORT_INIT); setError(''); setModal({ type: 'export' }) }} className="btn-secondary text-sm">
+            ⬇ Exporter CSV
+          </button>
+          <Link to="/admin/audit" className="btn-secondary text-sm">Journal d'audit</Link>
+        </div>
       </div>
 
       {error && (
@@ -382,9 +433,11 @@ export default function AdminDashboard() {
                       <td className="table-cell text-sm text-gray-600">{s.email}</td>
                       <td className="table-cell text-xs text-gray-500 whitespace-nowrap">{fmtDate(s.created_at)}</td>
                       <td className="table-cell">
-                        <button onClick={() => handleDeleteSupport(s)} className="text-xs text-red-600 font-medium hover:underline">
-                          Supprimer
-                        </button>
+                        <div className="flex gap-3">
+                          <button onClick={() => { setSForm({ nom: s.nom, email: s.email, password: '' }); setError(''); setModal({ type: 'edit-support', id: s.id }) }}
+                            className="text-xs text-blue-600 font-medium hover:underline">Modifier</button>
+                          <button onClick={() => handleDeleteSupport(s)} className="text-xs text-red-600 font-medium hover:underline">Supprimer</button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -423,9 +476,11 @@ export default function AdminDashboard() {
                       <td className="table-cell text-sm text-gray-600">{s.email}</td>
                       <td className="table-cell text-xs text-gray-500 whitespace-nowrap">{fmtDate(s.created_at)}</td>
                       <td className="table-cell">
-                        <button onClick={() => handleDeleteSuperadmin(s)} className="text-xs text-red-600 font-medium hover:underline">
-                          Supprimer
-                        </button>
+                        <div className="flex gap-3">
+                          <button onClick={() => { setSaForm({ nom: s.nom, email: s.email, password: '' }); setError(''); setModal({ type: 'edit-superadmin', id: s.id }) }}
+                            className="text-xs text-blue-600 font-medium hover:underline">Modifier</button>
+                          <button onClick={() => handleDeleteSuperadmin(s)} className="text-xs text-red-600 font-medium hover:underline">Supprimer</button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -601,6 +656,101 @@ export default function AdminDashboard() {
               <button type="submit" disabled={saving} className="btn-primary flex-1 flex items-center justify-center gap-2">
                 {saving && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                 {saving ? 'Création...' : 'Créer le compte'}
+              </button>
+            </div>
+          </form>
+        </ModalWrap>
+      )}
+
+      {/* Modal : modifier un compte support */}
+      {modal?.type === 'edit-support' && (
+        <ModalWrap title="Modifier le compte support" onClose={() => setModal(null)} error={error}>
+          <form onSubmit={handleEditSupport} className="space-y-3">
+            <div><label className="label">Nom complet *</label>
+              <input className="input" value={sForm.nom} onChange={setS('nom')} required /></div>
+            <div><label className="label">Email *</label>
+              <input type="email" className="input" value={sForm.email} onChange={setS('email')} required /></div>
+            <div><label className="label">Nouveau mot de passe <span className="text-gray-400 font-normal">(laisser vide pour ne pas changer)</span></label>
+              <input type="text" className="input" value={sForm.password} onChange={setS('password')} minLength={12} placeholder="Min. 12 caractères" /></div>
+            <div className="flex gap-3 pt-2">
+              <button type="button" className="btn-secondary flex-1" onClick={() => setModal(null)}>Annuler</button>
+              <button type="submit" disabled={saving} className="btn-primary flex-1">{saving ? '...' : 'Sauvegarder'}</button>
+            </div>
+          </form>
+        </ModalWrap>
+      )}
+
+      {/* Modal : modifier un compte superadmin */}
+      {modal?.type === 'edit-superadmin' && (
+        <ModalWrap title="Modifier le compte superadmin" onClose={() => setModal(null)} error={error}>
+          <form onSubmit={handleEditSuperadmin} className="space-y-3">
+            <div><label className="label">Nom complet *</label>
+              <input className="input" value={saForm.nom} onChange={setSa('nom')} required /></div>
+            <div><label className="label">Email *</label>
+              <input type="email" className="input" value={saForm.email} onChange={setSa('email')} required /></div>
+            <div><label className="label">Nouveau mot de passe <span className="text-gray-400 font-normal">(laisser vide pour ne pas changer)</span></label>
+              <input type="text" className="input" value={saForm.password} onChange={setSa('password')} minLength={12} placeholder="Min. 12 caractères" /></div>
+            <p className="text-xs text-red-600">Modification d'un compte à accès complet. Vérifiez bien l'email avant de sauvegarder.</p>
+            <div className="flex gap-3 pt-2">
+              <button type="button" className="btn-secondary flex-1" onClick={() => setModal(null)}>Annuler</button>
+              <button type="submit" disabled={saving} className="btn-primary flex-1">{saving ? '...' : 'Sauvegarder'}</button>
+            </div>
+          </form>
+        </ModalWrap>
+      )}
+
+      {/* Modal : export CSV */}
+      {modal?.type === 'export' && (
+        <ModalWrap title="Exporter des données CSV" onClose={() => setModal(null)} error={error}>
+          <form onSubmit={handleExport} className="space-y-3">
+            <div>
+              <label className="label">Type de données</label>
+              <select className="input" value={eForm.type} onChange={setE('type')}>
+                <option value="ventes">Ventes</option>
+                <option value="clients">Clients</option>
+                <option value="emplois">Emplois</option>
+              </select>
+            </div>
+            <div>
+              <label className="label">Rizerie</label>
+              <select className="input" value={eForm.rizerie_id} onChange={setE('rizerie_id')}>
+                <option value="">Toutes les rizeries</option>
+                {rizeries.map(r => <option key={r.id} value={r.id}>{r.nom}</option>)}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="label">Période</label>
+                <select className="input" value={eForm.periode} onChange={setE('periode')}>
+                  <option value="semaine">Semaine</option>
+                  <option value="mois">Mois</option>
+                  <option value="trimestre">Trimestre</option>
+                  <option value="semestre">Semestre</option>
+                  <option value="annuel">Annuel</option>
+                </select>
+              </div>
+              <div>
+                <label className="label">Année</label>
+                <input type="number" className="input" value={eForm.annee} onChange={setE('annee')} min="2020" max="2030" />
+              </div>
+            </div>
+            {eForm.periode !== 'annuel' && (
+              <div>
+                <label className="label">
+                  {eForm.periode === 'semaine' ? 'N° de semaine (1-52)' :
+                   eForm.periode === 'mois' ? 'Mois (1-12)' :
+                   eForm.periode === 'trimestre' ? 'Trimestre (1-4)' : 'Semestre (1-2)'}
+                </label>
+                <input type="number" className="input" value={eForm.valeur} onChange={setE('valeur')}
+                  min="1" max={eForm.periode === 'semaine' ? 52 : eForm.periode === 'mois' ? 12 : eForm.periode === 'trimestre' ? 4 : 2} />
+              </div>
+            )}
+            <p className="text-xs text-gray-400">Le fichier CSV est encodé UTF-8 avec BOM (compatible Excel).</p>
+            <div className="flex gap-3 pt-2">
+              <button type="button" className="btn-secondary flex-1" onClick={() => setModal(null)}>Annuler</button>
+              <button type="submit" disabled={saving} className="btn-primary flex-1 flex items-center justify-center gap-2">
+                {saving && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                Télécharger
               </button>
             </div>
           </form>
