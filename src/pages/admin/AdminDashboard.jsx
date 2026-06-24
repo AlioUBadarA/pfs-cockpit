@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import api from '../../services/api'
 import KpiCard from '../../components/KpiCard'
@@ -849,19 +850,35 @@ export default function AdminDashboard() {
 }
 
 function KebabMenu({ menuKey, open, onToggle, items }) {
+  const btnRef = useRef(null)
+  const [pos, setPos] = useState({ top: 0, right: 0 })
+
+  useEffect(() => {
+    if (open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect()
+      const menuH = items.length * 44 + 12
+      const openAbove = r.bottom + menuH > window.innerHeight
+      setPos(openAbove
+        ? { bottom: window.innerHeight - r.top + 4, right: window.innerWidth - r.right }
+        : { top: r.bottom + 4, right: window.innerWidth - r.right }
+      )
+    }
+  }, [open, items.length])
+
   return (
-    <div className="relative flex justify-center">
+    <div className="flex justify-center">
       <button
+        ref={btnRef}
         onClick={() => onToggle(menuKey)}
         className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 text-lg font-bold leading-none"
         title="Actions"
       >
         ⋮
       </button>
-      {open && (
+      {open && createPortal(
         <>
           <div className="fixed inset-0 z-40" onClick={() => onToggle(null)} />
-          <div className="absolute right-0 bottom-8 z-50 bg-white border border-gray-200 rounded-xl shadow-xl py-1.5 w-44 min-w-max">
+          <div className="fixed z-50 bg-white border border-gray-200 rounded-xl shadow-xl py-1.5 w-44" style={pos}>
             {items.map((item, i) => (
               <button
                 key={i}
@@ -873,7 +890,8 @@ function KebabMenu({ menuKey, open, onToggle, items }) {
               </button>
             ))}
           </div>
-        </>
+        </>,
+        document.body
       )}
     </div>
   )
