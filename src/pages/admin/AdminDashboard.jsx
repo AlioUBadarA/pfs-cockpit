@@ -571,7 +571,7 @@ export default function AdminDashboard() {
               {/* KPI Cards */}
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                 <MetricCard title="CA généré via plateforme" value={fmt(performance.global.ca_app)} sub={`${performance.global.nb_ventes} ventes enregistrées`} color="#1b75bc" />
-                <MetricCard title="CA avant la plateforme" value={fmt(performance.global.ca_baseline_total)} sub="Référence de départ des rizeries" color="#9e9e9e" />
+                <MetricCard title="CA avant RIZAO" value={fmt(performance.global.ca_baseline_total)} sub="Référence de départ des rizeries" color="#9e9e9e" />
                 <MetricCard
                   title="Taux de recouvrement"
                   value={`${performance.global.taux_recouvrement}%`}
@@ -1062,7 +1062,7 @@ function BaselineFields({ rForm, setR }) {
       </p>
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <label className="label">Emplois avant la plateforme</label>
+          <label className="label">Emplois avant RIZAO</label>
           <input type="number" min="0" className="input" value={rForm.emplois_baseline} onChange={setR('emplois_baseline')} />
         </div>
         <div>
@@ -1070,7 +1070,7 @@ function BaselineFields({ rForm, setR }) {
           <input type="number" min="0" className="input" value={rForm.masse_salariale_baseline} onChange={setR('masse_salariale_baseline')} />
         </div>
         <div>
-          <label className="label">CA avant la plateforme (F)</label>
+          <label className="label">CA avant RIZAO (F)</label>
           <input type="number" min="0" className="input" value={rForm.ca_baseline} onChange={setR('ca_baseline')} />
         </div>
       </div>
