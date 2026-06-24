@@ -12,7 +12,7 @@ const statutColor = (s) => ({
   'Terminé': 'bg-gray-100 text-gray-500',
 }[s] || 'bg-gray-100 text-gray-600')
 
-const INIT = { client_nom: '', produit: '', quantite_mensuelle: '', prix_unitaire: '', date_debut: '', date_fin: '', statut: 'Actif', note: '' }
+const INIT = { client_nom: '', produits: [], quantite_mensuelle: '', prix_unitaire: '', date_debut: '', date_fin: '', statut: 'Actif', note: '' }
 
 export default function ContratsClients() {
   const [items, setItems]     = useState([])
@@ -44,10 +44,15 @@ export default function ContratsClients() {
 
   const set = (f) => (e) => setForm(p => ({ ...p, [f]: e.target.value }))
 
-  const setProduit = (e) => {
-    const nom = e.target.value
-    const match = produits.find((p) => p.nom === nom)
-    setForm((p) => ({ ...p, produit: nom, prix_unitaire: !p.prix_unitaire && match ? match.prix_kg : p.prix_unitaire }))
+  const toggleProduit = (nom) => {
+    setForm((p) => {
+      const next = p.produits.includes(nom)
+        ? p.produits.filter((n) => n !== nom)
+        : [...p.produits, nom]
+      // auto-remplir le prix avec le premier produit sélectionné
+      const match = produits.find((pr) => pr.nom === next[0])
+      return { ...p, produits: next, prix_unitaire: !p.prix_unitaire && match ? match.prix_kg : p.prix_unitaire }
+    })
   }
 
   const openNew = () => { setEditing(null); setForm(INIT); setModalOpen(true) }
@@ -55,7 +60,7 @@ export default function ContratsClients() {
     setEditing(item)
     setForm({
       client_nom:         item.client_nom,
-      produit:            item.produit,
+      produits:           Array.isArray(item.produits) && item.produits.length ? item.produits : (item.produit ? [item.produit] : []),
       quantite_mensuelle: item.quantite_mensuelle || '',
       prix_unitaire:      item.prix_unitaire || '',
       date_debut:         item.date_debut ? item.date_debut.slice(0,10) : '',
@@ -71,6 +76,7 @@ export default function ContratsClients() {
     try {
       const payload = {
         ...form,
+        produits:           form.produits,
         quantite_mensuelle: Number(form.quantite_mensuelle) || 0,
         prix_unitaire:      Number(form.prix_unitaire) || 0,
         date_debut: form.date_debut || null,
@@ -151,7 +157,9 @@ export default function ContratsClients() {
                   <tr key={item.id} className={`hover:bg-gray-50 ${item.statut === 'Terminé' ? 'opacity-50' : ''}`}>
                     <td className="table-cell font-mono text-xs text-gray-500">{item.numero || '-'}</td>
                     <td className="table-cell font-medium">{item.client_nom}</td>
-                    <td className="table-cell text-sm">{item.produit}</td>
+                    <td className="table-cell text-sm">
+                      {(Array.isArray(item.produits) && item.produits.length ? item.produits : (item.produit ? [item.produit] : [])).join(', ') || '-'}
+                    </td>
                     <td className="table-cell text-right">{item.quantite_mensuelle ? Number(item.quantite_mensuelle).toLocaleString('fr-FR') + ' kg' : '-'}</td>
                     <td className="table-cell text-right">{fmt(item.prix_unitaire)}</td>
                     <td className="table-cell text-right font-semibold text-[#1b75bc]">{caMensuel > 0 ? Number(caMensuel).toLocaleString('fr-FR') + ' F' : '-'}</td>
@@ -185,11 +193,31 @@ export default function ContratsClients() {
             </datalist>
           </div>
           <div>
-            <label className="label">Produit *</label>
-            <input className="input" list="produits-list" placeholder="Ex: Riz brisé 25%" value={form.produit} onChange={setProduit} required />
-            <datalist id="produits-list">
-              {produits.map((p) => <option key={p.id} value={p.nom} />)}
-            </datalist>
+            <label className="label">Produits du contrat *</label>
+            {produits.length === 0 ? (
+              <p className="text-xs text-amber-600">Aucun produit au catalogue — demandez à votre manager d'en ajouter.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2 mt-1">
+                {produits.map((p) => {
+                  const sel = form.produits.includes(p.nom)
+                  return (
+                    <button
+                      type="button"
+                      key={p.id}
+                      onClick={() => toggleProduit(p.nom)}
+                      className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                        sel
+                          ? 'bg-[#1b75bc] text-white border-[#1b75bc]'
+                          : 'bg-white text-gray-600 border-gray-300 hover:border-[#1b75bc]'
+                      }`}
+                    >
+                      {p.nom}{p.prix_kg ? ` — ${Number(p.prix_kg).toLocaleString('fr-FR')} F/kg` : ''}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+            {form.produits.length === 0 && <p className="text-xs text-red-500 mt-1">Sélectionnez au moins un produit</p>}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>

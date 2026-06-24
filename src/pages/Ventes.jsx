@@ -203,10 +203,17 @@ export default function Ventes() {
           </div>
           <div>
             <label className="label">Produit</label>
-            <input className="input" list="produits-list" placeholder="Ex: Riz brisé 25%" value={form.produit} onChange={setProduit} required />
-            <datalist id="produits-list">
-              {produits.map((p) => <option key={p.id} value={p.nom} />)}
-            </datalist>
+            <select className="input" value={form.produit} onChange={setProduit} required>
+              <option value="">— Choisir un produit —</option>
+              {produits.map((p) => (
+                <option key={p.id} value={p.nom}>
+                  {p.nom}{p.prix_kg ? ` — ${Number(p.prix_kg).toLocaleString('fr-FR')} F/kg` : ''}
+                </option>
+              ))}
+            </select>
+            {produits.length === 0 && (
+              <p className="text-xs text-amber-600 mt-1">Aucun produit au catalogue — demandez à votre manager d'en ajouter.</p>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
