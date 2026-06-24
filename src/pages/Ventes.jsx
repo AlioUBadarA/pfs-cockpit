@@ -197,27 +197,30 @@ export default function Ventes() {
                       <div className="relative">
                         <button
                           onClick={() => setPrintMenu(printMenu === v.id ? null : v.id)}
-                          className="text-xs text-[#1b75bc] hover:text-blue-800 font-medium flex items-center gap-0.5"
+                          className="text-xs text-[#1b75bc] hover:text-blue-800 font-medium"
                         >
                           ⎙ Imprimer
                         </button>
                         {printMenu === v.id && (
                           <>
                             <div className="fixed inset-0 z-40" onClick={() => setPrintMenu(null)} />
-                            <div className="absolute right-0 top-6 z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[160px]">
+                            <div className="absolute right-0 top-7 z-50 bg-white border border-gray-200 rounded-lg shadow-xl py-1 w-48">
                               <button
                                 onClick={() => { setPrintMenu(null); printBonCommande(v, user) }}
-                                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 text-gray-700"
+                                className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                               >
                                 Bon de commande
                               </button>
                               {v.statut_paiement === 'Paye' && (
-                                <button
-                                  onClick={() => handlePrintFacture(v)}
-                                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 text-gray-700"
-                                >
-                                  Facture
-                                </button>
+                                <>
+                                  <div className="border-t border-gray-100 mx-2" />
+                                  <button
+                                    onClick={() => handlePrintFacture(v)}
+                                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                                  >
+                                    Facture
+                                  </button>
+                                </>
                               )}
                             </div>
                           </>
