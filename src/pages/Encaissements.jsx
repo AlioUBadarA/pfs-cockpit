@@ -66,12 +66,14 @@ export default function Encaissements() {
         montant: Number(form.montant), mode: form.mode, date: form.date,
       })
       setModalOpen(false)
-      const totalVerse = versements.reduce((s, v) => s + Number(v.montant), 0) + Number(form.montant)
+      // Relit les versements depuis l'API pour avoir le total exact
+      const { data: fresh } = await api.get(`/api/encaissements/${selected.type}/${selected.id}/versements`)
+      setVersements(fresh)
+      const totalVerse = fresh.reduce((s, v) => s + Number(v.montant), 0)
       setSelected((p) => ({
         ...p, total_verse: totalVerse,
         statut: p.type === 'vente' && totalVerse >= Number(p.montant_total) ? 'Paye' : p.statut,
       }))
-      openTransaction(selected)
       setResults((rs) => rs.map((r) => r.id === selected.id ? { ...r, total_verse: totalVerse } : r))
     } catch (err) {
       setError(err.response?.data?.error || 'Erreur lors de l\'enregistrement')
