@@ -57,9 +57,12 @@ export default function Layout() {
               {roleBadge}
             </span>
           )}
-          <span className="hidden sm:block text-sm text-gray-600 truncate max-w-[160px]">
-            {user?.rizerie || user?.nom}
-          </span>
+          <div className="hidden sm:flex flex-col items-end leading-tight max-w-[200px]">
+            <span className="text-sm font-medium text-gray-800 truncate w-full text-right">{user?.nom}</span>
+            {user?.rizerie && (
+              <span className="text-[11px] text-gray-500 truncate w-full text-right">{user.rizerie}</span>
+            )}
+          </div>
           <div className="relative">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
@@ -75,6 +78,9 @@ export default function Layout() {
                   <div className="px-4 py-3 border-b border-gray-100">
                     <p className="text-sm font-semibold text-gray-900">{user?.nom}</p>
                     <p className="text-xs text-gray-500">{user?.email}</p>
+                    {user?.rizerie && (
+                      <p className="text-xs text-[#1b75bc] font-medium mt-0.5">{user.rizerie}</p>
+                    )}
                     {roleBadge && (
                       <span className="inline-block mt-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase" style={{ background: '#F9A825', color: '#1b75bc' }}>
                         {roleBadge}
