@@ -25,7 +25,8 @@ function TauxBadge({ taux }) {
 }
 
 export default function Equipe() {
-  const { isManager } = useAuth()
+  const { isManager, user } = useAuth()
+  const canPromote = ['directeur', 'rizier', 'superadmin'].includes(user?.role)
   const [vendeurs, setVendeurs] = useState([])
   const [managers, setManagers] = useState([])
   const [loading, setLoading]   = useState(true)
@@ -116,6 +117,16 @@ export default function Equipe() {
     }
   }
 
+  const handlePromote = async (v) => {
+    if (!confirm(`Promouvoir ${v.nom} au rang de Manager ?\nIl sera rattaché directement à vous et pourra désormais gérer une équipe.`)) return
+    try {
+      await api.patch(`/api/equipe/${v.id}/role`, { role: 'manager' })
+      load()
+    } catch (err) {
+      setError(err.response?.data?.error || 'Erreur lors de la promotion')
+    }
+  }
+
   const objAnnuelGroupe = vendeurs.reduce((s, v) => s + Number(v.objectif_annuel || 0), 0)
   const caYTDGroupe = vendeurs.reduce((s, v) => s + Number(v.ca_total || 0), 0)
   const tauxAtteinteGroupe = objAnnuelGroupe > 0 ? caYTDGroupe / (objAnnuelGroupe / 12 * (new Date().getMonth() + 1)) * 100 : 0
@@ -137,6 +148,9 @@ export default function Equipe() {
         <div className="flex gap-2 whitespace-nowrap">
           <button onClick={() => openEdit(v)} className="text-xs text-blue-600 hover:text-blue-800 font-medium">Éditer</button>
           <button onClick={() => { setPwdModal(v); setNewPwd(''); setError('') }} className="text-xs text-yellow-700 hover:text-yellow-900 font-medium">MDP</button>
+          {canPromote && v.role === 'vendeur' && (
+            <button onClick={() => handlePromote(v)} className="text-xs text-purple-600 hover:text-purple-800 font-medium">Promouvoir</button>
+          )}
           <button onClick={() => deleteVendeur(v.id)} className="text-xs text-red-600 hover:text-red-800 font-medium">Suppr.</button>
         </div>
       ),
