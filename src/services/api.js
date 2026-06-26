@@ -15,9 +15,19 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('pfs_token')
-      localStorage.removeItem('pfs_user')
-      window.location.href = '/login'
+      const requestUrl = error.config?.url || ''
+      const isAuthEndpoint = requestUrl.includes('/api/auth/')
+      const isAlreadyOnLogin = window.location.pathname === '/login'
+      // Évite la boucle /login → 401 → /login : on ne redirige pas si on est déjà
+      // sur /login ou si la requête venait elle-même d'un endpoint d'authentification.
+      if (!isAuthEndpoint && !isAlreadyOnLogin) {
+        localStorage.removeItem('pfs_token')
+        localStorage.removeItem('pfs_user')
+        localStorage.removeItem('pfs_admin_token')
+        localStorage.removeItem('pfs_admin_user')
+        localStorage.removeItem('pfs_impersonating')
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(error)
   }
