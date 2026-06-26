@@ -70,7 +70,7 @@ function AppRoutes() {
       <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
         <Route index              element={<RootRedirect />} />
         <Route path="ventes"      element={<Ventes />} />
-        <Route path="pilotage"    element={<PilotageSemaine />} />
+        <Route path="pilotage"    element={<ManagerRoute><PilotageSemaine /></ManagerRoute>} />
         <Route path="argumentaire" element={<Argumentaire />} />
         <Route path="clients"     element={<Clients />} />
         <Route path="prospection" element={<Prospection />} />
