@@ -244,6 +244,7 @@ export default function AdminDashboard() {
           <button onClick={() => { setEForm(EXPORT_INIT); setError(''); setModal({ type: 'export' }) }} className="btn-secondary text-sm">
             ⬇ Exporter CSV
           </button>
+          <Link to="/admin/connexions" className="btn-secondary text-sm">📊 Connexions</Link>
           <Link to="/admin/audit" className="btn-secondary text-sm">Journal d'audit</Link>
         </div>
       </div>

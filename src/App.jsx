@@ -27,6 +27,7 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminUserDetail from './pages/admin/AdminUserDetail'
 import AdminAudit from './pages/admin/AdminAudit'
 import AdminImpactRizao from './pages/admin/AdminImpactRizao'
+import AdminConnexions from './pages/admin/AdminConnexions'
 
 function PrivateRoute({ children }) {
   const { user } = useAuth()
@@ -98,6 +99,7 @@ function AppRoutes() {
         <Route path="admin/impact-rizao"   element={<AdminRoute><AdminImpactRizao /></AdminRoute>} />
         <Route path="admin/users/:id"      element={<AdminRoute><AdminUserDetail /></AdminRoute>} />
         <Route path="admin/audit"          element={<AdminRoute><AdminAudit /></AdminRoute>} />
+        <Route path="admin/connexions"     element={<AdminRoute><AdminConnexions /></AdminRoute>} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
