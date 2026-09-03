@@ -106,6 +106,15 @@ export default function Equipe() {
     finally { setSaving(false) }
   }
 
+  const handleForcePwd = async (v) => {
+    setSaving(true); setError('')
+    try {
+      await api.patch(`/api/equipe/${v.id}/force-password-change`)
+      load()
+    } catch (err) { setError(err.response?.data?.error || 'Erreur') }
+    finally { setSaving(false) }
+  }
+
   const handleCreate = async (e) => {
     e.preventDefault(); setSaving(true); setError('')
     try {
@@ -180,6 +189,9 @@ export default function Equipe() {
   const vendeurActions = (v) => [
     { icon: '✏️', label: 'Éditer', onClick: () => openEdit(v) },
     { icon: '🔑', label: 'Mot de passe', onClick: () => { setPwdModal(v); setNewPwd(''); setError('') } },
+    ...(v.must_change_password
+      ? [{ icon: '⏳', label: 'Changement déjà forcé', disabled: true }]
+      : [{ icon: '⚠️', label: 'Forcer le changement', onClick: () => handleForcePwd(v) }]),
     ...(canAssign && managers.length > 0 && v.role === 'vendeur' ? [{
       icon: '👥',
       label: v.manager_nom ? 'Réassigner manager' : 'Assigner un manager',
@@ -193,6 +205,9 @@ export default function Equipe() {
     { icon: '👁️', label: "Voir l'équipe", onClick: () => openTeamView(m) },
     { icon: '✏️', label: 'Éditer', onClick: () => openEdit(m) },
     { icon: '🔑', label: 'Mot de passe', onClick: () => { setPwdModal(m); setNewPwd(''); setError('') } },
+    ...(m.must_change_password
+      ? [{ icon: '⏳', label: 'Changement déjà forcé', disabled: true }]
+      : [{ icon: '⚠️', label: 'Forcer le changement', onClick: () => handleForcePwd(m) }]),
     { icon: '🗑️', label: 'Supprimer', danger: true, onClick: () => deleteUser(m.id) },
   ]
 

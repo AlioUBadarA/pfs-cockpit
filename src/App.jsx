@@ -1,7 +1,8 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Layout from './components/Layout'
 import Login from './pages/Login'
+import ChangePassword from './pages/ChangePassword'
 import Dashboard from './pages/Dashboard'
 import PilotageSemaine from './pages/Pilotage'
 import Argumentaire from './pages/Argumentaire'
@@ -29,9 +30,16 @@ import AdminAudit from './pages/admin/AdminAudit'
 import AdminImpactRizao from './pages/admin/AdminImpactRizao'
 import AdminConnexions from './pages/admin/AdminConnexions'
 
+const CHANGE_PASSWORD_PATH = '/profil/mot-de-passe'
+
 function PrivateRoute({ children }) {
   const { user } = useAuth()
-  return user ? children : <Navigate to="/login" replace />
+  const location = useLocation()
+  if (!user) return <Navigate to="/login" replace />
+  if (user.must_change_password && location.pathname !== CHANGE_PASSWORD_PATH) {
+    return <Navigate to={CHANGE_PASSWORD_PATH} replace />
+  }
+  return children
 }
 
 function PublicRoute({ children }) {
@@ -90,6 +98,7 @@ function AppRoutes() {
         <Route path="produits"   element={<Produits />} />
         <Route path="encaissements" element={<Encaissements />} />
         <Route path="guide"      element={<Guide />} />
+        <Route path="profil/mot-de-passe" element={<ChangePassword />} />
 
         {/* Redirects anciens liens (anciens onglets groupés) */}
         <Route path="crm" element={<Navigate to="/clients" replace />} />

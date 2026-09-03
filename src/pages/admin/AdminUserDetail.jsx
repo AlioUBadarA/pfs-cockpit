@@ -69,6 +69,15 @@ export default function AdminUserDetail() {
     finally { setSaving(false) }
   }
 
+  const doForcePasswordChange = async () => {
+    setSaving(true)
+    try {
+      await api.patch(`/api/admin/users/${id}/force-password-change`)
+      load(); flash('L\'utilisateur devra changer son mot de passe à sa prochaine connexion')
+    } catch (err) { setError(err.response?.data?.error || 'Erreur') }
+    finally { setSaving(false) }
+  }
+
   const doEdit = async (e) => {
     e.preventDefault()
     setSaving(true)
@@ -147,6 +156,9 @@ export default function AdminUserDetail() {
           )}
           <button onClick={() => setShowEdit(true)} className="btn-secondary text-sm">Modifier profil</button>
           <button onClick={() => setShowPassword(true)} className="btn-secondary text-sm">Reset mot de passe</button>
+          <button onClick={doForcePasswordChange} disabled={saving || user.must_change_password} className="btn-secondary text-sm">
+            {user.must_change_password ? 'Changement forcé en attente' : 'Forcer le changement'}
+          </button>
           {user.suspended
             ? <button onClick={() => doSuspend(false)} className="btn-primary text-sm">Réactiver</button>
             : <button onClick={() => { setShowSuspend(true); setSuspendReason('') }} className="text-sm px-4 py-2 bg-[#F9A825] text-[#1A1A1A] rounded-lg font-medium hover:bg-yellow-500">Suspendre</button>

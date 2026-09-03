@@ -34,8 +34,11 @@ export default function KebabMenu({ menuKey, open, onToggle, items }) {
             {items.map((item, i) => (
               <button
                 key={i}
-                onClick={() => { onToggle(null); item.onClick() }}
-                className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-2.5 hover:bg-gray-50 transition-colors ${item.danger ? 'text-red-600 hover:bg-red-50' : 'text-gray-700'}`}
+                disabled={item.disabled}
+                onClick={() => { if (item.disabled) return; onToggle(null); item.onClick() }}
+                className={`w-full text-left px-4 py-2.5 text-sm flex items-center gap-2.5 transition-colors ${
+                  item.disabled ? 'text-gray-400 cursor-default' : item.danger ? 'text-red-600 hover:bg-red-50' : 'text-gray-700 hover:bg-gray-50'
+                }`}
               >
                 {item.icon && <span className="text-sm w-4 text-center">{item.icon}</span>}
                 {item.label}

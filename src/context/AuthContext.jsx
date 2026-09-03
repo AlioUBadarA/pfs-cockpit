@@ -29,6 +29,15 @@ export function AuthProvider({ children }) {
     }
   }
 
+  const updateUser = (patch) => {
+    setUser((prev) => {
+      if (!prev) return prev
+      const next = { ...prev, ...patch }
+      localStorage.setItem('pfs_user', JSON.stringify(next))
+      return next
+    })
+  }
+
   const logout = () => {
     localStorage.removeItem('pfs_token')
     localStorage.removeItem('pfs_user')
@@ -91,7 +100,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{
-      user, loading, login, logout, register,
+      user, loading, login, logout, register, updateUser,
       isAdmin, isSuperadmin, isSupport, isVendeur, isManager, isDirecteur,
       impersonating, startImpersonation, stopImpersonation,
     }}>
