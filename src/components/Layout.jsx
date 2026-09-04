@@ -5,7 +5,7 @@ import ImpersonationBanner from './ImpersonationBanner'
 import Sidebar from './Sidebar'
 
 export default function Layout() {
-  const { user, logout, isSuperadmin, isSupport, isManager } = useAuth()
+  const { user, logout, isSuperadmin, isSupport, isManager, isDirecteur, isVendeur, isRizier } = useAuth()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
@@ -20,7 +20,8 @@ export default function Layout() {
     ? user.nom.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
     : 'CC'
 
-  const roleBadge = isSuperadmin ? 'Superadmin' : isSupport ? 'Support' : isManager ? 'Manager' : null
+  const roleBadge = isSuperadmin ? 'Superadmin' : isSupport ? 'Support'
+    : isManager ? 'Manager' : isDirecteur ? 'Directeur' : isRizier ? 'Rizier' : isVendeur ? 'Commercial' : null
 
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--cc-bg)' }}>

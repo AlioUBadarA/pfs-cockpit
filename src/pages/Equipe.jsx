@@ -52,9 +52,10 @@ function EquipeRow({ cells, aligns, highlighted }) {
 }
 
 export default function Equipe() {
-  const { isManager, user } = useAuth()
-  const canPromote = ['directeur', 'rizier', 'superadmin'].includes(user?.role)
-  const canAssign  = ['directeur', 'rizier', 'superadmin'].includes(user?.role)
+  const { isManager, isDirecteur, isRizier } = useAuth()
+  // superadmin exclu : cette page est bloquée pour lui par ManagerRoute (redirigé vers /admin).
+  const canPromote = isDirecteur || isRizier
+  const canAssign  = canPromote
 
   const [vendeurs, setVendeurs]     = useState([])
   const [managers, setManagers]     = useState([])
