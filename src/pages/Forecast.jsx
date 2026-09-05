@@ -14,6 +14,7 @@ export default function Forecast() {
   const [data, setData]       = useState([])
   const [parVendeur, setParVendeur] = useState([])
   const [quarterly, setQuarterly]   = useState([])
+  const [projectionAnnuelle, setProjectionAnnuelle] = useState(0)
   const [editing, setEditing] = useState({})
   const [saving, setSaving]   = useState(null)
   const [loading, setLoading] = useState(true)
@@ -26,6 +27,7 @@ export default function Forecast() {
         setData(r.data.months || [])
         setParVendeur(r.data.par_vendeur || [])
         setQuarterly(r.data.quarterly || [])
+        setProjectionAnnuelle(r.data.projection_annuelle || 0)
         const init = {}
         r.data.months.forEach(m => { init[m.mois] = String(m.objectif || '') })
         setEditing(init)
@@ -60,13 +62,6 @@ export default function Forecast() {
   const totalReal = data.reduce((s, m) => s + m.realise, 0)
   const avancement = totalObj > 0 ? Math.round(totalReal / totalObj * 100) : null
 
-  // Projection : rythme moyen des 3 derniers mois ayant un réalisé non nul, étalé sur les mois restants.
-  const moisActuel = annee === new Date().getFullYear() ? new Date().getMonth() + 1 : 12
-  const moisEcoules = data.filter(m => m.mois <= moisActuel && m.realise > 0)
-  const rythme = moisEcoules.length ? moisEcoules.slice(-3).reduce((s, m) => s + m.realise, 0) / Math.min(3, moisEcoules.length) : 0
-  const moisRestants = Math.max(0, 12 - moisActuel)
-  const projectionAnnuelle = totalReal + rythme * moisRestants
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -92,7 +87,7 @@ export default function Forecast() {
           value={avancement != null ? `${avancement}%` : '-'}
           color={avancement == null ? '#8a7f6e' : avancement >= 100 ? '#1b75bc' : avancement >= 70 ? '#F9A825' : '#CC0000'}
         />
-        <KpiCard title="Projection fin d'année" value={fmt(projectionAnnuelle)} sub="au rythme des 3 derniers mois" color="#6b46c1" />
+        <KpiCard title="Projection fin d'année" value={fmt(projectionAnnuelle)} sub="CA YTD ÷ mois écoulés × 12 (même méthode que le tableau de bord)" color="#6b46c1" />
       </div>
 
       {!loading && data.length > 0 && (

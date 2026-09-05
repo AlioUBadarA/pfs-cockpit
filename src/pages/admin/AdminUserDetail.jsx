@@ -12,7 +12,7 @@ const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-'
 export default function AdminUserDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { user: adminUser, startImpersonation } = useAuth()
+  const { user: adminUser, startImpersonation, isSuperadmin } = useAuth()
   const [data, setData]         = useState(null)
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState('')
@@ -430,6 +430,7 @@ export default function AdminUserDetail() {
               <select className="input" value={vendeurForm.role} onChange={e => setVendeurForm({...vendeurForm, role: e.target.value})}>
                 <option value="vendeur">Commercial (vendeur)</option>
                 <option value="manager">Manager</option>
+                {isSuperadmin && <option value="directeur">Directeur</option>}
               </select>
             </div>
             {vendeurForm.role === 'manager' && (
@@ -460,7 +461,7 @@ export default function AdminUserDetail() {
               <input className="input" value={vendeurForm.telephone} onChange={e => setVendeurForm({...vendeurForm, telephone: e.target.value})} />
             </div>
             <div>
-              <label className="label">Mot de passe provisoire * (min. 6 caractères)</label>
+              <label className="label">Mot de passe provisoire * (min. 12 caractères)</label>
               <input type="text" className="input" value={vendeurForm.password} onChange={e => setVendeurForm({...vendeurForm, password: e.target.value})} required minLength={12} />
             </div>
             <p className="text-xs text-gray-400">Ce compte sera rattaché à <strong>{user.rizerie || user.nom}</strong>.</p>

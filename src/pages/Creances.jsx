@@ -47,13 +47,15 @@ export default function Creances() {
         const listEnCours  = parseList(enCours)
         const listEnRetard = parseList(enRetard)
 
-        const somme = (arr) => arr.reduce((s, v) => s + Number(v.montant || 0), 0)
+        // Créance = reste à payer (montant facturé moins les versements déjà reçus), pas le montant brut
+        const resteAPayer = (v) => Math.max(Number(v.montant || 0) - Number(v.total_verse || 0), 0)
+        const somme = (arr) => arr.reduce((s, v) => s + resteAPayer(v), 0)
 
         const now = new Date()
         const enAttente = [...listEnRetard, ...listEnCours].map((v) => {
           const echeance = v.date_echeance ? new Date(v.date_echeance) : new Date(new Date(v.date_vente).getTime() + 30 * 86400000)
           const age = Math.round((now - echeance) / 86400000)
-          return { ...v, age, bucket: bucketOf(age), risque: risqueOf(age) }
+          return { ...v, age, bucket: bucketOf(age), risque: risqueOf(age), reste: resteAPayer(v) }
         })
 
         setData({
@@ -101,17 +103,17 @@ export default function Creances() {
 
   const buckets = BUCKETS.map((b) => {
     const list = creances.filter((c) => c.bucket === b)
-    const val = list.reduce((s, c) => s + Number(c.montant || 0), 0)
+    const val = list.reduce((s, c) => s + Number(c.reste || 0), 0)
     return { label: b, val: val || list.length, disp: fmt(val), color: BUCKET_COLOR[b] }
   })
 
   const parVendeur = {}
-  creances.forEach((c) => { const n = c.vendeur_nom || 'Moi'; parVendeur[n] = (parVendeur[n] || 0) + Number(c.montant || 0) })
+  creances.forEach((c) => { const n = c.vendeur_nom || 'Moi'; parVendeur[n] = (parVendeur[n] || 0) + Number(c.reste || 0) })
   const vendeurArr = Object.entries(parVendeur).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).map(([label, val]) => ({ label, val, disp: fmt(val), color: '#CC0000' }))
 
   const filtered = [...(filterRisque === 'Tous' ? creances : creances.filter((c) => c.risque.label === filterRisque))].sort((a, b) => b.age - a.age)
-  const critique = creances.filter((c) => c.risque.label === 'Critique').reduce((s, c) => s + Number(c.montant || 0), 0)
-  const encours = creances.reduce((s, c) => s + Number(c.montant || 0), 0)
+  const critique = creances.filter((c) => c.risque.label === 'Critique').reduce((s, c) => s + Number(c.reste || 0), 0)
+  const encours = creances.reduce((s, c) => s + Number(c.reste || 0), 0)
 
   return (
     <div className="space-y-5">
@@ -178,7 +180,14 @@ export default function Creances() {
                 <tr key={v.id} className="hover:bg-gray-50">
                   <td className="table-cell font-medium">{v.client_nom}<div className="text-[10.5px] text-gray-400">{v.produit}</div></td>
                   <td className="table-cell text-xs text-gray-500">{v.vendeur_nom || '-'}</td>
-                  <td className="table-cell text-right font-semibold">{Number(v.montant).toLocaleString('fr-FR')} F</td>
+                  <td className="table-cell text-right font-semibold">
+                    {Number(v.reste).toLocaleString('fr-FR')} F
+                    {Number(v.total_verse) > 0 && (
+                      <div className="text-[10.5px] font-normal text-gray-400">
+                        {Number(v.total_verse).toLocaleString('fr-FR')} F déjà versé(s) / {Number(v.montant).toLocaleString('fr-FR')} F
+                      </div>
+                    )}
+                  </td>
                   <td className="table-cell whitespace-nowrap text-xs">{fmtDate(v.date_echeance)}</td>
                   <td className="table-cell text-xs">{v.age > 0 ? `${v.age} j de retard` : 'à échoir'}</td>
                   <td className="table-cell">

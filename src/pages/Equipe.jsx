@@ -337,6 +337,7 @@ export default function Equipe() {
               >
                 <option value="vendeur">Commercial (vendeur)</option>
                 <option value="manager">Manager</option>
+                {isRizier && <option value="directeur">Directeur</option>}
               </select>
             </div>
           )}
