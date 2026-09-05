@@ -40,19 +40,33 @@ export default function Creances() {
     Promise.all([
       api.get('/api/ventes', { params: { statut: 'En cours' } }),
       api.get('/api/ventes', { params: { statut: 'En retard' } }),
+      api.get('/api/contrats/echeances', { params: { statut: 'En cours' } }),
+      api.get('/api/contrats/echeances', { params: { statut: 'En retard' } }),
       api.get('/api/encaissements/mois'),
     ])
-      .then(([enCours, enRetard, payeMoisR]) => {
+      .then(([enCours, enRetard, echEnCours, echEnRetard, payeMoisR]) => {
         const parseList = (r) => Array.isArray(r.data) ? r.data : []
         const listEnCours  = parseList(enCours)
         const listEnRetard = parseList(enRetard)
+        // Échéances de contrats récurrents normalisées à la même forme que les ventes,
+        // pour partager le même calcul de créances/ancienneté/risque.
+        const normEcheance = (e) => ({
+          id: e.id, type: 'echeance',
+          client_nom: e.client_nom,
+          produit: `Contrat ${e.contrat_numero || ''} · ${String(e.mois).padStart(2, '0')}/${e.annee}`,
+          vendeur_nom: e.vendeur_nom,
+          montant: e.montant, total_verse: e.total_verse,
+          date_echeance: e.date_paiement_prevue,
+        })
+        const listEchEnCours  = parseList(echEnCours).map(normEcheance)
+        const listEchEnRetard = parseList(echEnRetard).map(normEcheance)
 
         // Créance = reste à payer (montant facturé moins les versements déjà reçus), pas le montant brut
         const resteAPayer = (v) => Math.max(Number(v.montant || 0) - Number(v.total_verse || 0), 0)
         const somme = (arr) => arr.reduce((s, v) => s + resteAPayer(v), 0)
 
         const now = new Date()
-        const enAttente = [...listEnRetard, ...listEnCours].map((v) => {
+        const enAttente = [...listEnRetard, ...listEchEnRetard, ...listEnCours, ...listEchEnCours].map((v) => {
           const echeance = v.date_echeance ? new Date(v.date_echeance) : new Date(new Date(v.date_vente).getTime() + 30 * 86400000)
           const age = Math.round((now - echeance) / 86400000)
           return { ...v, age, bucket: bucketOf(age), risque: risqueOf(age), reste: resteAPayer(v) }
@@ -61,11 +75,11 @@ export default function Creances() {
         setData({
           creances: enAttente,
           kpis: {
-            en_retard: somme(listEnRetard),
-            en_cours:  somme(listEnCours),
+            en_retard: somme(listEnRetard) + somme(listEchEnRetard),
+            en_cours:  somme(listEnCours) + somme(listEchEnCours),
             paye_mois: payeMoisR.data.total,
-            nb_retard: listEnRetard.length,
-            nb_cours:  listEnCours.length,
+            nb_retard: listEnRetard.length + listEchEnRetard.length,
+            nb_cours:  listEnCours.length + listEchEnCours.length,
           },
         })
       })
@@ -127,9 +141,9 @@ export default function Creances() {
       )}
 
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-        <KpiCard title="Encours total" value={fmt(encours)} sub={`${creances.length} facture(s)`} color="#CC0000" />
-        <KpiCard title="En retard"   value={fmt(kpis.en_retard)} sub={`${kpis.nb_retard ?? 0} vente(s)`} color="#CC0000" />
-        <KpiCard title="En cours"    value={fmt(kpis.en_cours)}  sub={`${kpis.nb_cours ?? 0} vente(s)`}  color="#F9A825" />
+        <KpiCard title="Encours total" value={fmt(encours)} sub={`${creances.length} transaction(s)`} color="#CC0000" />
+        <KpiCard title="En retard"   value={fmt(kpis.en_retard)} sub={`${kpis.nb_retard ?? 0} transaction(s)`} color="#CC0000" />
+        <KpiCard title="En cours"    value={fmt(kpis.en_cours)}  sub={`${kpis.nb_cours ?? 0} transaction(s)`}  color="#F9A825" />
         <KpiCard title="Payé ce mois" value={fmt(kpis.paye_mois)} color="#1B5E20" />
         <KpiCard title="Risque critique (+90j)" value={fmt(critique)} color="#CC0000" />
       </div>
@@ -199,15 +213,19 @@ export default function Creances() {
                     {v.nb_relances > 0 ? `${v.nb_relances} · ${fmtDate(v.derniere_relance)}` : '-'}
                   </td>
                   <td className="table-cell">
-                    <KebabMenu
-                      menuKey={v.id}
-                      open={openMenu === v.id}
-                      onToggle={(k) => setOpenMenu(k)}
-                      items={[
-                        { icon: '📣', label: 'Relancer le client', onClick: () => relancer(v.id) },
-                        { icon: '✅', label: 'Marquer payé', onClick: () => marquerPaye(v.id) },
-                      ]}
-                    />
+                    {v.type === 'echeance' ? (
+                      <span className="text-[10.5px] text-gray-400">via Encaissements</span>
+                    ) : (
+                      <KebabMenu
+                        menuKey={v.id}
+                        open={openMenu === v.id}
+                        onToggle={(k) => setOpenMenu(k)}
+                        items={[
+                          { icon: '📣', label: 'Relancer le client', onClick: () => relancer(v.id) },
+                          { icon: '✅', label: 'Marquer payé', onClick: () => marquerPaye(v.id) },
+                        ]}
+                      />
+                    )}
                   </td>
                 </tr>
               ))}

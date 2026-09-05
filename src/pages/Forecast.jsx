@@ -15,6 +15,7 @@ export default function Forecast() {
   const [parVendeur, setParVendeur] = useState([])
   const [quarterly, setQuarterly]   = useState([])
   const [projectionAnnuelle, setProjectionAnnuelle] = useState(0)
+  const [contractualiseAnnuel, setContractualiseAnnuel] = useState(0)
   const [editing, setEditing] = useState({})
   const [saving, setSaving]   = useState(null)
   const [loading, setLoading] = useState(true)
@@ -28,6 +29,7 @@ export default function Forecast() {
         setParVendeur(r.data.par_vendeur || [])
         setQuarterly(r.data.quarterly || [])
         setProjectionAnnuelle(r.data.projection_annuelle || 0)
+        setContractualiseAnnuel(r.data.contractualise_annuel || 0)
         const init = {}
         r.data.months.forEach(m => { init[m.mois] = String(m.objectif || '') })
         setEditing(init)
@@ -56,6 +58,7 @@ export default function Forecast() {
     name: MOIS_LABELS[m.mois - 1],
     Objectif: m.objectif,
     Réalisé:  m.realise,
+    Contractualisé: m.contractualise,
   }))
 
   const totalObj = data.reduce((s, m) => s + m.objectif, 0)
@@ -79,15 +82,17 @@ export default function Forecast() {
 
       {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">{error}</div>}
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <KpiCard title="Objectif annuel" value={fmt(totalObj)} color="#1b75bc" />
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <KpiCard title="Objectif annuel" value={fmt(totalObj)} sub="saisi manuellement" color="#1b75bc" />
+        <KpiCard title="CA contractualisé" value={fmt(contractualiseAnnuel)} sub="engagé via les contrats récurrents" color="#7a6a52" />
         <KpiCard title="Réalisé" value={fmt(totalReal)} color="#1565C0" />
         <KpiCard
           title="Avancement"
           value={avancement != null ? `${avancement}%` : '-'}
+          sub="vs objectif manuel"
           color={avancement == null ? '#8a7f6e' : avancement >= 100 ? '#1b75bc' : avancement >= 70 ? '#F9A825' : '#CC0000'}
         />
-        <KpiCard title="Projection fin d'année" value={fmt(projectionAnnuelle)} sub="CA YTD ÷ mois écoulés × 12 (même méthode que le tableau de bord)" color="#6b46c1" />
+        <KpiCard title="Projection fin d'année" value={fmt(projectionAnnuelle)} sub="CA YTD ÷ mois écoulés × 12" color="#6b46c1" />
       </div>
 
       {!loading && data.length > 0 && (
@@ -100,6 +105,7 @@ export default function Forecast() {
               <Tooltip formatter={v => Number(v).toLocaleString('fr-FR') + ' F'} />
               <Legend />
               <Bar dataKey="Objectif" fill="#9E9E9E" radius={[3,3,0,0]} />
+              <Bar dataKey="Contractualisé" fill="#B08968" radius={[3,3,0,0]} />
               <Bar dataKey="Réalisé"  fill="#2E7D32" radius={[3,3,0,0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -129,7 +135,7 @@ export default function Forecast() {
           <table className="w-full text-left border-collapse p-1">
             <thead>
               <tr>
-                {['Mois','Objectif (F)','Réalisé (F)','Avancement','Sauvegarder'].map(h => (
+                {['Mois','Objectif (F)','Contractualisé (F)','Réalisé (F)','Avancement','Sauvegarder'].map(h => (
                   <th key={h} className="table-header whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -149,6 +155,7 @@ export default function Forecast() {
                         onKeyDown={e => e.key === 'Enter' && save(m.mois)}
                       />
                     </td>
+                    <td className="table-cell text-right text-sm text-gray-500">{fmt(m.contractualise)}</td>
                     <td className="table-cell text-right font-medium text-blue-700">{fmt(m.realise)}</td>
                     <td className="table-cell">
                       {pct != null ? (
