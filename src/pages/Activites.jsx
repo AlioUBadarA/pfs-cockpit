@@ -55,7 +55,11 @@ export default function Activites() {
 
   const now = new Date()
   const last12w = activites.filter((a) => (now - new Date(a.date)) / (86400000 * 7) <= 12)
-  const perWeek = Math.round(last12w.length / 12)
+  // Diviseur = nb de semaines réellement couvertes (borné à 12), pas toujours 12 —
+  // sinon un compte récent (< 12 semaines d'historique) voit son rythme sous-estimé.
+  const premiereActivite = activites.length ? new Date(Math.min(...activites.map((a) => new Date(a.date)))) : now
+  const semainesEcoulees = Math.max(1, Math.min(12, Math.ceil((now - premiereActivite) / (86400000 * 7))))
+  const perWeek = Math.round(last12w.length / semainesEcoulees)
   const signes = activites.filter((a) => a.type === 'Contrat signé').length
   const tauxPositif = activites.length ? Math.round(activites.filter((a) => a.resultat === 'Positif').length / activites.length * 100) : 0
 
@@ -82,7 +86,7 @@ export default function Activites() {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <KpiCard title="Activités totales" value={activites.length} sub="historique" color="#1b75bc" />
-        <KpiCard title="Rythme hebdo" value={`${perWeek} / sem`} sub="moyenne 12 dernières semaines" />
+        <KpiCard title="Rythme hebdo" value={`${perWeek} / sem`} sub={`moyenne sur ${semainesEcoulees} semaine(s)`} />
         <KpiCard title="Contrats signés" value={signes} sub="issus du terrain" color="#1B5E20" />
         <KpiCard title="Taux positif" value={`${tauxPositif} %`} sub="résultats favorables" color="#1B5E20" />
       </div>

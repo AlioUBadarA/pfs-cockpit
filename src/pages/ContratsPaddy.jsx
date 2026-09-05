@@ -24,15 +24,15 @@ export default function ContratsPaddy() {
   const [form, setForm]           = useState(INIT)
   const [saving, setSaving]       = useState(false)
 
+  // Liste complète chargée une seule fois : les KPI d'en-tête restent globaux même quand
+  // le tableau est filtré par statut (sinon ils s'effondrent à tort en filtrant).
   const load = useCallback(() => {
     setLoading(true)
-    const params = {}
-    if (filterStatut) params.statut = filterStatut
-    api.get('/api/contrats/paddy', { params })
+    api.get('/api/contrats/paddy')
       .then(r => setItems(r.data))
       .catch(() => setError('Erreur de chargement'))
       .finally(() => setLoading(false))
-  }, [filterStatut])
+  }, [])
 
   useEffect(() => { load() }, [load])
 
@@ -83,6 +83,9 @@ export default function ContratsPaddy() {
   const totalPaddyActif = items.filter(i => i.statut === 'Actif').reduce((s, i) => s + Number(i.quantite_kg || 0), 0)
   const valeurTotale    = items.filter(i => i.statut === 'Actif').reduce((s, i) => s + Number(i.quantite_kg || 0) * Number(i.prix_kg || 0), 0)
 
+  // Le tableau applique le filtre de statut ; les KPI ci-dessus restent, eux, globaux (sur `items`).
+  const visibleItems = filterStatut ? items.filter(i => i.statut === filterStatut) : items
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -122,10 +125,10 @@ export default function ContratsPaddy() {
       <div className="card p-0 overflow-x-auto">
         {loading ? (
           <div className="flex justify-center py-10"><span className="w-7 h-7 border-4 border-[#62bb46] border-t-transparent rounded-full animate-spin" /></div>
-        ) : items.length === 0 ? (
+        ) : visibleItems.length === 0 ? (
           <div className="text-center py-12 text-gray-400">
-            <p className="text-sm mb-3">Aucun contrat paddy enregistré</p>
-            <button onClick={openNew} className="btn-primary text-sm">+ Premier contrat</button>
+            <p className="text-sm mb-3">{filterStatut ? 'Aucun contrat pour ce statut' : 'Aucun contrat paddy enregistré'}</p>
+            {!filterStatut && <button onClick={openNew} className="btn-primary text-sm">+ Premier contrat</button>}
           </div>
         ) : (
           <table className="w-full text-left border-collapse">
@@ -135,7 +138,7 @@ export default function ContratsPaddy() {
               ))}</tr>
             </thead>
             <tbody>
-              {items.map(item => {
+              {visibleItems.map(item => {
                 const valeur = Number(item.quantite_kg || 0) * Number(item.prix_kg || 0)
                 return (
                   <tr key={item.id} className={`hover:bg-gray-50 ${item.statut === 'Terminé' ? 'opacity-50' : ''}`}>

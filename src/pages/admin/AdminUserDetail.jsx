@@ -134,10 +134,10 @@ export default function AdminUserDetail() {
   if (loading) return <div className="flex justify-center py-20"><span className="w-8 h-8 border-4 border-[#62bb46] border-t-transparent rounded-full animate-spin" /></div>
   if (error && !data) return <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-4 text-sm">{error}</div>
 
-  const { user, ventes = [], clients = [], pilotage = [], vendeurs = [], managers = [] } = data
-  const caTotal = ventes.reduce((s, v) => s + Number(v.montant || 0), 0)
-  const creances = ventes.filter((v) => ['En cours', 'En retard'].includes(v.statut_paiement))
-  const creancesTotal = creances.reduce((s, v) => s + Number(v.montant || 0), 0)
+  const { user, stats = {}, ventes = [], clients = [], pilotage = [], vendeurs = [], managers = [] } = data
+  const caTotal = stats.ca_total || 0
+  const nbVentesTotal = stats.nb_ventes ?? ventes.length
+  const creancesTotal = stats.creances_total || 0
 
   return (
     <div className="space-y-6">
@@ -196,7 +196,7 @@ export default function AdminUserDetail() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard title="CA total" value={fmt(caTotal)} icon="💰" color="#1b75bc" />
         <KpiCard title="Créances en cours" value={fmt(creancesTotal)} icon="📋" color={creancesTotal > 0 ? '#CC0000' : '#62bb46'} />
-        <KpiCard title="Total ventes" value={ventes.length} icon="🧾" color="#62bb46" />
+        <KpiCard title="Total ventes" value={nbVentesTotal} icon="🧾" color="#62bb46" />
         <KpiCard title="Clients" value={clients.length} icon="👥" color="#1b75bc" />
       </div>
 

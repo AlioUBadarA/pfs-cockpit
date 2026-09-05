@@ -26,19 +26,20 @@ export default function ContratsClients() {
   const [form, setForm]           = useState(INIT)
   const [saving, setSaving]       = useState(false)
 
+  // Liste complète (non filtrée) chargée une seule fois : les KPI d'en-tête doivent rester
+  // globaux même quand le tableau est filtré par statut, sinon "Contrats actifs"/"CA annuel"
+  // s'effondrent à tort dès qu'on filtre sur "Suspendu" ou "Terminé".
   const load = useCallback(() => {
     setLoading(true)
-    const params = {}
-    if (filterStatut) params.statut = filterStatut
     Promise.all([
-      api.get('/api/contrats/clients', { params }),
+      api.get('/api/contrats/clients'),
       api.get('/api/clients'),
       api.get('/api/produits'),
     ])
       .then(([r1, r2, r3]) => { setItems(r1.data); setClients(r2.data); setProduits(r3.data) })
       .catch(() => setError('Erreur de chargement'))
       .finally(() => setLoading(false))
-  }, [filterStatut])
+  }, [])
 
   useEffect(() => { load() }, [load])
 
@@ -99,6 +100,9 @@ export default function ContratsClients() {
   const caAnnuelTotal = items.filter(i => i.statut === 'Actif')
     .reduce((s, i) => s + Number(i.quantite_mensuelle || 0) * Number(i.prix_unitaire || 0) * 12, 0)
 
+  // Le tableau applique le filtre de statut ; les KPI ci-dessus restent, eux, globaux (sur `items`).
+  const visibleItems = filterStatut ? items.filter(i => i.statut === filterStatut) : items
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -138,10 +142,10 @@ export default function ContratsClients() {
       <div className="card p-0 overflow-x-auto">
         {loading ? (
           <div className="flex justify-center py-10"><span className="w-7 h-7 border-4 border-[#62bb46] border-t-transparent rounded-full animate-spin" /></div>
-        ) : items.length === 0 ? (
+        ) : visibleItems.length === 0 ? (
           <div className="text-center py-12 text-gray-400">
-            <p className="text-sm mb-3">Aucun contrat enregistré</p>
-            <button onClick={openNew} className="btn-primary text-sm">+ Premier contrat</button>
+            <p className="text-sm mb-3">{filterStatut ? 'Aucun contrat pour ce statut' : 'Aucun contrat enregistré'}</p>
+            {!filterStatut && <button onClick={openNew} className="btn-primary text-sm">+ Premier contrat</button>}
           </div>
         ) : (
           <table className="w-full text-left border-collapse">
@@ -151,7 +155,7 @@ export default function ContratsClients() {
               ))}</tr>
             </thead>
             <tbody>
-              {items.map(item => {
+              {visibleItems.map(item => {
                 const caMensuel = Number(item.quantite_mensuelle || 0) * Number(item.prix_unitaire || 0)
                 return (
                   <tr key={item.id} className={`hover:bg-gray-50 ${item.statut === 'Terminé' ? 'opacity-50' : ''}`}>

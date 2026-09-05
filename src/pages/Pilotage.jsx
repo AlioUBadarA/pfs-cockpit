@@ -9,11 +9,30 @@ const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
 const pct = (n) => n != null ? Number(n).toFixed(1) + ' %' : '-'
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : 'jamais'
 
-function getWeekKey(date = new Date()) {
+const pad2 = (n) => String(n).padStart(2, '0')
+const toLocalISODate = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
+const parseLocalDate = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d) }
+
+// Lundi de la semaine contenant `date`, en date locale (pas d'UTC — évite un décalage de jour).
+function mondayOf(date = new Date()) {
   const d = new Date(date)
   d.setHours(0, 0, 0, 0)
   d.setDate(d.getDate() - ((d.getDay() + 6) % 7))
-  return d.toISOString().slice(0, 10)
+  return d
+}
+
+// Semaine ISO 8601 (YYYY-Www) — c'est le format exact attendu par l'API /api/pilotage
+// (voir SEMAINE_RE côté backend). Le sélecteur de date affiche lui une date normale
+// (YYYY-MM-DD, lundi de la semaine) : ce sont deux représentations distinctes de la même semaine.
+function isoWeekKey(date) {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const dayNum = (d.getDay() + 6) % 7 // lundi=0 .. dimanche=6
+  d.setDate(d.getDate() - dayNum + 3) // jeudi de cette semaine (détermine l'année ISO)
+  const firstThursday = new Date(d.getFullYear(), 0, 4)
+  const firstDayNum = (firstThursday.getDay() + 6) % 7
+  firstThursday.setDate(firstThursday.getDate() - firstDayNum + 3)
+  const week = 1 + Math.round((d - firstThursday) / (7 * 86400000))
+  return `${d.getFullYear()}-W${pad2(week)}`
 }
 
 function buildDefaultRows() {
@@ -26,7 +45,8 @@ const STATUT_COLOR = { Actif: '#1B5E20', Prospect: '#F9A825', Dormant: '#8a7f6e'
 const PROSPECT_COLOR = { Nouveau: '#8a7f6e', Qualifié: '#1b75bc', Proposition: '#6b46c1', Négociation: '#F9A825', Gagné: '#1B5E20', Perdu: '#CC0000' }
 
 export default function Pilotage() {
-  const [semaine, setSemaine] = useState(getWeekKey())
+  const [weekStart, setWeekStart] = useState(() => toLocalISODate(mondayOf()))
+  const semaine = isoWeekKey(parseLocalDate(weekStart))
   const [rows, setRows] = useState(buildDefaultRows())
   const [visites, setVisites] = useState([])
   const [clients, setClients] = useState([])
@@ -178,8 +198,8 @@ export default function Pilotage() {
           <input
             type="date"
             className="input w-auto text-sm"
-            value={semaine}
-            onChange={(e) => setSemaine(getWeekKey(e.target.value))}
+            value={weekStart}
+            onChange={(e) => setWeekStart(toLocalISODate(mondayOf(parseLocalDate(e.target.value))))}
           />
         </div>
       </div>

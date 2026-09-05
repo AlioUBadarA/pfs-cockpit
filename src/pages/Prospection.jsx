@@ -128,11 +128,19 @@ export default function Prospection() {
   const perdus = items.filter(i => i.statut === 'Perdu').length
   const tauxConversion = (gagnes + perdus) ? Math.round((gagnes / (gagnes + perdus)) * 100) : 0
 
-  const funnel = ['Nouveau','Qualifié','Proposition','Négociation'].map(s => {
+  // Si aucun prospect n'a de valeur estimée renseignée, on bascule l'entonnoir entier sur un
+  // décompte (plutôt que de mélanger F CFA et nombre de prospects d'une étape à l'autre).
+  const funnelRaw = ['Nouveau','Qualifié','Proposition','Négociation'].map(s => {
     const list = items.filter(i => i.statut === s)
     const val = list.reduce((a, i) => a + Number(i.valeur_estimee || 0), 0)
-    return { label: s, val: val || list.length, disp: `${fmt(val)} · ${list.length}` }
+    return { label: s, list, val }
   })
+  const funnelAllZero = funnelRaw.every(f => f.val === 0)
+  const funnel = funnelRaw.map(f => ({
+    label: f.label,
+    val: funnelAllZero ? f.list.length : f.val,
+    disp: funnelAllZero ? `${f.list.length} prospect(s)` : `${fmt(f.val)} · ${f.list.length}`,
+  }))
 
   const bySrc = {}
   items.forEach((i) => { const s = i.source || 'Autre'; bySrc[s] = (bySrc[s] || 0) + 1 })

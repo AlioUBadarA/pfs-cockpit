@@ -158,7 +158,7 @@ export default function Insights() {
 
         <Block title="Prévision mois prochain" color="#F9A825" empty="Pas encore de données.">
           {[
-            { main: 'CA attendu', sub: 'rythme des 3 derniers mois', val: fmt(kpis.projection_annuel ? kpis.projection_annuel / 12 : 0) },
+            { main: 'CA attendu', sub: 'moyenne mensuelle YTD projetée', val: fmt(kpis.projection_annuel ? kpis.projection_annuel / 12 : 0) },
             { main: 'À signer bientôt', sub: 'signature prévue < 30 j', val: fmt(valeurNegociation) },
             { main: 'Objectif mensuel', sub: 'groupe', val: fmt(kpis.objectif_annuel ? kpis.objectif_annuel / 12 : 0) },
             { main: 'Reste à faire', sub: "pour l'objectif annuel", val: fmt(Math.max(0, (kpis.objectif_annuel || 0) - (kpis.ca_ytd || 0))), color: '#F9A825' },

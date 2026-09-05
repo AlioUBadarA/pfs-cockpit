@@ -100,9 +100,9 @@ export default function Rentabilite() {
       {data && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <KpiCard title="CA total" value={fmt(data.ca_total)} color="#1b75bc" />
-          <KpiCard title={`Coût estimé (${tauxCout}%)`} value={fmt(data.ca_total * tauxCout / 100)} color="#8a7f6e" />
-          <KpiCard title="Marge brute" value={fmt(data.ca_total * (100 - tauxCout) / 100)} color="#1565C0" />
-          <KpiCard title="Taux de marge" value={`${100 - tauxCout}%`} color="#6b46c1" />
+          <KpiCard title="Coût (réel + estimé)" value={fmt(data.cout_total)} sub={`estimation à ${tauxCout}% là où le coût réel n'est pas renseigné`} color="#8a7f6e" />
+          <KpiCard title="Marge brute" value={fmt(data.marge_total)} color="#1565C0" />
+          <KpiCard title="Taux de marge" value={`${data.taux_marge_total}%`} color="#6b46c1" />
         </div>
       )}
 

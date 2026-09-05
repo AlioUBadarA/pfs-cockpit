@@ -5,7 +5,7 @@ import KebabMenu from '../components/KebabMenu'
 import { useAuth } from '../context/AuthContext'
 
 const TENDANCES = ['hausse', 'stable', 'déclin']
-const fmt = (n) => n ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
+const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
 
 const tendanceColor = (t) => ({
   hausse:  'bg-green-100 text-green-700',
@@ -95,8 +95,9 @@ export default function Produits() {
           <p className="text-2xl font-bold text-green-700">{items.filter(i => i.tendance === 'hausse').length}</p>
         </div>
         <div className="card text-center">
-          <p className="text-xs text-gray-500 mb-1">Marge moyenne / kg</p>
+          <p className="text-xs text-gray-500 mb-1">Marge catalogue moy. / kg</p>
           <p className="text-lg font-bold text-purple-700">{fmt(margeMoyenne)}</p>
+          <p className="text-[10px] text-gray-400 mt-0.5">prix - coût de référence, non pondérée par les ventes</p>
         </div>
       </div>
 

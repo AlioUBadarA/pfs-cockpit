@@ -8,7 +8,16 @@ import KpiCard from '../components/KpiCard'
 import RfmGrid from '../components/RfmGrid'
 import { useAuth } from '../context/AuthContext'
 
-const TYPES = ['Grossiste', 'Détaillant marché', 'Boutique', 'Restauration', 'Cantine-Institution']
+// Valeurs alignées sur TYPES_VALIDES (gcr/routes/clients.js) et la contrainte CHECK de schema.sql —
+// un libellé français plus lisible est affiché, mais la valeur envoyée à l'API doit matcher exactement.
+const TYPES = ['Grossiste', 'Detaillant marche', 'Boutique', 'Restauration', 'Cantine/Institution']
+const TYPE_LABEL = {
+  'Grossiste': 'Grossiste',
+  'Detaillant marche': 'Détaillant marché',
+  'Boutique': 'Boutique',
+  'Restauration': 'Restauration',
+  'Cantine/Institution': 'Cantine/Institution',
+}
 const STATUTS_CLIENT = ['Actif', 'Prospect', 'Dormant']
 
 const CLIENT_INIT = {
@@ -53,22 +62,11 @@ export default function Clients() {
 
   const load = useCallback(() => {
     setLoading(true)
-    Promise.all([
-      api.get('/api/clients'),
-      api.get('/api/ventes', { params: { limit: 500 } }),
-    ])
-      .then(([rc, rv]) => {
-        const ventes = Array.isArray(rv.data) ? rv.data : []
-        const byClient = {}
-        ventes.forEach((v) => {
-          if (!v.client_id) return
-          const e = byClient[v.client_id] || { ca_total: 0, nb_ventes: 0, derniere_vente: null }
-          e.ca_total += Number(v.montant || 0)
-          e.nb_ventes += 1
-          if (!e.derniere_vente || v.date_vente > e.derniere_vente) e.derniere_vente = v.date_vente
-          byClient[v.client_id] = e
-        })
-        const enriched = (rc.data || []).map((c) => computeRfm({ ...c, ...(byClient[c.id] || { ca_total: 0, nb_ventes: 0, derniere_vente: null }) }))
+    api.get('/api/clients')
+      .then((rc) => {
+        const enriched = (rc.data || []).map((c) => computeRfm({
+          ...c, ca_total: Number(c.ca_total || 0), nb_ventes: Number(c.nb_ventes || 0),
+        }))
         setClients(enriched)
       })
       .catch(() => setError('Erreur de chargement'))
@@ -274,7 +272,7 @@ export default function Clients() {
             <div>
               <label className="label">Type</label>
               <select className="input" value={form.type} onChange={set('type')}>
-                {TYPES.map((t) => <option key={t}>{t}</option>)}
+                {TYPES.map((t) => <option key={t} value={t}>{TYPE_LABEL[t]}</option>)}
               </select>
             </div>
             <div>
