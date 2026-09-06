@@ -264,8 +264,8 @@ export default function Pilotage() {
                     const tel = isClient ? v.client_telephone : v.prospect_telephone
                     const color = isClient ? (STATUT_COLOR[statut] || '#8a7f6e') : (PROSPECT_COLOR[statut] || '#8a7f6e')
                     return (
-                      <div key={v.id} className="flex items-start gap-3 px-3 py-2.5 rounded-lg border border-gray-100 bg-gray-50/60">
-                        <div className="flex-none w-44 min-w-0">
+                      <div key={v.id} className="flex flex-wrap sm:flex-nowrap items-start gap-3 px-3 py-2.5 rounded-lg border border-gray-100 bg-gray-50/60">
+                        <div className="w-full sm:w-44 sm:flex-none min-w-0">
                           <div className="flex items-center gap-1.5">
                             <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded" style={{ background: isClient ? '#1b75bc1a' : '#F9A8251a', color: isClient ? '#1b75bc' : '#F9A825' }}>
                               {isClient ? 'Client' : 'Prospect'}
@@ -274,7 +274,7 @@ export default function Pilotage() {
                           <p className="text-sm font-semibold text-gray-800 truncate mt-0.5">{nom}</p>
                           <p className="text-[11px] mt-0.5" style={{ color }}>{statut}</p>
                         </div>
-                        <div className="flex-none w-40 text-[11px] text-gray-500 leading-tight">
+                        <div className="w-full sm:w-40 sm:flex-none text-[11px] text-gray-500 leading-tight">
                           {zone && <p>📍 {zone}</p>}
                           {tel && <p>📞 {tel}</p>}
                           {isClient ? (
@@ -284,7 +284,7 @@ export default function Pilotage() {
                           )}
                         </div>
                         <input
-                          className="flex-1 min-w-0 input py-1.5 text-sm"
+                          className="flex-1 min-w-0 w-full sm:w-auto input py-1.5 text-sm"
                           placeholder="Action à poser (ex: relancer, proposer une remise...)"
                           value={v.commentaire || ''}
                           onChange={(e) => updateCommentaire(v.id, e.target.value)}
