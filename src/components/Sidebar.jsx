@@ -36,8 +36,12 @@ const GROUPS_USER = [
   ] },
 ]
 
-// Un vendeur n'accède pas au pilotage global (vue Direction réservée aux managers/riziers).
-const GROUPS_VENDEUR = GROUPS_USER.filter((g) => g.title !== 'Pilotage')
+// Un vendeur n'accède pas au pilotage global (vue Direction réservée aux managers/riziers),
+// ni au planning semaine (page /pilotage, réservée par ManagerRoute) même si ce lien est
+// niché dans un autre groupe que "Pilotage".
+const GROUPS_VENDEUR = GROUPS_USER
+  .filter((g) => g.title !== 'Pilotage')
+  .map((g) => ({ ...g, items: g.items.filter((it) => it.to !== '/pilotage') }))
 
 const GROUPS_ADMIN = [
   { title: 'Administration', items: [
@@ -47,9 +51,15 @@ const GROUPS_ADMIN = [
   ] },
 ]
 
+const GROUPS_COMPTABLE = [
+  { title: 'Comptabilité', items: [
+    { to: '/comptabilite', label: 'Validation des encaissements', end: true },
+  ] },
+]
+
 export default function Sidebar({ onNavigate }) {
-  const { isAdmin, isVendeur } = useAuth()
-  const groups = isAdmin ? GROUPS_ADMIN : isVendeur ? GROUPS_VENDEUR : GROUPS_USER
+  const { isAdmin, isVendeur, isComptable } = useAuth()
+  const groups = isAdmin ? GROUPS_ADMIN : isComptable ? GROUPS_COMPTABLE : isVendeur ? GROUPS_VENDEUR : GROUPS_USER
 
   return (
     <aside

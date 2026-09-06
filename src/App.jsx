@@ -23,6 +23,7 @@ import Journal from './pages/Journal'
 import Activites from './pages/Activites'
 import Produits from './pages/Produits'
 import Encaissements from './pages/Encaissements'
+import Comptabilite from './pages/Comptabilite'
 import Guide from './pages/Guide'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminUserDetail from './pages/admin/AdminUserDetail'
@@ -48,9 +49,10 @@ function PublicRoute({ children }) {
 }
 
 function RootRedirect() {
-  const { isAdmin, isVendeur } = useAuth()
-  if (isAdmin)   return <Navigate to="/admin"   replace />
-  if (isVendeur) return <Navigate to="/journal" replace />
+  const { isAdmin, isVendeur, isComptable } = useAuth()
+  if (isAdmin)     return <Navigate to="/admin"        replace />
+  if (isComptable) return <Navigate to="/comptabilite" replace />
+  if (isVendeur)   return <Navigate to="/journal"      replace />
   return <Dashboard />
 }
 
@@ -67,6 +69,15 @@ function ManagerRoute({ children }) {
   if (!user) return <Navigate to="/login" replace />
   if (isAdmin) return <Navigate to="/admin" replace />
   if (isVendeur) return <Navigate to="/journal" replace />
+  return children
+}
+
+// Validation des encaissements : comptable et superadmin uniquement (même règle que le
+// backend, voir middleware/permissions.js — 'encaissements:valider').
+function ComptableRoute({ children }) {
+  const { user, isComptable, isSuperadmin } = useAuth()
+  if (!user) return <Navigate to="/login" replace />
+  if (!isComptable && !isSuperadmin) return <Navigate to="/" replace />
   return children
 }
 
@@ -97,6 +108,7 @@ function AppRoutes() {
         <Route path="activites"  element={<Activites />} />
         <Route path="produits"   element={<Produits />} />
         <Route path="encaissements" element={<Encaissements />} />
+        <Route path="comptabilite" element={<ComptableRoute><Comptabilite /></ComptableRoute>} />
         <Route path="guide"      element={<Guide />} />
         <Route path="profil/mot-de-passe" element={<ChangePassword />} />
 

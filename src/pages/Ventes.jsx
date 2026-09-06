@@ -8,13 +8,15 @@ import { printBonCommande, printFacture } from '../utils/printDocument'
 // Valeurs exactes du backend
 const STATUTS_DB   = ['En cours', 'Paye', 'En retard']
 const STATUT_LABEL = { 'Paye': 'Payé', 'En cours': 'En cours', 'En retard': 'En retard' }
+// Valeurs exactes du backend (gcr/utils/paiement.js)
+const CONDITIONS_PAIEMENT = ['Comptant', 'J+15', 'J+30', '50% comptant / 50% J+15', '50% comptant / 50% J+30']
 
 const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-'
 
 const VENTE_INIT = {
   client_nom: '', produit: '', quantite: '', prix_unitaire: '',
-  statut_paiement: 'En cours', date_vente: '',
+  statut_paiement: 'En cours', date_vente: '', conditions_paiement: '',
 }
 
 export default function Ventes() {
@@ -59,12 +61,13 @@ export default function Ventes() {
     setError('')
     try {
       await api.post('/api/ventes', {
-        client_nom:      form.client_nom,
-        produit:         form.produit,
-        date_vente:      form.date_vente,
-        quantite:        Number(form.quantite),
-        prix_unitaire:   Number(form.prix_unitaire),
-        statut_paiement: form.statut_paiement,
+        client_nom:          form.client_nom,
+        produit:             form.produit,
+        date_vente:          form.date_vente,
+        quantite:            Number(form.quantite),
+        prix_unitaire:       Number(form.prix_unitaire),
+        statut_paiement:     form.statut_paiement,
+        conditions_paiement: form.conditions_paiement || undefined,
       })
       setModalOpen(false)
       load()
@@ -167,7 +170,7 @@ export default function Ventes() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr>
-                {['N° transaction','Date','Client','Produit','Qté (kg)','P.U.','Montant','Statut','Actions'].map(h => (
+                {['N° transaction','Date','Client','Produit','Qté (kg)','P.U.','Montant','Solde','Prochaine échéance','Statut','Actions'].map(h => (
                   <th key={h} className="table-header whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -182,6 +185,27 @@ export default function Ventes() {
                   <td className="table-cell text-right">{Number(v.quantite).toLocaleString('fr-FR')}</td>
                   <td className="table-cell text-right">{fmt(v.prix_unitaire)}</td>
                   <td className="table-cell text-right font-semibold">{fmt(v.montant)}</td>
+                  <td className="table-cell text-right">
+                    {v.statut_paiement === 'Paye' ? (
+                      <span className="text-xs text-green-700">Soldé</span>
+                    ) : (
+                      fmt(Math.max(0, Number(v.montant) - Number(v.total_verse || 0)))
+                    )}
+                  </td>
+                  <td className="table-cell whitespace-nowrap">
+                    {v.statut_paiement === 'Paye' ? (
+                      <span className="text-gray-300">-</span>
+                    ) : v.date_echeance ? (
+                      <div>
+                        <div>{fmtDate(v.date_echeance)}</div>
+                        {Number(v.montant_attendu_prochaine_echeance) > 0 && (
+                          <div className="text-[10.5px] text-gray-400">{fmt(v.montant_attendu_prochaine_echeance)} attendu</div>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-gray-300">-</span>
+                    )}
+                  </td>
                   <td className="table-cell">
                     <div className="flex items-center gap-1.5">
                       <select
@@ -254,6 +278,14 @@ export default function Ventes() {
             <select className="input" value={form.statut_paiement} onChange={set('statut_paiement')}>
               {STATUTS_DB.map((s) => <option key={s} value={s}>{STATUT_LABEL[s]}</option>)}
             </select>
+          </div>
+          <div>
+            <label className="label">Conditions de paiement</label>
+            <select className="input" value={form.conditions_paiement} onChange={set('conditions_paiement')}>
+              <option value="">— Non précisé —</option>
+              {CONDITIONS_PAIEMENT.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <p className="text-xs text-gray-400 mt-1">Détermine l'échéance par défaut si aucune date n'est précisée.</p>
           </div>
           <div className="flex gap-3 pt-2">
             <button type="button" className="btn-secondary flex-1" onClick={() => setModalOpen(false)}>Annuler</button>
