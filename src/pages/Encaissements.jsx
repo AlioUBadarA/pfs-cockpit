@@ -28,7 +28,7 @@ export default function Encaissements() {
   const [loadingVers, setLoadingVers] = useState(false)
 
   const [modalOpen, setModalOpen] = useState(false)
-  const [form, setForm] = useState({ montant: '', mode: 'Espèces', date: new Date().toISOString().slice(0, 10) })
+  const [form, setForm] = useState({ montant: '', mode: 'Espèces', date: new Date().toISOString().slice(0, 10), prochaine_echeance: '' })
   const [saving, setSaving] = useState(false)
   const [openMenu, setOpenMenu] = useState(null)
 
@@ -56,19 +56,30 @@ export default function Encaissements() {
   }
 
   const openNewVersement = () => {
-    setForm({ montant: '', mode: 'Espèces', date: new Date().toISOString().slice(0, 10) })
+    setForm({ montant: '', mode: 'Espèces', date: new Date().toISOString().slice(0, 10), prochaine_echeance: '' })
     setError('')
     setModalOpen(true)
   }
 
   const set = (f) => (e) => setForm((p) => ({ ...p, [f]: e.target.value }))
 
+  // Le paddy n'a pas de suivi d'échéance structuré côté backend — pas la peine de demander
+  // une prochaine date de paiement pour ce type de transaction.
+  const supportsEcheance = selected && ['vente', 'echeance'].includes(selected.type)
+  const soldeApresVersement = selected ? reste - (Number(form.montant) || 0) : 0
+  const demandeProchaineEcheance = supportsEcheance && soldeApresVersement > 0
+
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (demandeProchaineEcheance && !form.prochaine_echeance) {
+      setError('La prochaine date de paiement est requise tant qu\'il reste un solde')
+      return
+    }
     setSaving(true); setError('')
     try {
       await api.post(`/api/encaissements/${selected.type}/${selected.id}/versements`, {
         montant: Number(form.montant), mode: form.mode, date: form.date,
+        prochaine_echeance: demandeProchaineEcheance ? form.prochaine_echeance : undefined,
       })
       setModalOpen(false)
       // Relit les versements depuis l'API pour avoir le total exact
@@ -80,6 +91,9 @@ export default function Encaissements() {
       setSelected((p) => ({
         ...p, total_verse: totalVerse,
         statut: p.type === 'vente' && totalVerse >= montantTotal ? 'Paye' : p.statut,
+        ...(demandeProchaineEcheance ? (
+          p.type === 'vente' ? { date_echeance: form.prochaine_echeance } : { date: form.prochaine_echeance }
+        ) : {}),
       }))
       setResults((rs) => rs.map((r) => r.id === selected.id ? { ...r, total_verse: totalVerse } : r))
       // Impression automatique du reçu
@@ -141,7 +155,7 @@ export default function Encaissements() {
           sub={`Montant ${selected.type === 'vente' ? 'total' : 'mensuel'} : ${fmt(selected.montant_total)}`}
           right={<button className="btn-secondary text-sm" onClick={() => setSelected(null)}>← Retour aux résultats</button>}
         >
-          <div className="grid grid-cols-3 gap-3 mb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
             <div className="card text-center">
               <p className="text-xs text-gray-500 mb-1">Encaissé</p>
               <p className="text-lg font-bold text-[#1b75bc]">{fmt(selected.total_verse)}</p>
@@ -154,6 +168,14 @@ export default function Encaissements() {
               <p className="text-xs text-gray-500 mb-1">Statut</p>
               <p className={`text-lg font-bold ${statutColor(selected.statut)}`}>{selected.statut}</p>
             </div>
+            {reste > 0 && supportsEcheance && (
+              <div className="card text-center">
+                <p className="text-xs text-gray-500 mb-1">Prochaine échéance</p>
+                <p className="text-lg font-bold text-gray-700">
+                  {fmtDate(selected.type === 'vente' ? selected.date_echeance : selected.date)}
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end mb-3">
@@ -235,6 +257,25 @@ export default function Encaissements() {
               <input type="date" className="input" value={form.date} onChange={set('date')} required />
             </div>
           </div>
+          {form.montant && (
+            <p className="text-xs text-gray-500">
+              Reste après cette tranche : <strong>{fmt(Math.max(0, soldeApresVersement))}</strong>
+            </p>
+          )}
+          {demandeProchaineEcheance && (
+            <div>
+              <label className="label">Prochaine date de paiement *</label>
+              <input
+                type="date"
+                className="input"
+                value={form.prochaine_echeance}
+                onChange={set('prochaine_echeance')}
+                min={form.date}
+                required
+              />
+              <p className="text-xs text-gray-400 mt-1">Il restera un solde après cette tranche : indiquez quand le client s'engage à payer la suite.</p>
+            </div>
+          )}
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-2">
             <button type="button" className="btn-secondary flex-1" onClick={() => setModalOpen(false)}>Annuler</button>
