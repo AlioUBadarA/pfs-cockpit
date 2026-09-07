@@ -63,6 +63,8 @@ export default function Encaissements() {
 
   const set = (f) => (e) => setForm((p) => ({ ...p, [f]: e.target.value }))
 
+  const reste = selected ? Math.max(0, Number(selected.montant_total) - Number(selected.total_verse)) : 0
+
   // Le paddy n'a pas de suivi d'échéance structuré côté backend — pas la peine de demander
   // une prochaine date de paiement pour ce type de transaction.
   const supportsEcheance = selected && ['vente', 'echeance'].includes(selected.type)
@@ -103,8 +105,6 @@ export default function Encaissements() {
       setError(err.response?.data?.error || 'Erreur lors de l\'enregistrement')
     } finally { setSaving(false) }
   }
-
-  const reste = selected ? Math.max(0, Number(selected.montant_total) - Number(selected.total_verse)) : 0
 
   return (
     <div className="space-y-5">
