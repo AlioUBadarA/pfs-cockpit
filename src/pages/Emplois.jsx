@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
 import Modal from '../components/Modal'
 import RoleBadge from '../components/RoleBadge'
+import IdentifiantField from '../components/IdentifiantField'
 import { useAuth } from '../context/AuthContext'
 
 const TYPES = ['CDI','CDD','Temps partiel','Stage','Journalier']
@@ -34,7 +35,7 @@ const INIT = {
   nom: '', poste: '', type_contrat: 'CDI', date_embauche: '', salaire: '', telephone: '', note: '', periode_rizao: 'Avec RIZAO',
   date_naissance: '', lieu_naissance: '', sexe: '', nationalite: '', piece_identite_type: '', piece_identite_numero: '', adresse: '',
 }
-const AFFECT_INIT = { role_plateforme: 'vendeur', email: '', password: '', objectif_annuel: '' }
+const AFFECT_INIT = { role_plateforme: 'vendeur', email: '', telephone: '', password: '', objectif_annuel: '' }
 
 export default function Emplois() {
   const { user } = useAuth()
@@ -116,7 +117,7 @@ export default function Emplois() {
 
   const openAffect = (item) => {
     setAffectTarget(item)
-    setAffectForm({ ...AFFECT_INIT, email: '', password: '' })
+    setAffectForm({ ...AFFECT_INIT, email: '', telephone: item.telephone || '', password: '' })
     setAffectError('')
   }
 
@@ -129,6 +130,7 @@ export default function Emplois() {
       await api.patch(`/api/emplois/${affectTarget.id}/affecter`, {
         role_plateforme: affectForm.role_plateforme,
         email: affectForm.email,
+        telephone: affectForm.telephone,
         password: affectForm.password,
         objectif_annuel: affectForm.objectif_annuel ? Number(affectForm.objectif_annuel) : undefined,
       })
@@ -348,15 +350,13 @@ export default function Emplois() {
               <p className="text-xs text-gray-400 mt-1">Le comptable valide les encaissements déclarés par les commerciaux, pour toute la rizerie.</p>
             )}
           </div>
-          <div>
-            <label className="label">Email {affectTarget?.telephone ? '' : '*'}</label>
-            <input type="email" className="input" value={affectForm.email} onChange={setA('email')} required={!affectTarget?.telephone} />
-            {affectTarget?.telephone && (
-              <p className="text-xs text-gray-400 mt-1">
-                Le téléphone déjà enregistré pour cet employé ({affectTarget.telephone}) servira d'identifiant de connexion si l'email est laissé vide.
-              </p>
-            )}
-          </div>
+          <IdentifiantField
+            email={affectForm.email}
+            telephone={affectForm.telephone}
+            onEmailChange={(v) => setAffectForm((p) => ({ ...p, email: v }))}
+            onTelephoneChange={(v) => setAffectForm((p) => ({ ...p, telephone: v }))}
+            country={user?.pays}
+          />
           <div>
             <label className="label">Mot de passe provisoire *</label>
             <input type="text" className="input" value={affectForm.password} onChange={setA('password')} required minLength={12} placeholder="Min. 12 caractères" />
