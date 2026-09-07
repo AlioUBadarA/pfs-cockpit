@@ -7,13 +7,13 @@ import pfsLogo from '../assets/pfs-logo.png'
 export default function Login() {
   const { login, loading } = useAuth()
   const navigate = useNavigate()
-  const [form, setForm] = useState({ email: '', password: '' })
+  const [form, setForm] = useState({ identifiant: '', password: '' })
   const [error, setError] = useState('')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    const result = await login(form.email, form.password)
+    const result = await login(form.identifiant, form.password)
     if (result.ok) {
       navigate('/')
     } else {
@@ -52,13 +52,13 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="label">Email</label>
+              <label className="label">Email ou téléphone</label>
               <input
-                type="email"
+                type="text"
                 className="input"
-                placeholder="votre@email.com"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                placeholder="votre@email.com ou +221 77 123 45 67"
+                value={form.identifiant}
+                onChange={(e) => setForm({ ...form, identifiant: e.target.value })}
                 required
                 autoFocus
               />

@@ -8,6 +8,7 @@ import RoleBadge from '../../components/RoleBadge'
 import PageTabs from '../../components/PageTabs'
 import LocationFields from '../../components/LocationFields'
 import PhoneField from '../../components/PhoneField'
+import IdentifiantField from '../../components/IdentifiantField'
 import { useAuth } from '../../context/AuthContext'
 import Country from 'country-state-city/lib/country'
 
@@ -43,8 +44,8 @@ export default function AdminDashboard() {
   // Formulaires
   const RIZERIE_INIT    = { nom: '', pays: '', region: '', ville: '', telephone: '', emplois_baseline: '', masse_salariale_baseline: '', ca_baseline: '' }
   const COMPTE_INIT     = { nom: '', email: '', password: '', rizerie_id: '', telephone: '', ville: '' }
-  const SUPPORT_INIT    = { nom: '', email: '', password: '' }
-  const SUPERADMIN_INIT = { nom: '', email: '', password: '' }
+  const SUPPORT_INIT    = { nom: '', email: '', password: '', telephone: '' }
+  const SUPERADMIN_INIT = { nom: '', email: '', password: '', telephone: '' }
   const EXPORT_INIT     = { type: 'ventes', periode: 'mois', annee: new Date().getFullYear(), valeur: new Date().getMonth() + 1, rizerie_id: '' }
   const [rForm, setRForm]   = useState(RIZERIE_INIT)
   const [cForm, setCForm]   = useState(COMPTE_INIT)
@@ -676,21 +677,20 @@ export default function AdminDashboard() {
               <label className="label">Nom complet *</label>
               <input className="input" value={cForm.nom} onChange={setC('nom')} required placeholder="Mamadou Diallo" />
             </div>
-            <div>
-              <label className="label">Email *</label>
-              <input type="email" className="input" value={cForm.email} onChange={setC('email')} required placeholder="email@rizerie.sn" />
-            </div>
+            <IdentifiantField
+              email={cForm.email}
+              telephone={cForm.telephone}
+              onEmailChange={(v) => setCForm((p) => ({ ...p, email: v }))}
+              onTelephoneChange={(v) => setCForm((p) => ({ ...p, telephone: v }))}
+              country={rizeries.find((r) => r.id === cForm.rizerie_id)?.pays}
+            />
             <div>
               <label className="label">Mot de passe provisoire *</label>
               <input type="text" className="input" value={cForm.password} onChange={setC('password')} required minLength={12} placeholder="Min. 12 caractères" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <PhoneField
-                country={rizeries.find((r) => r.id === cForm.rizerie_id)?.pays}
-                value={cForm.telephone}
-                onChange={(v) => setCForm((p) => ({ ...p, telephone: v }))}
-              />
-              <div><label className="label">Ville</label><input className="input" value={cForm.ville} onChange={setC('ville')} placeholder="Dakar" /></div>
+            <div>
+              <label className="label">Ville</label>
+              <input className="input" value={cForm.ville} onChange={setC('ville')} placeholder="Dakar" />
             </div>
             <div className="flex gap-3 pt-2">
               <button type="button" className="btn-secondary flex-1" onClick={() => setModal(null)}>Annuler</button>
@@ -711,10 +711,12 @@ export default function AdminDashboard() {
               <label className="label">Nom complet *</label>
               <input className="input" value={sForm.nom} onChange={setS('nom')} required placeholder="Aïssatou Ndiaye" />
             </div>
-            <div>
-              <label className="label">Email *</label>
-              <input type="email" className="input" value={sForm.email} onChange={setS('email')} required placeholder="support@pfs.sn" />
-            </div>
+            <IdentifiantField
+              email={sForm.email}
+              telephone={sForm.telephone}
+              onEmailChange={(v) => setSForm((p) => ({ ...p, email: v }))}
+              onTelephoneChange={(v) => setSForm((p) => ({ ...p, telephone: v }))}
+            />
             <div>
               <label className="label">Mot de passe provisoire *</label>
               <input type="text" className="input" value={sForm.password} onChange={setS('password')} required minLength={12} placeholder="Min. 12 caractères" />
@@ -739,10 +741,12 @@ export default function AdminDashboard() {
               <label className="label">Nom complet *</label>
               <input className="input" value={saForm.nom} onChange={setSa('nom')} required placeholder="Aïssatou Ndiaye" />
             </div>
-            <div>
-              <label className="label">Email *</label>
-              <input type="email" className="input" value={saForm.email} onChange={setSa('email')} required placeholder="admin@pfs.sn" />
-            </div>
+            <IdentifiantField
+              email={saForm.email}
+              telephone={saForm.telephone}
+              onEmailChange={(v) => setSaForm((p) => ({ ...p, email: v }))}
+              onTelephoneChange={(v) => setSaForm((p) => ({ ...p, telephone: v }))}
+            />
             <div>
               <label className="label">Mot de passe provisoire *</label>
               <input type="text" className="input" value={saForm.password} onChange={setSa('password')} required minLength={12} placeholder="Min. 12 caractères" />

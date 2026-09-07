@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($tmp = \"$env:TEMP\\\\pfs-cockpit-clone-check\"; if \\(Test-Path $tmp\\) { Remove-Item -Recurse -Force $tmp }; git clone https://github.com/AlioUBadarA/pfs-cockpit $tmp 2>&1 | Out-String)"
+    ]
+  }
+}

@@ -18,7 +18,7 @@ export default function PhoneField({ country, value, onChange, label = 'Téléph
 
   return (
     <div>
-      <label className="label">{label}</label>
+      {label && <label className="label">{label}</label>}
       <div className="flex gap-2">
         {callingCode && (
           <span className="px-3 flex items-center justify-center bg-gray-50 text-gray-500 text-sm font-medium rounded-lg border border-gray-300 shrink-0">

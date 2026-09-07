@@ -349,8 +349,13 @@ export default function Emplois() {
             )}
           </div>
           <div>
-            <label className="label">Email *</label>
-            <input type="email" className="input" value={affectForm.email} onChange={setA('email')} required />
+            <label className="label">Email {affectTarget?.telephone ? '' : '*'}</label>
+            <input type="email" className="input" value={affectForm.email} onChange={setA('email')} required={!affectTarget?.telephone} />
+            {affectTarget?.telephone && (
+              <p className="text-xs text-gray-400 mt-1">
+                Le téléphone déjà enregistré pour cet employé ({affectTarget.telephone}) servira d'identifiant de connexion si l'email est laissé vide.
+              </p>
+            )}
           </div>
           <div>
             <label className="label">Mot de passe provisoire *</label>

@@ -14,10 +14,10 @@ export function AuthProvider({ children }) {
   })
   const [loading, setLoading] = useState(false)
 
-  const login = async (email, password) => {
+  const login = async (identifiant, password) => {
     setLoading(true)
     try {
-      const { data } = await api.post('/api/auth/login', { email, password })
+      const { data } = await api.post('/api/auth/login', { identifiant, password })
       localStorage.setItem('pfs_token', data.token)
       localStorage.setItem('pfs_user', JSON.stringify(data.user))
       setUser(data.user)

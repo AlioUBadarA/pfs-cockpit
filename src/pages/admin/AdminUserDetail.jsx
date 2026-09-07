@@ -4,6 +4,7 @@ import api from '../../services/api'
 import KpiCard from '../../components/KpiCard'
 import StatutBadge from '../../components/StatutBadge'
 import RoleBadge from '../../components/RoleBadge'
+import IdentifiantField from '../../components/IdentifiantField'
 import { useAuth } from '../../context/AuthContext'
 
 const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
@@ -452,14 +453,13 @@ export default function AdminUserDetail() {
               <label className="label">Nom complet *</label>
               <input className="input" value={vendeurForm.nom} onChange={e => setVendeurForm({...vendeurForm, nom: e.target.value})} required />
             </div>
-            <div>
-              <label className="label">Email *</label>
-              <input type="email" className="input" value={vendeurForm.email} onChange={e => setVendeurForm({...vendeurForm, email: e.target.value})} required />
-            </div>
-            <div>
-              <label className="label">Téléphone</label>
-              <input className="input" value={vendeurForm.telephone} onChange={e => setVendeurForm({...vendeurForm, telephone: e.target.value})} />
-            </div>
+            <IdentifiantField
+              email={vendeurForm.email}
+              telephone={vendeurForm.telephone}
+              onEmailChange={(v) => setVendeurForm({ ...vendeurForm, email: v })}
+              onTelephoneChange={(v) => setVendeurForm({ ...vendeurForm, telephone: v })}
+              country={user.pays}
+            />
             <div>
               <label className="label">Mot de passe provisoire * (min. 12 caractères)</label>
               <input type="text" className="input" value={vendeurForm.password} onChange={e => setVendeurForm({...vendeurForm, password: e.target.value})} required minLength={12} />
