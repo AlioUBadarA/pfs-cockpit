@@ -5,6 +5,7 @@ const CONFIG = {
   vendeur:    { label: 'Commercial', cls: 'bg-gray-100 text-gray-700 border border-gray-300' },
   superadmin: { label: 'Super-admin','cls': 'bg-red-100 text-red-800 border border-red-300' },
   support:    { label: 'Support',    cls: 'bg-orange-100 text-orange-800 border border-orange-300' },
+  comptable:  { label: 'Comptable',  cls: 'bg-teal-100 text-teal-800 border border-teal-300' },
 }
 
 export default function RoleBadge({ role }) {

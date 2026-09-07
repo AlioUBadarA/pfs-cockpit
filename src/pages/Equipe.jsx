@@ -11,7 +11,6 @@ import { useAuth } from '../context/AuthContext'
 const fmt = (n) => Number(n || 0).toLocaleString('fr-FR') + ' F'
 
 const EDIT_INIT   = { nom: '', email: '', telephone: '' }
-const CREATE_INIT = { nom: '', email: '', password: '', telephone: '', role: 'vendeur', zone: '', manager_id: '' }
 const COLS   = ['Commercial', 'Obj./mois', 'Obj./an', 'Réalisé YTD', 'Écart', 'Atteinte', 'Projection', 'Marge nette', 'Activité', 'Créances', 'Actions']
 const ALIGNS = ['left', 'right', 'right', 'right', 'right', 'left', 'right', 'right', 'left', 'right', 'center']
 
@@ -64,11 +63,9 @@ export default function Equipe() {
   const [openMenu, setOpenMenu]     = useState(null)
   const [pwdModal, setPwdModal]     = useState(null)
   const [editModal, setEditModal]   = useState(null)
-  const [createOpen, setCreateOpen] = useState(false)
   const [assignModal, setAssignModal] = useState(null)
   const [teamModal, setTeamModal]   = useState(null)
   const [form, setForm]             = useState(EDIT_INIT)
-  const [cForm, setCForm]           = useState(CREATE_INIT)
   const [newPwd, setNewPwd]         = useState('')
   const [assignMgr, setAssignMgr]   = useState('')
   const [saving, setSaving]         = useState(false)
@@ -87,7 +84,6 @@ export default function Equipe() {
   useEffect(() => { load() }, [load])
 
   const set  = (f) => (e) => setForm(p => ({ ...p, [f]: e.target.value }))
-  const setC = (f) => (e) => setCForm(p => ({ ...p, [f]: e.target.value }))
 
   const handleEdit = async (e) => {
     e.preventDefault(); setSaving(true); setError('')
@@ -112,15 +108,6 @@ export default function Equipe() {
     try {
       await api.patch(`/api/equipe/${v.id}/force-password-change`)
       load()
-    } catch (err) { setError(err.response?.data?.error || 'Erreur') }
-    finally { setSaving(false) }
-  }
-
-  const handleCreate = async (e) => {
-    e.preventDefault(); setSaving(true); setError('')
-    try {
-      await api.post('/api/equipe', cForm)
-      setCreateOpen(false); setCForm(CREATE_INIT); load()
     } catch (err) { setError(err.response?.data?.error || 'Erreur') }
     finally { setSaving(false) }
   }
@@ -244,12 +231,13 @@ export default function Equipe() {
           <h2 className="font-display text-xl font-bold text-gray-900">Commerciaux</h2>
           <p className="text-sm text-gray-500 mt-0.5">Objectif · réalisé · écart · forecast · marge · créances</p>
         </div>
-        <button onClick={() => { setCForm(CREATE_INIT); setError(''); setCreateOpen(true) }} className="btn-primary text-sm">
-          + Créer un commercial
-        </button>
       </div>
 
-      {error && !editModal && !pwdModal && !createOpen && !assignModal && (
+      <p className="text-xs text-gray-400 -mt-3">
+        La création d'un commercial se fait désormais depuis RH (Affecter), pour garder une fiche employé complète.
+      </p>
+
+      {error && !editModal && !pwdModal && !assignModal && (
         <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">{error}</div>
       )}
 
@@ -320,65 +308,6 @@ export default function Equipe() {
           </div>
         )}
       </Panel>
-
-      {/* Modal créer commercial/manager */}
-      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Créer un commercial">
-        <form onSubmit={handleCreate} className="space-y-4">
-          {!isManager && (
-            <div>
-              <label className="label">Rôle</label>
-              <select
-                className="input"
-                value={cForm.role}
-                onChange={(e) => {
-                  const newRole = e.target.value
-                  setCForm(p => ({ ...p, role: newRole, manager_id: newRole === 'manager' ? '' : p.manager_id }))
-                }}
-              >
-                <option value="vendeur">Commercial (vendeur)</option>
-                <option value="manager">Manager</option>
-                {isRizier && <option value="directeur">Directeur</option>}
-              </select>
-            </div>
-          )}
-          {cForm.role === 'manager' && (
-            <div>
-              <label className="label">Zone</label>
-              <input className="input" value={cForm.zone} onChange={setC('zone')} placeholder="Ex: Dakar Nord" />
-            </div>
-          )}
-          {cForm.role === 'vendeur' && !isManager && managers.length > 0 && (
-            <div>
-              <label className="label">Rattacher à un manager (optionnel)</label>
-              <select className="input" value={cForm.manager_id} onChange={setC('manager_id')}>
-                <option value="">Aucun (rattaché directement à moi)</option>
-                {managers.map((m) => <option key={m.id} value={m.id}>{m.nom}{m.zone ? ` (${m.zone})` : ''}</option>)}
-              </select>
-            </div>
-          )}
-          <div>
-            <label className="label">Nom complet *</label>
-            <input className="input" value={cForm.nom} onChange={setC('nom')} required />
-          </div>
-          <div>
-            <label className="label">Email *</label>
-            <input type="email" className="input" value={cForm.email} onChange={setC('email')} required />
-          </div>
-          <div>
-            <label className="label">Mot de passe provisoire *</label>
-            <input type="text" className="input" value={cForm.password} onChange={setC('password')} required minLength={12} placeholder="Min. 12 caractères" />
-          </div>
-          <div>
-            <label className="label">Téléphone</label>
-            <input className="input" value={cForm.telephone} onChange={setC('telephone')} />
-          </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <div className="flex gap-3 pt-2">
-            <button type="button" className="btn-secondary flex-1" onClick={() => setCreateOpen(false)}>Annuler</button>
-            <button type="submit" disabled={saving} className="btn-primary flex-1">{saving ? 'Création...' : 'Créer'}</button>
-          </div>
-        </form>
-      </Modal>
 
       {/* Modal éditer */}
       <Modal open={!!editModal} onClose={() => setEditModal(null)} title={`Modifier : ${editModal?.nom}`}>

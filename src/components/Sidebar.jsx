@@ -7,7 +7,7 @@ const GROUPS_USER = [
     { to: '/', label: 'Direction', end: true },
     { to: '/managers', label: 'Managers' },
     { to: '/equipe', label: 'Commerciaux' },
-    { to: '/emplois', label: 'Emplois' },
+    { to: '/emplois', label: 'RH' },
   ] },
   { title: 'Clients & Ventes', items: [
     { to: '/clients', label: 'Portefeuille' },
