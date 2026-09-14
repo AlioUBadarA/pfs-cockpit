@@ -9,7 +9,7 @@ import { printBonCommande, printFacture } from '../utils/printDocument'
 const STATUTS_DB   = ['En cours', 'Paye', 'En retard']
 const STATUT_LABEL = { 'Paye': 'Payé', 'En cours': 'En cours', 'En retard': 'En retard' }
 // Valeurs exactes du backend (gcr/utils/paiement.js)
-const CONDITIONS_PAIEMENT = ['Comptant', 'J+15', 'J+30', '50% comptant / 50% J+15', '50% comptant / 50% J+30']
+const CONDITIONS_PAIEMENT = ['Comptant', 'J+15', 'J+30', 'J+45', 'J+60', 'J+90', '50% comptant / 50% J+15', '50% comptant / 50% J+30']
 
 const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-'

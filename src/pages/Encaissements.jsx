@@ -16,6 +16,8 @@ const statutColor = (s) => ({
   Actif: 'text-green-700', Suspendu: 'text-amber-600', Terminé: 'text-gray-500',
 }[s] || 'text-gray-600')
 
+const TYPE_LABEL = { vente: 'Vente', echeance: 'Contrat', paddy: 'Contrat paddy', depot: 'Dépôt-vente' }
+
 export default function Encaissements() {
   const { user } = useAuth()
   const [q, setQ] = useState('')
@@ -92,7 +94,7 @@ export default function Encaissements() {
       const resteAdu = Math.max(0, montantTotal - totalVerse)
       setSelected((p) => ({
         ...p, total_verse: totalVerse,
-        statut: p.type === 'vente' && totalVerse >= montantTotal ? 'Paye' : p.statut,
+        statut: ['vente', 'depot'].includes(p.type) && totalVerse >= montantTotal ? 'Paye' : p.statut,
         ...(demandeProchaineEcheance ? (
           p.type === 'vente' ? { date_echeance: form.prochaine_echeance } : { date: form.prochaine_echeance }
         ) : {}),
@@ -134,7 +136,7 @@ export default function Encaissements() {
             align={['left', 'left', 'left', 'right', 'right', 'left']}
             rows={results.map((r) => [
               { v: r.numero || '-', sub: fmtDate(r.date) },
-              r.type === 'vente' ? 'Vente' : 'Contrat',
+              TYPE_LABEL[r.type] || 'Contrat',
               r.client_nom,
               fmt(r.montant_total),
               fmt(r.total_verse),
@@ -151,8 +153,8 @@ export default function Encaissements() {
 
       {selected && (
         <Panel
-          title={`${selected.type === 'vente' ? 'Vente' : 'Contrat'} ${selected.numero || ''} — ${selected.client_nom}`}
-          sub={`Montant ${selected.type === 'vente' ? 'total' : 'mensuel'} : ${fmt(selected.montant_total)}`}
+          title={`${TYPE_LABEL[selected.type] || 'Contrat'} ${selected.numero || ''} — ${selected.client_nom}`}
+          sub={`Montant ${selected.type === 'vente' ? 'total' : selected.type === 'depot' ? 'dû (quantités vendues déclarées)' : 'mensuel'} : ${fmt(selected.montant_total)}`}
           right={<button className="btn-secondary text-sm" onClick={() => setSelected(null)}>← Retour aux résultats</button>}
         >
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">

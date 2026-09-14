@@ -16,6 +16,7 @@ import Actions from './pages/Actions'
 import Insights from './pages/Insights'
 import ContratsClients from './pages/ContratsClients'
 import ContratsPaddy from './pages/ContratsPaddy'
+import DepotVente from './pages/DepotVente'
 import Equipe from './pages/Equipe'
 import Emplois from './pages/Emplois'
 import Managers from './pages/Managers'
@@ -101,6 +102,7 @@ function AppRoutes() {
         <Route path="insights"    element={<Insights />} />
         <Route path="contrats-clients" element={<ContratsClients />} />
         <Route path="contrats-paddy"   element={<ContratsPaddy />} />
+        <Route path="depots-vente"     element={<DepotVente />} />
         <Route path="equipe"     element={<ManagerRoute><Equipe /></ManagerRoute>} />
         <Route path="emplois"    element={<ManagerRoute><Emplois /></ManagerRoute>} />
         <Route path="managers"   element={<ManagerRoute><Managers /></ManagerRoute>} />
