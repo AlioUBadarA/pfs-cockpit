@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, Link } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import ImpersonationBanner from './ImpersonationBanner'
 import Sidebar from './Sidebar'
@@ -9,6 +9,13 @@ export default function Layout() {
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(() => {
+    try { return localStorage.getItem('cc_sidebar_open') === '1' } catch { return false }
+  })
+
+  useEffect(() => {
+    try { localStorage.setItem('cc_sidebar_open', desktopSidebarOpen ? '1' : '0') } catch { /* ignore */ }
+  }, [desktopSidebarOpen])
 
   const handleLogout = () => {
     setMenuOpen(false)
@@ -25,15 +32,18 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--cc-bg)' }}>
-      {/* Sidebar — fixe sur desktop, tiroir sur mobile */}
+      {/* Sidebar — repliable sur desktop, tiroir sur mobile */}
       <div className="hidden md:block">
-        <Sidebar />
+        <Sidebar
+          collapsed={!desktopSidebarOpen}
+          onToggle={() => setDesktopSidebarOpen((o) => !o)}
+        />
       </div>
       {mobileNavOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div className="fixed inset-0 bg-black/40" onClick={() => setMobileNavOpen(false)} />
           <div className="relative z-50 w-[230px] h-full">
-            <Sidebar onNavigate={() => setMobileNavOpen(false)} />
+            <Sidebar onNavigate={() => setMobileNavOpen(false)} onToggle={() => setMobileNavOpen(false)} />
           </div>
         </div>
       )}
