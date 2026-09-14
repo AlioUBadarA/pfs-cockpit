@@ -99,12 +99,21 @@ export default function AdminUserDetail() {
     }
   }
 
-  const doDelete = async () => {
+  const doDelete = async (force = false) => {
     setSaving(true)
     try {
-      await api.delete(`/api/admin/users/${id}`)
+      await api.delete(`/api/admin/users/${id}`, force ? { data: { force: true } } : undefined)
       navigate('/admin')
-    } catch (err) { setError(err.response?.data?.error || 'Erreur') }
+    } catch (err) {
+      const msg = err.response?.data?.error || 'Erreur'
+      if (!force && isSuperadmin && msg.includes('Impossible de supprimer')) {
+        if (confirm(`${msg}\n\nForcer la suppression : les ventes, clients, emplois et contrats de ce compte (et de son équipe) seront archivés puis supprimés définitivement. Continuer ?`)) {
+          return doDelete(true)
+        }
+        return
+      }
+      setError(msg)
+    }
     finally { setSaving(false) }
   }
 
@@ -487,7 +496,7 @@ export default function AdminUserDetail() {
           </p>
           <div className="flex gap-3">
             <button className="btn-secondary flex-1" onClick={() => setShowDelete(false)}>Annuler</button>
-            <button disabled={saving} onClick={doDelete} className="btn-danger flex-1 flex items-center justify-center gap-2">
+            <button disabled={saving} onClick={() => doDelete()} className="btn-danger flex-1 flex items-center justify-center gap-2">
               {saving && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
               Supprimer définitivement
             </button>

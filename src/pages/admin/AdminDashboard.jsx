@@ -93,12 +93,21 @@ export default function AdminDashboard() {
     finally { setSaving(false) }
   }
 
-  const handleDeleteRizerie = async (r) => {
-    if (!confirm(`Supprimer la rizerie "${r.nom}" ?`)) return
+  const handleDeleteRizerie = async (r, force = false) => {
+    if (!force && !confirm(`Supprimer la rizerie "${r.nom}" ?`)) return
     try {
-      await api.delete(`/api/admin/rizeries/${r.id}`)
+      await api.delete(`/api/admin/rizeries/${r.id}`, force ? { data: { force: true } } : undefined)
       load()
-    } catch (err) { setError(err.response?.data?.error || 'Erreur') }
+    } catch (err) {
+      const msg = err.response?.data?.error || 'Erreur'
+      if (!force && isSuperadmin && msg.includes('encore rattachés')) {
+        if (confirm(`${msg}\n\nForcer la suppression : tous les comptes, ventes, clients et emplois de cette rizerie seront archivés puis supprimés définitivement. Continuer ?`)) {
+          return handleDeleteRizerie(r, true)
+        }
+        return
+      }
+      setError(msg)
+    }
   }
 
   const handleCreateCompte = async (e) => {
