@@ -2,6 +2,7 @@ import { Outlet, useNavigate, Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import ImpersonationBanner from './ImpersonationBanner'
+import DemoBanner from './DemoBanner'
 import Sidebar from './Sidebar'
 
 export default function Layout() {
@@ -49,6 +50,7 @@ export default function Layout() {
       )}
 
       <div className="flex-1 min-w-0 flex flex-col">
+        <DemoBanner />
         <ImpersonationBanner />
         {/* Topbar */}
         <header

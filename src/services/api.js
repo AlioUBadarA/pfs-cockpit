@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { isDemoMode, demoAdapter } from '../demo/demoMode'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'https://gcr-3qft.onrender.com',
@@ -6,6 +7,11 @@ const api = axios.create({
 })
 
 api.interceptors.request.use((config) => {
+  // Mode démo : la requête est servie localement par la fausse API, rien ne part vers le serveur
+  if (isDemoMode()) {
+    config.adapter = demoAdapter
+    return config
+  }
   const token = localStorage.getItem('pfs_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config

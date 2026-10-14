@@ -1,5 +1,6 @@
 import { createContext, useContext, useState } from 'react'
 import api from '../services/api'
+import { isDemoMode, setDemoMode, clearDemoData } from '../demo/demoMode'
 
 const AuthContext = createContext(null)
 
@@ -13,6 +14,7 @@ export function AuthProvider({ children }) {
     return stored ? JSON.parse(stored) : null
   })
   const [loading, setLoading] = useState(false)
+  const [isDemo, setIsDemo] = useState(() => isDemoMode())
 
   const login = async (identifiant, password) => {
     setLoading(true)
@@ -24,6 +26,26 @@ export function AuthProvider({ children }) {
       return { ok: true }
     } catch (err) {
       return { ok: false, message: err.response?.data?.error || 'Erreur de connexion' }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Compte démo : bascule l'app sur la fausse API locale (données fictives, aucun appel serveur)
+  const loginDemo = async () => {
+    setLoading(true)
+    try {
+      setDemoMode(true)
+      setIsDemo(true)
+      const { data } = await api.post('/api/auth/login', { identifiant: 'demo', password: 'demo' })
+      localStorage.setItem('pfs_token', data.token)
+      localStorage.setItem('pfs_user', JSON.stringify(data.user))
+      setUser(data.user)
+      return { ok: true }
+    } catch {
+      setDemoMode(false)
+      setIsDemo(false)
+      return { ok: false, message: 'Impossible de lancer la démo' }
     } finally {
       setLoading(false)
     }
@@ -44,6 +66,12 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('pfs_admin_token')
     localStorage.removeItem('pfs_admin_user')
     localStorage.removeItem('pfs_impersonating')
+    if (isDemo) {
+      // Quitter la démo efface les modifications faites par le visiteur
+      setDemoMode(false)
+      setIsDemo(false)
+      clearDemoData()
+    }
     setUser(null)
     setImpersonating(null)
   }
@@ -102,7 +130,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{
-      user, loading, login, logout, register, updateUser,
+      user, loading, login, loginDemo, isDemo, logout, register, updateUser,
       isAdmin, isSuperadmin, isSupport, isVendeur, isManager, isDirecteur, isRizier, isComptable,
       impersonating, startImpersonation, stopImpersonation,
     }}>

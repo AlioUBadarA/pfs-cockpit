@@ -5,7 +5,7 @@ import pfsIcon from '../assets/pfs-icon.png'
 import pfsLogo from '../assets/pfs-logo.png'
 
 export default function Login() {
-  const { login, loading } = useAuth()
+  const { login, loginDemo, loading } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({ identifiant: '', password: '' })
   const [error, setError] = useState('')
@@ -19,6 +19,13 @@ export default function Login() {
     } else {
       setError(result.message)
     }
+  }
+
+  const handleDemo = async () => {
+    setError('')
+    const result = await loginDemo()
+    if (result.ok) navigate('/')
+    else setError(result.message)
   }
 
   return (
@@ -90,6 +97,22 @@ export default function Login() {
             Accès sur invitation uniquement.<br />
             Contactez l'administrateur PFS pour obtenir un compte.
           </p>
+        </div>
+
+        <div className="card shadow-sm mt-4 text-center">
+          <p className="text-sm font-semibold text-gray-800">Découvrir la plateforme</p>
+          <p className="text-xs text-gray-500 mt-1 mb-3">
+            Explorez un compte de démonstration rempli de données fictives.
+            Vos actions n'affectent aucune donnée réelle.
+          </p>
+          <button
+            type="button"
+            onClick={handleDemo}
+            disabled={loading}
+            className="btn-secondary w-full"
+          >
+            Essayer la démo
+          </button>
         </div>
 
         <div className="flex items-center justify-center mt-6 opacity-60">
