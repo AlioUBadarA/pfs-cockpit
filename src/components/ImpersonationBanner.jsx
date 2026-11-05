@@ -13,7 +13,7 @@ export default function ImpersonationBanner() {
   }
 
   return (
-    <div className="bg-[#F9A825] text-[#1A1A1A] px-4 py-2 flex items-center justify-between text-sm font-medium sticky top-0 z-50 shadow">
+    <div className="relative z-20 bg-[#F9A825] px-4 py-2 flex items-center justify-between text-sm font-medium text-[#1A1A1A] shadow-sm">
       <div className="flex items-center gap-2">
         <span className="text-lg">👁️</span>
         <span>

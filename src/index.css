@@ -6,13 +6,17 @@
    Solutions (bleu #1b75bc / vert #62bb46), variables centralisées dans ce fichier. */
 :root {
   --cc-bg: #f3f5f7;
-  --cc-sidebar: #102536;
-  --cc-sidebar-text: #9db3c2;
   --cc-border: #dde3e8;
   --cc-accent: #1b75bc;
   --cc-accent-light: #62bb46;
   --cc-text: #16212b;
   --cc-text-muted: #6b7b87;
+  /* Navigation claire, inspirée d'Ant Design Pro */
+  --cc-nav-text: #4b5c68;
+  --cc-nav-muted: #7a8b97;
+  --cc-nav-active: #1b75bc;
+  --cc-nav-active-bg: #eaf3fb;
+  --cc-nav-hover: #f3f6f8;
 }
 
 * {
@@ -108,16 +112,84 @@ body {
     @apply h-2.5 rounded-full overflow-hidden;
     background: #eef1f3;
   }
+}
 
-  /* Navigation latérale */
-  .sidebar-link {
-    @apply flex items-center gap-2.5 w-full px-2.5 py-2 mb-0.5 rounded-md text-[13px] text-left transition-colors duration-150 cursor-pointer;
-    color: var(--cc-sidebar-text);
-  }
-  .sidebar-link:hover { background: rgba(255,255,255,0.06); }
-  .sidebar-link.active {
-    background: var(--cc-accent);
-    color: #fff;
-    font-weight: 600;
+/* ── Page de connexion : animations et effets ── */
+@keyframes login-rise {
+  from { opacity: 0; transform: translate3d(0, 16px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes login-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(0, -8px, 0); }
+}
+@keyframes login-pulse {
+  0%, 100% { opacity: .45; }
+  50%      { opacity: .9; }
+}
+
+.login-rise      { animation: login-rise .75s cubic-bezier(.22, 1, .36, 1) both; }
+.login-rise-1    { animation-delay: .05s; }
+.login-rise-2    { animation-delay: .12s; }
+.login-rise-3    { animation-delay: .19s; }
+.login-rise-4    { animation-delay: .26s; }
+.login-float     { animation: login-float 9s ease-in-out infinite; }
+.login-float-slow{ animation: login-float 12s ease-in-out infinite; }
+.login-pulse-soft{ animation: login-pulse 6s ease-in-out infinite; }
+
+.login-grid {
+  background-image: radial-gradient(rgba(255, 255, 255, .18) 1px, transparent 1px);
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(ellipse at 30% 25%, #000 10%, transparent 70%);
+  mask-image: radial-gradient(ellipse at 30% 25%, #000 10%, transparent 70%);
+}
+
+.login-submit {
+  background-image: linear-gradient(118deg, #1b75bc 0%, #1769a8 48%, #2b8f73 125%);
+}
+.login-submit:hover:not(:disabled) {
+  background-image: linear-gradient(118deg, #1d7ec9 0%, #176bab 48%, #2f9a7c 125%);
+}
+
+/* ── Layout : panneaux déroulants et tiroir de navigation ── */
+@keyframes cc-pop-in {
+  from { opacity: 0; transform: translateY(-6px) scale(.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes cc-drawer-in {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+.cc-pop       { animation: cc-pop-in .16s cubic-bezier(.2, .8, .3, 1) both; }
+.cc-drawer-in { animation: cc-drawer-in .22s cubic-bezier(.2, .8, .3, 1) both; }
+
+.cc-sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #d9e2e8 transparent;
+  overscroll-behavior: contain;
+}
+.cc-sidebar-scroll::-webkit-scrollbar { width: 5px; }
+.cc-sidebar-scroll::-webkit-scrollbar-thumb { background: #dde5ea; border-radius: 9999px; }
+
+/* Écrans peu hauts : on allège les éléments décoratifs pour garder les panneaux non scrollables. */
+@media (max-height: 800px) and (min-width: 768px) {
+  .login-brand-footer { display: none !important; }
+}
+@media (max-height: 760px) and (min-width: 768px) {
+  .login-center { padding-top: .75rem !important; padding-bottom: .75rem !important; }
+}
+@media (max-height: 700px) and (min-width: 768px) {
+  .login-preview { display: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-rise,
+  .login-float,
+  .login-float-slow,
+  .login-pulse-soft,
+  .cc-pop,
+  .cc-drawer-in {
+    animation: none !important;
   }
 }

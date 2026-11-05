@@ -1,127 +1,133 @@
-import { Outlet, useNavigate, Link } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import ImpersonationBanner from './ImpersonationBanner'
 import DemoBanner from './DemoBanner'
+import ImpersonationBanner from './ImpersonationBanner'
 import Sidebar from './Sidebar'
+import Topbar from './Topbar'
+
+const COMPACT_BREAKPOINT = 1280
 
 export default function Layout() {
-  const { user, logout, isSuperadmin, isSupport, isManager, isDirecteur, isVendeur, isRizier } = useAuth()
+  const { logout } = useAuth()
   const navigate = useNavigate()
-  const [menuOpen, setMenuOpen] = useState(false)
+  const location = useLocation()
+
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(() => {
-    try { return localStorage.getItem('cc_sidebar_open') === '1' } catch { return false }
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < COMPACT_BREAKPOINT) return true
+    try {
+      const stored = localStorage.getItem('cc_sidebar_open')
+      if (stored !== null) return stored !== '1'
+    } catch {
+      /* stockage indisponible */
+    }
+    return false
   })
 
+  // Mémorise la préférence de largeur du Sidebar.
   useEffect(() => {
-    try { localStorage.setItem('cc_sidebar_open', desktopSidebarOpen ? '1' : '0') } catch { /* ignore */ }
-  }, [desktopSidebarOpen])
+    try {
+      localStorage.setItem('cc_sidebar_open', collapsed ? '0' : '1')
+    } catch {
+      /* stockage indisponible */
+    }
+  }, [collapsed])
+
+  // Tablette : repli automatique ; retour desktop : dépli.
+  useEffect(() => {
+    let compact = window.innerWidth < COMPACT_BREAKPOINT
+    const handleResize = () => {
+      const next = window.innerWidth < COMPACT_BREAKPOINT
+      if (next === compact) return
+      compact = next
+      setCollapsed(next)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // Ferme le tiroir mobile à chaque navigation.
+  useEffect(() => {
+    setMobileNavOpen(false)
+  }, [location.pathname])
+
+  // Verrouille le défilement de la page quand le tiroir est ouvert.
+  useEffect(() => {
+    if (!mobileNavOpen) return
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setMobileNavOpen(false)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.body.style.overflow = previous
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [mobileNavOpen])
 
   const handleLogout = () => {
-    setMenuOpen(false)
     logout()
     navigate('/login')
   }
 
-  const initials = user?.nom
-    ? user.nom.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
-    : 'CC'
-
-  const roleBadge = isSuperadmin ? 'Superadmin' : isSupport ? 'Support'
-    : isManager ? 'Manager' : isDirecteur ? 'Directeur' : isRizier ? 'Rizier' : isVendeur ? 'Commercial' : null
-
   return (
-    <div className="min-h-screen flex" style={{ background: 'var(--cc-bg)' }}>
-      {/* Sidebar — repliable sur desktop, tiroir sur mobile */}
-      <div className="hidden md:block">
-        <Sidebar
-          collapsed={!desktopSidebarOpen}
-          onToggle={() => setDesktopSidebarOpen((o) => !o)}
-        />
+    <div className="flex min-h-screen" style={{ background: 'var(--cc-bg)' }}>
+      {/* Sidebar desktop — fixe, repliable */}
+      <div className="hidden flex-none md:block">
+        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((value) => !value)} />
       </div>
+
+      {/* Sidebar mobile — tiroir */}
       {mobileNavOpen && (
-        <div className="fixed inset-0 z-40 md:hidden">
-          <div className="fixed inset-0 bg-black/40" onClick={() => setMobileNavOpen(false)} />
-          <div className="relative z-50 w-[230px] h-full">
-            <Sidebar onNavigate={() => setMobileNavOpen(false)} onToggle={() => setMobileNavOpen(false)} />
+        <div
+          className="fixed inset-0 z-50 md:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menu de navigation"
+        >
+          <button
+            type="button"
+            onClick={() => setMobileNavOpen(false)}
+            aria-label="Fermer le menu"
+            className="absolute inset-0 h-full w-full cursor-default bg-[#102536]/45 backdrop-blur-[2px]"
+          />
+          <div className="cc-drawer-in relative flex h-full w-[280px] max-w-[86vw] shadow-[0_24px_60px_-20px_rgba(16,37,54,.5)]">
+            <Sidebar
+              mobile
+              collapsed={false}
+              onNavigate={() => setMobileNavOpen(false)}
+              onToggle={() => setMobileNavOpen(false)}
+            />
           </div>
         </div>
       )}
 
-      <div className="flex-1 min-w-0 flex flex-col">
+      {/* Colonne principale */}
+      <div className="flex min-w-0 flex-1 flex-col">
         <DemoBanner />
         <ImpersonationBanner />
-        {/* Topbar */}
-        <header
-          className="sticky top-0 z-30 flex items-center gap-3 px-4 sm:px-6 h-14 border-b"
-          style={{ background: 'rgba(244,242,238,.92)', backdropFilter: 'blur(8px)', borderColor: 'var(--cc-border)' }}
-        >
-          <button
-            onClick={() => setMobileNavOpen(true)}
-            className="md:hidden w-9 h-9 flex items-center justify-center rounded-md hover:bg-black/5 flex-none"
-            aria-label="Ouvrir le menu"
-          >
-            <span className="text-lg">☰</span>
-          </button>
-          <div className="flex-1" />
-          {roleBadge && (
-            <span className="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide" style={{ background: 'var(--cc-accent)', color: '#fff' }}>
-              {roleBadge}
-            </span>
-          )}
-          <div className="hidden sm:flex flex-col items-end leading-tight max-w-[200px]">
-            <span className="text-sm font-medium text-gray-800 truncate w-full text-right">{user?.nom}</span>
-            {user?.rizerie && (
-              <span className="text-[11px] text-gray-500 truncate w-full text-right">{user.rizerie}</span>
-            )}
-          </div>
-          <div className="relative">
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="w-8 h-8 rounded-full font-bold text-sm flex items-center justify-center focus:outline-none flex-none"
-              style={{ background: '#F9A825', color: '#1A1A1A' }}
-            >
-              {initials}
-            </button>
-            {menuOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-                <div className="absolute right-0 top-10 w-52 bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50">
-                  <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="text-sm font-semibold text-gray-900">{user?.nom}</p>
-                    <p className="text-xs text-gray-500">{user?.email}</p>
-                    {user?.rizerie && (
-                      <p className="text-xs text-[#1b75bc] font-medium mt-0.5">{user.rizerie}</p>
-                    )}
-                    {roleBadge && (
-                      <span className="inline-block mt-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase" style={{ background: '#F9A825', color: '#1b75bc' }}>
-                        {roleBadge}
-                      </span>
-                    )}
-                  </div>
-                  <Link
-                    to="/profil/mot-de-passe"
-                    onClick={() => setMenuOpen(false)}
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                  >
-                    Changer le mot de passe
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                  >
-                    Se déconnecter
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </header>
 
-        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6">
-          <Outlet />
+        <Topbar
+          collapsed={collapsed}
+          onToggleCollapse={() => setCollapsed((value) => !value)}
+          onOpenMobileNav={() => setMobileNavOpen(true)}
+          onLogout={handleLogout}
+        />
+
+        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-7xl">
+            <Outlet />
+          </div>
         </main>
+
+        <footer className="border-t border-[#e8edf1] px-4 py-3 sm:px-6 lg:px-8">
+          <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 text-[10.5px] text-[#93a1ab]">
+            <span className="truncate">Cockpit Commercial · Partners In Food Solutions</span>
+            <span className="hidden flex-none sm:inline">{new Date().getFullYear()}</span>
+          </div>
+        </footer>
       </div>
     </div>
   )
