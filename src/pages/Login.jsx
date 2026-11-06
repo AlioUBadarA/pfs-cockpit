@@ -153,24 +153,24 @@ export default function Login() {
         />
 
         <div className="relative z-10 flex w-full items-center gap-3">
-          <div className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-white p-2">
+          <div className="flex h-14 w-14 flex-none items-center justify-center rounded-xl bg-white p-2">
             <img src={pfsIcon} alt="" className="h-full w-full object-contain" />
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#102536]/75">
+            <p className="text-[12.5px] font-semibold uppercase tracking-[0.14em] text-[#102536]/75">
               Partners In Food Solutions
             </p>
-            <p className="font-display text-[18px] font-semibold leading-tight">
+            <p className="font-display text-[22px] font-semibold leading-tight">
               Sales Cockpit
             </p>
           </div>
         </div>
 
-        <div className="relative z-10 w-full max-w-[460px] text-white">
-          <h2 className="font-display text-[clamp(1.7rem,2.3vw,2.4rem)] font-semibold leading-[1.15]">
+        <div className="relative z-10 w-full max-w-[540px] text-white">
+          <h2 className="font-display text-[clamp(2.1rem,2.9vw,3.1rem)] font-semibold leading-[1.15]">
             Le suivi commercial des rizeries accompagnées par PFS.
           </h2>
-          <p className="mt-3 max-w-[40ch] text-[14px] leading-relaxed text-white/90">
+          <p className="mt-4 max-w-[42ch] text-[17px] leading-relaxed text-white/90">
             Ventes, contrats, encaissements et prévisions, dans un même outil partagé par les équipes des rizeries.
           </p>
         </div>
@@ -181,13 +181,13 @@ export default function Login() {
         className="relative flex min-h-[100dvh] flex-col bg-white"
         aria-labelledby="login-title"
       >
-        {/* Suite du fondu du panneau gauche : s'éteint juste avant le formulaire (430 px centré).
+        {/* Suite du fondu du panneau gauche : s'éteint juste avant le formulaire (500 px centré).
             Couche collante : elle reste alignée sur le panneau gauche pendant le défilement. */}
         <div className="pointer-events-none absolute inset-0 hidden md:block" aria-hidden="true">
           <div
             className="sticky top-0 h-[100dvh]"
             style={{
-              width: 'max(0px, calc(50% - 215px - 12px))',
+              width: 'max(0px, calc(50% - 250px - 12px))',
               background: LOGIN_COLOR_GRADIENT,
               WebkitMaskImage: LOGIN_COLOR_FADE_END,
               maskImage: LOGIN_COLOR_FADE_END,
@@ -201,7 +201,7 @@ export default function Login() {
         </div>
 
         <div className="login-center relative z-10 flex flex-1 items-center justify-center px-5 py-4 sm:px-8 md:px-10 xl:px-14">
-          <div className="w-full max-w-[430px]">
+          <div className="w-full max-w-[500px]">
             {/* Identité mobile : le panneau latéral est masqué */}
             <div className="mb-6 flex items-center gap-3 md:hidden">
               <div className="flex h-11 w-11 flex-none items-center justify-center rounded-2xl bg-white p-2 shadow-sm ring-1 ring-black/5">
@@ -220,14 +220,14 @@ export default function Login() {
             <div className="login-rise login-rise-1">
               <h1
                 id="login-title"
-                className="font-display text-[clamp(1.75rem,3vw,2.15rem)] font-semibold leading-tight text-[#102536]"
+                className="font-display text-[clamp(2.2rem,3.4vw,2.9rem)] font-semibold leading-tight text-[#102536]"
               >
                 Connexion
               </h1>
-              <p className="mt-1 text-[15px] font-semibold leading-snug text-[#1b75bc]">
+              <p className="mt-1 text-[18.5px] font-semibold leading-snug text-[#1b75bc]">
                 Partners In Food Solutions vous souhaite la bienvenue
               </p>
-              <p className="mt-1 text-[13.5px] leading-snug text-[#6b7b87] sm:whitespace-nowrap">
+              <p className="mt-1 text-[16px] leading-snug text-[#6b7b87] sm:whitespace-nowrap">
                 Saisissez vos identifiants pour accéder à votre espace.
               </p>
             </div>
@@ -236,7 +236,7 @@ export default function Login() {
               <div
                 id="login-error"
                 role="alert"
-                className={`login-rise mt-4 flex gap-3 rounded-xl border px-4 py-3.5 text-[12.5px] leading-relaxed ${
+                className={`login-rise mt-4 flex gap-3 rounded-xl border px-4 py-3.5 text-[14.5px] leading-relaxed ${
                   isSuspended
                     ? 'border-orange-300 bg-orange-50 text-orange-800'
                     : 'border-red-200 bg-red-50 text-red-700'
@@ -249,7 +249,7 @@ export default function Login() {
                   {isSuspended && <p className="font-semibold">Accès suspendu</p>}
                   <p>{error}</p>
                   {isSuspended && (
-                    <p className="mt-1.5 text-[11px] opacity-90">
+                    <p className="mt-1.5 text-[13px] opacity-90">
                       Contactez l'administrateur PFS pour régulariser votre situation.
                     </p>
                   )}
@@ -259,13 +259,13 @@ export default function Login() {
 
             <form
               onSubmit={handleSubmit}
-              className="login-rise login-rise-2 mt-5 space-y-3.5"
+              className="login-rise login-rise-2 mt-6 space-y-4"
               aria-busy={loading}
             >
               <div>
                 <label
                   htmlFor="identifiant"
-                  className="mb-1.5 block text-[12.5px] font-semibold tracking-wide text-[#34434f]"
+                  className="mb-1.5 block text-[14.5px] font-semibold tracking-wide text-[#34434f]"
                 >
                   E-mail ou téléphone
                 </label>
@@ -281,7 +281,7 @@ export default function Login() {
                     onChange={(e) => setForm({ ...form, identifiant: e.target.value })}
                     required
                     autoFocus
-                    className="h-11 w-full rounded-xl border border-[#d8e1e8] bg-[#fbfcfd] pl-11 pr-4 text-[14px] text-[#16212b] outline-none transition-all duration-200 placeholder:text-[#a3b0ba] hover:border-[#c3d0d9] focus:border-[#1b75bc] focus:bg-white focus:ring-4 focus:ring-[#1b75bc]/10"
+                    className="h-12 w-full rounded-xl border border-[#d8e1e8] bg-[#fbfcfd] pl-11 pr-4 text-[16px] text-[#16212b] outline-none transition-all duration-200 placeholder:text-[#a3b0ba] hover:border-[#c3d0d9] focus:border-[#1b75bc] focus:bg-white focus:ring-4 focus:ring-[#1b75bc]/10"
                   />
                 </div>
               </div>
@@ -290,7 +290,7 @@ export default function Login() {
                 <div className="mb-1.5 flex items-center justify-between gap-3">
                   <label
                     htmlFor="password"
-                    className="block text-[12.5px] font-semibold tracking-wide text-[#34434f]"
+                    className="block text-[14.5px] font-semibold tracking-wide text-[#34434f]"
                   >
                     Mot de passe
                   </label>
@@ -299,7 +299,7 @@ export default function Login() {
                     onClick={() => setShowForgotHelp((v) => !v)}
                     aria-expanded={showForgotHelp}
                     aria-controls="login-forgot-help"
-                    className="rounded text-[12px] font-semibold text-[#1b75bc] transition-colors duration-150 hover:text-[#0f5a93] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1b75bc]/30 focus-visible:ring-offset-2"
+                    className="rounded text-[14px] font-semibold text-[#1b75bc] transition-colors duration-150 hover:text-[#0f5a93] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1b75bc]/30 focus-visible:ring-offset-2"
                   >
                     Mot de passe oublié ?
                   </button>
@@ -316,7 +316,7 @@ export default function Login() {
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
                     required
-                    className="h-11 w-full rounded-xl border border-[#d8e1e8] bg-[#fbfcfd] pl-11 pr-12 text-[14px] text-[#16212b] outline-none transition-all duration-200 placeholder:text-[#a3b0ba] hover:border-[#c3d0d9] focus:border-[#1b75bc] focus:bg-white focus:ring-4 focus:ring-[#1b75bc]/10"
+                    className="h-12 w-full rounded-xl border border-[#d8e1e8] bg-[#fbfcfd] pl-11 pr-12 text-[16px] text-[#16212b] outline-none transition-all duration-200 placeholder:text-[#a3b0ba] hover:border-[#c3d0d9] focus:border-[#1b75bc] focus:bg-white focus:ring-4 focus:ring-[#1b75bc]/10"
                   />
                   <button
                     type="button"
@@ -334,7 +334,7 @@ export default function Login() {
                     id="login-forgot-help"
                     role="region"
                     aria-label="Réinitialisation du mot de passe"
-                    className="login-rise mt-2 flex gap-2.5 rounded-xl border border-[#1b75bc]/15 bg-[#f2f8fc] px-3.5 py-3 text-[11.5px] leading-relaxed text-[#31536d]"
+                    className="login-rise mt-2 flex gap-2.5 rounded-xl border border-[#1b75bc]/15 bg-[#f2f8fc] px-3.5 py-3 text-[13.5px] leading-relaxed text-[#31536d]"
                   >
                     <InfoIcon className="mt-0.5 h-4 w-4 flex-none text-[#1b75bc]" />
                     <div>
@@ -349,7 +349,7 @@ export default function Login() {
 
               <label
                 htmlFor="remember"
-                className="group flex w-fit cursor-pointer select-none items-center gap-2.5 text-[12.5px] text-[#4b5c68]"
+                className="group flex w-fit cursor-pointer select-none items-center gap-2.5 text-[14.5px] text-[#4b5c68]"
               >
                 <input
                   id="remember"
@@ -367,7 +367,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="login-submit group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl px-5 py-3 text-[14.5px] font-semibold text-white transition-colors duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#1b75bc]/30 disabled:cursor-not-allowed disabled:opacity-70"
+                className="login-submit group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl px-5 py-3.5 text-[16.5px] font-semibold text-white transition-colors duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-[#1b75bc]/30 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {loading ? (
                   <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
@@ -382,8 +382,8 @@ export default function Login() {
             {/* Compte de démonstration */}
             <div className="login-rise login-rise-3 mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-dashed border-[#cbd8e1] bg-[#f8fafb] px-3.5 py-3">
               <div className="min-w-0 flex-1 basis-[200px]">
-                <p className="text-[12.5px] font-semibold text-[#102536]">Découvrir la plateforme</p>
-                <p className="text-[11.5px] leading-snug text-[#6b7b87]">
+                <p className="text-[15px] font-semibold text-[#102536]">Découvrir la plateforme</p>
+                <p className="text-[13.5px] leading-snug text-[#6b7b87]">
                   Compte de démonstration, données fictives.
                 </p>
               </div>
@@ -391,14 +391,14 @@ export default function Login() {
                 type="button"
                 onClick={handleDemo}
                 disabled={loading}
-                className="flex flex-none items-center justify-center gap-2 rounded-lg border border-[#dbe3e9] bg-white px-4 py-2 text-[12.5px] font-semibold text-[#31536d] transition-all duration-200 hover:border-[#1b75bc]/40 hover:text-[#1b75bc] hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1b75bc]/30 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex flex-none items-center justify-center gap-2 rounded-lg border border-[#dbe3e9] bg-white px-4 py-2.5 text-[14.5px] font-semibold text-[#31536d] transition-all duration-200 hover:border-[#1b75bc]/40 hover:text-[#1b75bc] hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1b75bc]/30 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <PlayIcon className="h-3.5 w-3.5" />
                 Essayer la démo
               </button>
             </div>
 
-            <div className="login-rise login-rise-4 mt-3 flex items-start gap-2 text-[11px] leading-relaxed text-[#83919b]">
+            <div className="login-rise login-rise-4 mt-3 flex items-start gap-2 text-[13px] leading-relaxed text-[#83919b]">
               <LockIcon className="mt-0.5 h-3.5 w-3.5 flex-none" />
               <p>
                 Accès sur invitation uniquement. Contactez l'administrateur PFS pour obtenir un compte.
