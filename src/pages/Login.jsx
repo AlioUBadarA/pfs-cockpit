@@ -152,15 +152,15 @@ export default function Login() {
           aria-hidden="true"
         />
 
-        <div className="relative z-10 flex w-full items-center gap-3">
-          <div className="flex h-14 w-14 flex-none items-center justify-center rounded-xl bg-white p-2">
+        <div className="relative z-10 flex w-full items-center gap-4">
+          <div className="flex h-[72px] w-[72px] flex-none items-center justify-center rounded-2xl bg-white p-2.5 shadow-[0_10px_24px_-14px_rgba(16,37,54,.45)]">
             <img src={pfsIcon} alt="" className="h-full w-full object-contain" />
           </div>
-          <div className="min-w-0">
-            <p className="text-[12.5px] font-semibold uppercase tracking-[0.14em] text-[#102536]/75">
+          <div className="flex-none">
+            <p className="whitespace-nowrap text-[clamp(11px,1.05vw,15px)] font-bold uppercase leading-tight tracking-[0.1em] text-[#102536]">
               Partners In Food Solutions
             </p>
-            <p className="font-display text-[22px] font-semibold leading-tight">
+            <p className="mt-0.5 font-display text-[25px] font-semibold leading-tight">
               Sales Cockpit
             </p>
           </div>
