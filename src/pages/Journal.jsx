@@ -39,7 +39,7 @@ export default function Journal() {
   const venteMode = {}; ventes.forEach((v) => { const md = v.mode || 'Autre'; venteMode[md] = (venteMode[md] || 0) + Number(v.montant) })
   const encBars = Object.entries(encMode).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ label: k, val: v, disp: fmt(v), color: MODE_COLOR[k] || '#9a8f7e' }))
   const venteBars = Object.entries(venteMode).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ label: k, val: v, disp: fmt(v), color: MODE_COLOR[k] || '#9a8f7e' }))
-  const topMode = encBars[0]?.label || '—'
+  const topMode = encBars[0]?.label || '-'
 
   const presetBtn = (label, f, t) => {
     const on = from === f && to === t
@@ -114,7 +114,7 @@ export default function Journal() {
                 ])}
                 align={['left', 'left', 'left', 'right', 'left', 'left']}
               />
-            ) : <p className="text-sm text-gray-400">—</p>}
+            ) : <p className="text-sm text-gray-400">-</p>}
           </Panel>
 
           <Panel title="Encaissements" sub={`${versements.length} opération(s)`}>
@@ -124,7 +124,7 @@ export default function Journal() {
                 rows={versements.map((v) => [fmtDate(v.date), v.client_nom, { v: fmt(v.montant), bold: true }, v.mode || '-'])}
                 align={['left', 'left', 'right', 'left']}
               />
-            ) : <p className="text-sm text-gray-400">—</p>}
+            ) : <p className="text-sm text-gray-400">-</p>}
           </Panel>
         </>
       )}

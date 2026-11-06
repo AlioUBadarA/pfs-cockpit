@@ -189,7 +189,7 @@ export function getBreadcrumb(pathname, role) {
   if (pathname === '/crm') {
     return [{ label: 'Clients & Ventes' }, { label: 'Portefeuille', to: '/clients' }]
   }
-  return [{ label: 'Cockpit Commercial' }]
+  return [{ label: 'Sales Cockpit' }]
 }
 
 /** Entrées indexées pour la recherche de navigation du Header. */

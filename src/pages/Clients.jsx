@@ -8,7 +8,7 @@ import KpiCard from '../components/KpiCard'
 import RfmGrid from '../components/RfmGrid'
 import { useAuth } from '../context/AuthContext'
 
-// Valeurs alignées sur TYPES_VALIDES (gcr/routes/clients.js) et la contrainte CHECK de schema.sql —
+// Valeurs alignées sur TYPES_VALIDES (gcr/routes/clients.js) et la contrainte CHECK de schema.sql,
 // un libellé français plus lisible est affiché, mais la valeur envoyée à l'API doit matcher exactement.
 const TYPES = ['Grossiste', 'Detaillant marche', 'Boutique', 'Restauration', 'Cantine/Institution']
 const TYPE_LABEL = {
@@ -318,7 +318,7 @@ export default function Clients() {
           </div>
           <div>
             <label className="label">Horaire de visite</label>
-            <input className="input" placeholder="Lundi 9h–11h" value={form.horaire} onChange={set('horaire')} />
+            <input className="input" placeholder="Lundi 9h-11h" value={form.horaire} onChange={set('horaire')} />
           </div>
           {produits.length > 0 && (
             <div>

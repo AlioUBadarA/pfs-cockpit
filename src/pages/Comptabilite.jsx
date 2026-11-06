@@ -166,7 +166,7 @@ export default function Comptabilite() {
       <Modal open={!!rejectTarget} onClose={() => setRejectTarget(null)} title="Rejeter cet encaissement">
         <form onSubmit={confirmReject} className="space-y-4">
           <p className="text-sm text-gray-600">
-            {rejectTarget?.numero} — {rejectTarget?.client_nom} — <strong>{fmt(rejectTarget?.montant)}</strong>
+            {rejectTarget?.numero} · {rejectTarget?.client_nom} · <strong>{fmt(rejectTarget?.montant)}</strong>
           </p>
           <div>
             <label className="label">Motif du rejet</label>

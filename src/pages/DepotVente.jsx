@@ -242,15 +242,15 @@ export default function DepotVente() {
           <div>
             <label className="label">Produit *</label>
             <select className="input" value={form.produit} onChange={setProduit} required>
-              <option value="">— Choisir un produit —</option>
+              <option value="">Choisir un produit</option>
               {produits.map((p) => (
                 <option key={p.id} value={p.nom}>
-                  {p.nom}{p.prix_kg ? ` — ${Number(p.prix_kg).toLocaleString('fr-FR')} F/kg` : ''}
+                  {p.nom}{p.prix_kg ? ` · ${Number(p.prix_kg).toLocaleString('fr-FR')} F/kg` : ''}
                 </option>
               ))}
             </select>
             {produits.length === 0 && (
-              <p className="text-xs text-amber-600 mt-1">Aucun produit au catalogue — demandez à votre manager d'en ajouter.</p>
+              <p className="text-xs text-amber-600 mt-1">Aucun produit au catalogue. Demandez à votre manager d'en ajouter.</p>
             )}
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -286,7 +286,7 @@ export default function DepotVente() {
       </Modal>
 
       {/* Rapports périodiques (mouvements) d'un dépôt */}
-      <Modal open={!!movModal} onClose={() => setMovModal(null)} title={`Rapports — ${movModal?.client_nom || ''}`} width="max-w-2xl">
+      <Modal open={!!movModal} onClose={() => setMovModal(null)} title={`Rapports · ${movModal?.client_nom || ''}`} width="max-w-2xl">
         {movLoading ? (
           <div className="flex justify-center py-8"><span className="w-6 h-6 border-4 border-[#62bb46] border-t-transparent rounded-full animate-spin" /></div>
         ) : movDetail ? (

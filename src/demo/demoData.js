@@ -161,7 +161,7 @@ export function buildDemoDb() {
     telephone: `+221 7${pick(['7', '8', '6', '0'])} ${100 + Math.floor(rand() * 899)} ${10 + Math.floor(rand() * 89)} ${10 + Math.floor(rand() * 89)}`,
     volume_estime: Math.round(potentiel / 12 / 1e5) * 1e5,
     valorise: pick(['Prix', 'Régularité des livraisons', 'Qualité constante', 'Délais de paiement', 'Riz local']),
-    horaire: pick(['Lundi 9h–11h', 'Mardi matin', 'Mercredi 15h–17h', 'Jeudi 10h', 'Vendredi après la prière', 'Samedi matin']),
+    horaire: pick(['Lundi 9h-11h', 'Mardi matin', 'Mercredi 15h-17h', 'Jeudi 10h', 'Vendredi après la prière', 'Samedi matin']),
     produits_interet: Array.from(new Set(prefs)).map((i) => PRODUITS[i].nom),
     created_at: isoDate(addDays(today, -420)),
   }))

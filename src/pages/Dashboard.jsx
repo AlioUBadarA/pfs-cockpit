@@ -68,7 +68,7 @@ export default function Dashboard() {
         <KpiCard title="Marge nette" value={fmt(kpis.marge_nette)} sub={`${kpis.taux_marge_nette ?? 0} % du CA`} />
         <KpiCard title="Encaissé ce mois" value={fmt(kpis.encaisse_mois)} sub={`${fmt(kpis.encaisse_ytd)} cumulé YTD`} color="#1B5E20" />
         <KpiCard title="Créances ouvertes" value={fmt(kpis.total_creances)} sub={`${kpis.nb_creances ?? 0} en attente`} color="#CC0000" />
-        <KpiCard title="Recouvrement" value={kpis.taux_recouvrement != null ? `${kpis.taux_recouvrement} %` : '—'} sub="versements / facturé" color={kpis.taux_recouvrement >= 80 ? '#1B5E20' : kpis.taux_recouvrement >= 50 ? '#F9A825' : '#CC0000'} />
+        <KpiCard title="Recouvrement" value={kpis.taux_recouvrement != null ? `${kpis.taux_recouvrement} %` : '-'} sub="versements / facturé" color={kpis.taux_recouvrement >= 80 ? '#1B5E20' : kpis.taux_recouvrement >= 50 ? '#F9A825' : '#CC0000'} />
         <KpiCard title="Prospection espérée" value={fmt(kpis.pipeline_espere)} sub={`${kpis.pipeline_nb ?? 0} prospect(s) en cours`} color="#5a6b7a" />
         <KpiCard title="Clients actifs" value={`${kpis.clients_actifs ?? 0} / ${kpis.clients_total ?? 0}`} sub={`${kpis.clients_dormants ?? 0} dormants`} />
         <KpiCard title="Alertes critiques" value={mv.cmd_retard ?? 0} sub="à traiter" color="#CC0000" />

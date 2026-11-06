@@ -64,7 +64,7 @@ function AdminRoute({ children }) {
   return children
 }
 
-// Accessible au manager, directeur, rizier — pas au vendeur ni à l'admin
+// Accessible au manager, directeur, rizier, pas au vendeur ni à l'admin
 function ManagerRoute({ children }) {
   const { user, isAdmin, isVendeur } = useAuth()
   if (!user) return <Navigate to="/login" replace />
@@ -74,7 +74,7 @@ function ManagerRoute({ children }) {
 }
 
 // Validation des encaissements : comptable et superadmin uniquement (même règle que le
-// backend, voir middleware/permissions.js — 'encaissements:valider').
+// backend, voir middleware/permissions.js, 'encaissements:valider').
 function ComptableRoute({ children }) {
   const { user, isComptable, isSuperadmin } = useAuth()
   if (!user) return <Navigate to="/login" replace />

@@ -13,7 +13,7 @@ const pad2 = (n) => String(n).padStart(2, '0')
 const toLocalISODate = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 const parseLocalDate = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d) }
 
-// Lundi de la semaine contenant `date`, en date locale (pas d'UTC — évite un décalage de jour).
+// Lundi de la semaine contenant `date`, en date locale (pas d'UTC, évite un décalage de jour).
 function mondayOf(date = new Date()) {
   const d = new Date(date)
   d.setHours(0, 0, 0, 0)
@@ -21,7 +21,7 @@ function mondayOf(date = new Date()) {
   return d
 }
 
-// Semaine ISO 8601 (YYYY-Www) — c'est le format exact attendu par l'API /api/pilotage
+// Semaine ISO 8601 (YYYY-Www), c'est le format exact attendu par l'API /api/pilotage
 // (voir SEMAINE_RE côté backend). Le sélecteur de date affiche lui une date normale
 // (YYYY-MM-DD, lundi de la semaine) : ce sont deux représentations distinctes de la même semaine.
 function isoWeekKey(date) {
@@ -345,7 +345,7 @@ export default function Pilotage() {
       </div>
 
       {/* Picker client/prospect */}
-      <Modal open={!!pickerJour} onClose={() => setPickerJour(null)} title={`Ajouter une visite — ${pickerJour}`}>
+      <Modal open={!!pickerJour} onClose={() => setPickerJour(null)} title={`Ajouter une visite · ${pickerJour}`}>
         <div className="space-y-3">
           <input
             className="input"

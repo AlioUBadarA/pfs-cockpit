@@ -55,7 +55,7 @@ export default function Activites() {
 
   const now = new Date()
   const last12w = activites.filter((a) => (now - new Date(a.date)) / (86400000 * 7) <= 12)
-  // Diviseur = nb de semaines réellement couvertes (borné à 12), pas toujours 12 —
+  // Diviseur = nb de semaines réellement couvertes (borné à 12), pas toujours 12,
   // sinon un compte récent (< 12 semaines d'historique) voit son rythme sous-estimé.
   const premiereActivite = activites.length ? new Date(Math.min(...activites.map((a) => new Date(a.date)))) : now
   const semainesEcoulees = Math.max(1, Math.min(12, Math.ceil((now - premiereActivite) / (86400000 * 7))))

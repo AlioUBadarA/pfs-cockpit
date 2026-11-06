@@ -257,7 +257,7 @@ export default function Emplois() {
               <div>
                 <label className="label">Sexe</label>
                 <select className="input" value={form.sexe} onChange={set('sexe')}>
-                  <option value="">—</option>
+                  <option value="">-</option>
                   {SEXES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
@@ -268,7 +268,7 @@ export default function Emplois() {
               <div>
                 <label className="label">Type de pièce d'identité</label>
                 <select className="input" value={form.piece_identite_type} onChange={set('piece_identite_type')}>
-                  <option value="">—</option>
+                  <option value="">-</option>
                   {PIECES_IDENTITE.map(p => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>

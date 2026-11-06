@@ -1,6 +1,6 @@
 import { Fragment } from 'react'
 
-// Grille RFM 5x5 (Récence en lignes, Fréquence en colonnes) — taille/couleur = nb clients,
+// Grille RFM 5x5 (Récence en lignes, Fréquence en colonnes), taille/couleur = nb clients,
 // vert = "champions" (récence et fréquence élevées), ambre = le reste. Formule identique au HTML de référence.
 const fmtM = (n) => (Number(n || 0) / 1e6).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' M'
 

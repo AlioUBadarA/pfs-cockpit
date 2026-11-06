@@ -87,7 +87,7 @@ export default function Actions() {
 
         {filt.length === 0 ? (
           <p className="text-sm text-gray-400 py-6 text-center">
-            {vue === 'À traiter' ? '🎉 Aucune alerte à traiter — tout est à jour.' : 'Aucune alerte dans cette vue.'}
+            {vue === 'À traiter' ? 'Aucune alerte à traiter, tout est à jour.' : 'Aucune alerte dans cette vue.'}
           </p>
         ) : (
           <div className="flex flex-col gap-2">

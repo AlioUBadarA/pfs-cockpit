@@ -165,7 +165,7 @@ export default function AdminImpactRizao() {
                         <td className="table-cell text-center whitespace-nowrap">
                           {caPct !== null
                             ? <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${caPct >= 100 ? 'bg-green-100 text-green-700' : caPct >= 50 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>+{caPct}%</span>
-                            : <span className="text-gray-300 text-xs">—</span>
+                            : <span className="text-gray-300 text-xs">-</span>
                           }
                         </td>
                         <td className="table-cell text-center text-gray-500">{r.emplois_baseline}</td>

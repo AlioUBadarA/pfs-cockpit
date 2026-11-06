@@ -1,4 +1,4 @@
-/* Jeu d'icônes de navigation — tracés au trait, dans l'esprit d'Ant Design. */
+/* Jeu d'icônes de navigation, tracés au trait, dans l'esprit d'Ant Design. */
 
 const PATHS = {
   dashboard: (

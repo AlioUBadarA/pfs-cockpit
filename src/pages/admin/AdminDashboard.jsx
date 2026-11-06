@@ -248,7 +248,7 @@ export default function AdminDashboard() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h2 className="font-display text-xl font-bold text-gray-900">Administration</h2>
-          <p className="text-sm text-gray-500">Cockpit Commercial &middot; gestion des rizeries et des comptes</p>
+          <p className="text-sm text-gray-500">Sales Cockpit &middot; gestion des rizeries et des comptes</p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => { setEForm(EXPORT_INIT); setError(''); setModal({ type: 'export' }) }} className="btn-secondary text-sm">
@@ -324,12 +324,12 @@ export default function AdminDashboard() {
                       <td className="table-cell text-center whitespace-nowrap">
                         {emploisApp > 0
                           ? <>{emploisApp} <span className={emploisDelta >= 0 ? 'text-green-600' : 'text-red-600'}>({emploisDelta >= 0 ? '+' : ''}{emploisDelta})</span></>
-                          : <span className="text-gray-300">—</span>
+                          : <span className="text-gray-300">-</span>
                         }
                       </td>
                       <td className="table-cell text-right whitespace-nowrap font-medium">
                         {caCur === 0 && caPrev === 0
-                          ? <span className="text-gray-300 text-xs">—</span>
+                          ? <span className="text-gray-300 text-xs">-</span>
                           : caPrev === 0
                             ? <span className="text-green-700 text-xs">Nouveau {annee}</span>
                             : <span style={{ color: caYoYPct >= 0 ? '#1B5E20' : '#CC0000' }}>
@@ -420,7 +420,7 @@ export default function AdminDashboard() {
                           </span>
                           {rizerieInfo && (
                             <span className="text-xs text-gray-500 ml-2">
-                              {[fmtPays(rizerieInfo.pays), rizerieInfo.ville].filter(Boolean).join(' — ')}
+                              {[fmtPays(rizerieInfo.pays), rizerieInfo.ville].filter(Boolean).join(', ')}
                             </span>
                           )}
                         </div>
@@ -512,7 +512,7 @@ export default function AdminDashboard() {
             </button>
           </div>
           <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-3">
-            Un compte support a les mêmes accès qu'un superadmin, sauf créer ou supprimer d'autres comptes support — réservé au vrai superadmin.
+            Un compte support a les mêmes accès qu'un superadmin, sauf créer ou supprimer d'autres comptes support, ce qui reste réservé au vrai superadmin.
           </div>
           <div className="card p-0 overflow-x-auto">
             {support.length === 0 ? (
@@ -676,7 +676,7 @@ export default function AdminDashboard() {
               <label className="label">Rattacher à une rizerie *</label>
               <select className="input" value={cForm.rizerie_id} onChange={setC('rizerie_id')} required>
                 <option value="">Choisir une rizerie...</option>
-                {rizeries.map(r => <option key={r.id} value={r.id}>{r.nom}{r.ville ? ` — ${r.ville}` : ''}{r.pays ? ` (${fmtPays(r.pays)})` : ''}</option>)}
+                {rizeries.map(r => <option key={r.id} value={r.id}>{r.nom}{r.ville ? ` · ${r.ville}` : ''}{r.pays ? ` (${fmtPays(r.pays)})` : ''}</option>)}
               </select>
               {rizeries.length === 0 && (
                 <p className="text-xs text-orange-600 mt-1">Aucune rizerie existante. <button type="button" className="underline" onClick={() => { setRForm(RIZERIE_INIT); setError(''); setModal({ type: 'create-rizerie' }) }}>Créer d'abord une rizerie</button></p>
@@ -900,7 +900,7 @@ function BaselineFields({ rForm, setR }) {
   return (
     <div className="border-t border-gray-100 pt-3">
       <p className="text-xs text-gray-500 mb-2">
-        Valeurs de référence <strong>avant</strong> l'utilisation de la plateforme — servent à mesurer l'impact du programme RIZAO dans l'onglet "Impact RIZAO".
+        Valeurs de référence <strong>avant</strong> l'utilisation de la plateforme. Elles servent à mesurer l'impact du programme RIZAO dans l'onglet "Impact RIZAO".
       </p>
       <div className="grid grid-cols-3 gap-3">
         <div>

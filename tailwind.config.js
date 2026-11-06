@@ -22,8 +22,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['IBM Plex Sans', 'Inter', 'system-ui', 'sans-serif'],
-        display: ['Spectral', 'serif'],
+        sans: ['Source Sans 3', 'system-ui', 'sans-serif'],
+        display: ['Source Serif 4', 'Georgia', 'serif'],
       },
     },
   },

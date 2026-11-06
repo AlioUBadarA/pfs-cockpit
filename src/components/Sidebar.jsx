@@ -68,7 +68,7 @@ export default function Sidebar({ collapsed = false, onToggle, onNavigate, mobil
         <Link
           to="/"
           onClick={handleNavigate}
-          aria-label="Cockpit Commercial — Accueil"
+          aria-label="Sales Cockpit, accueil"
           className={`flex min-w-0 items-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[#1b75bc]/40 ${
             collapsed ? 'justify-center' : 'flex-1 gap-2.5'
           }`}
@@ -79,7 +79,7 @@ export default function Sidebar({ collapsed = false, onToggle, onNavigate, mobil
           {!collapsed && (
             <span className="min-w-0">
               <span className="block truncate font-display text-[15px] font-semibold leading-tight text-[#102536]">
-                Cockpit Commercial
+                Sales Cockpit
               </span>
               <span className="mt-0.5 block truncate text-[10px] font-medium uppercase tracking-[0.14em] text-[#94a3ae]">
                 Filière riz · PFS
@@ -267,7 +267,7 @@ export default function Sidebar({ collapsed = false, onToggle, onNavigate, mobil
             {!collapsed && <span>Réduire le menu</span>}
           </button>
         ) : (
-          <p className="px-2 text-center text-[10.5px] text-[#a3b0ba]">Cockpit Commercial · PFS</p>
+          <p className="px-2 text-center text-[10.5px] text-[#a3b0ba]">Sales Cockpit · PFS</p>
         )}
       </div>
 

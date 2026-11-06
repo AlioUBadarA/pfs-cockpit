@@ -134,7 +134,7 @@ export default function AdminAudit() {
       {total > LIMIT && (
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500">
-            {offset + 1}–{Math.min(offset + LIMIT, total)} sur {total}
+            {offset + 1}-{Math.min(offset + LIMIT, total)} sur {total}
           </span>
           <div className="flex gap-2">
             <button

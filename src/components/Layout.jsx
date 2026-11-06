@@ -74,12 +74,12 @@ export default function Layout() {
 
   return (
     <div className="flex min-h-screen" style={{ background: 'var(--cc-bg)' }}>
-      {/* Sidebar desktop — fixe, repliable */}
+      {/* Sidebar desktop, fixe, repliable */}
       <div className="hidden flex-none md:block">
         <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((value) => !value)} />
       </div>
 
-      {/* Sidebar mobile — tiroir */}
+      {/* Sidebar mobile, tiroir */}
       {mobileNavOpen && (
         <div
           className="fixed inset-0 z-50 md:hidden"
@@ -124,7 +124,7 @@ export default function Layout() {
 
         <footer className="border-t border-[#e8edf1] px-4 py-3 sm:px-6 lg:px-8">
           <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 text-[10.5px] text-[#93a1ab]">
-            <span className="truncate">Cockpit Commercial · Partners In Food Solutions</span>
+            <span className="truncate">Sales Cockpit · Partners In Food Solutions</span>
             <span className="hidden flex-none sm:inline">{new Date().getFullYear()}</span>
           </div>
         </footer>

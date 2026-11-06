@@ -124,7 +124,7 @@ export default function AdminConnexions() {
 
           {/* Graphique 30 jours */}
           <div className="card">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">Connexions par jour — 30 derniers jours</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-4">Connexions par jour (30 derniers jours)</h3>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={chartData} barGap={2} margin={{ top: 0, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
@@ -175,10 +175,10 @@ export default function AdminConnexions() {
                           <span className="font-medium text-gray-900 text-sm">{r.actor_nom || <span className="text-gray-300 italic">Inconnu</span>}</span>
                         </td>
                         <td className="table-cell"><RolePill role={r.role} /></td>
-                        <td className="table-cell text-sm text-gray-600">{r.rizerie || <span className="text-gray-300">—</span>}</td>
+                        <td className="table-cell text-sm text-gray-600">{r.rizerie || <span className="text-gray-300">-</span>}</td>
                         <td className="table-cell text-sm text-gray-500 whitespace-nowrap">{fmtDate(r.created_at)}</td>
                         <td className="table-cell text-sm font-mono text-gray-700">{fmtHeure(r.created_at)}</td>
-                        <td className="table-cell text-xs font-mono text-gray-400">{r.ip || '—'}</td>
+                        <td className="table-cell text-xs font-mono text-gray-400">{r.ip || '-'}</td>
                       </tr>
                     ))}
                   </tbody>

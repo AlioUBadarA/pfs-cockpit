@@ -213,7 +213,7 @@ export function printRecu(transaction, versement, totalVerse, resteAdu, user) {
     </div>
 
     <p style="font-size:10px;color:#bbb;text-align:center;margin-top:32px">
-      Document généré le ${new Date().toLocaleDateString('fr-FR')} — ${user?.rizerie || 'PFS'}
+      Document généré le ${new Date().toLocaleDateString('fr-FR')} · ${user?.rizerie || 'PFS'}
     </p>
   `
 

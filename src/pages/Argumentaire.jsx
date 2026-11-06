@@ -133,7 +133,7 @@ export default function Argumentaire() {
         <h2 className="font-display text-xl font-bold text-gray-900">Argumentaire &amp; Entretien de vente</h2>
         <p className="text-sm text-gray-500 mt-1">
           Scripts, réponses aux objections et bonnes pratiques pour vos visites commerciales
-          {pays ? ` — adapté pour le marché ${pays}` : ''}.
+          {pays ? `, adapté pour le marché ${pays}` : ''}.
         </p>
       </div>
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-// Pays d'Afrique (54 États reconnus par l'ONU) — les rizeries PFS sont réparties
+// Pays d'Afrique (54 États reconnus par l'ONU), les rizeries PFS sont réparties
 // sur tout le continent, ce filtre évite de noyer le sélecteur dans les 250 pays du monde.
 const AFRICA_ISO = [
   'DZ','AO','BJ','BW','BF','BI','CM','CV','CF','TD','KM','CG','CD','CI','DJ','EG',
@@ -61,7 +61,7 @@ export default function LocationFields({ pays, region, ville, onChange }) {
       <div>
         <label className="label">Région</label>
         <select className="input" value={region || ''} onChange={setRegion} disabled={!pays || states.length === 0}>
-          <option value="">{states.length ? 'Choisir...' : '—'}</option>
+          <option value="">{states.length ? 'Choisir...' : '-'}</option>
           {states.map((s) => <option key={s.isoCode} value={s.name}>{s.name}</option>)}
         </select>
       </div>

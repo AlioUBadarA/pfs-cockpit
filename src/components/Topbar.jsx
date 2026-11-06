@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import api from '../services/api'
 import {
   getBreadcrumb,
   getSearchEntries,
@@ -44,8 +45,30 @@ export default function Topbar({ collapsed, onToggleCollapse, onOpenMobileNav, o
   const profileButtonRef = useRef(null)
   const profilePanelRef = useRef(null)
 
+  // Les alertes concernent les rôles métier ; admin et comptable n'ont pas cette page dans leur menu.
+  const hasAlerts = role === 'manager' || role === 'vendeur'
+  const [alerts, setAlerts] = useState({ status: 'idle', items: [], count: 0 })
+  const alertCount = alerts.count
+
+  const loadAlerts = useCallback(() => {
+    if (!hasAlerts) return
+    setAlerts((prev) => ({ ...prev, status: 'loading' }))
+    api.get('/api/actions')
+      .then((r) => {
+        const items = (r.data?.alertes || []).filter((a) => !a.traitee)
+        setAlerts({ status: 'ready', items, count: r.data?.stats?.a_traiter ?? items.length })
+      })
+      .catch(() => setAlerts((prev) => ({ ...prev, status: 'error' })))
+  }, [hasAlerts])
+
+  // Chargement à l'ouverture de session, puis à chaque ouverture du panneau.
+  useEffect(() => { loadAlerts() }, [loadAlerts])
+  useEffect(() => {
+    if (activeMenu === 'notifications') loadAlerts()
+  }, [activeMenu, loadAlerts])
+
   const crumbs = useMemo(() => getBreadcrumb(location.pathname, role), [location.pathname, role])
-  const currentPage = crumbs[crumbs.length - 1]?.label || 'Cockpit Commercial'
+  const currentPage = crumbs[crumbs.length - 1]?.label || 'Sales Cockpit'
 
   const entries = useMemo(() => getSearchEntries(role), [role])
   const normalizedQuery = normalize(query.trim())
@@ -239,7 +262,7 @@ export default function Topbar({ collapsed, onToggleCollapse, onOpenMobileNav, o
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               onKeyDown={handleSearchKeyDown}
-              placeholder="Rechercher une page…"
+              placeholder="Rechercher une page..."
               aria-label="Rechercher une page"
               className="h-11 w-full min-w-0 bg-transparent text-[13px] text-[#102536] outline-none placeholder:text-[#a3b0ba]"
             />
@@ -293,24 +316,31 @@ export default function Topbar({ collapsed, onToggleCollapse, onOpenMobileNav, o
         </div>
       )}
 
-      {/* Centre de notifications */}
+      {/* Centre de notifications : alertes à traiter (même moteur que la page Alertes) */}
+      {hasAlerts && (
       <button
         ref={notificationsButtonRef}
         type="button"
         onClick={() => toggleMenu('notifications')}
-        aria-label="Notifications"
+        aria-label={alertCount ? `Notifications : ${alertCount} alerte(s) à traiter` : 'Notifications'}
         aria-haspopup="dialog"
         aria-expanded={activeMenu === 'notifications'}
-        className={`flex h-9 w-9 flex-none items-center justify-center rounded-lg transition-colors ${
+        className={`relative flex h-9 w-9 flex-none items-center justify-center rounded-lg transition-colors ${
           activeMenu === 'notifications'
             ? 'bg-[#eef6fc] text-[#1b75bc]'
             : 'text-[#5b6b77] hover:bg-[#f3f6f8] hover:text-[#102536]'
         }`}
       >
         <NavIcon name="bell" className="h-[18px] w-[18px]" />
+        {alertCount > 0 && (
+          <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#cc0000] px-1 text-[9.5px] font-bold leading-none text-white">
+            {alertCount > 99 ? '99+' : alertCount}
+          </span>
+        )}
       </button>
+      )}
 
-      {activeMenu === 'notifications' && (
+      {hasAlerts && activeMenu === 'notifications' && (
         <div
           ref={notificationsPanelRef}
           role="dialog"
@@ -318,18 +348,33 @@ export default function Topbar({ collapsed, onToggleCollapse, onOpenMobileNav, o
           className="cc-pop absolute right-2 top-[calc(100%+8px)] z-50 w-[calc(100vw-1rem)] max-w-[336px] overflow-hidden rounded-xl border border-[#e3e9ee] bg-white shadow-[0_20px_50px_-20px_rgba(16,37,54,.4)] sm:right-5"
         >
           <div className="flex items-center justify-between border-b border-[#eef1f4] px-4 py-3">
-            <p className="text-[12.5px] font-semibold text-[#102536]">Notifications</p>
-            <span className="rounded-full bg-[#f2f5f7] px-2 py-0.5 text-[10px] font-semibold text-[#8a99a4]">0</span>
-          </div>
-          <div className="px-4 py-7 text-center">
-            <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-[#f1f6f9] text-[#7fa3bb]">
-              <NavIcon name="bell" className="h-5 w-5" />
+            <p className="text-[12.5px] font-semibold text-[#102536]">Alertes à traiter</p>
+            <span className="rounded-full bg-[#f2f5f7] px-2 py-0.5 text-[10px] font-semibold text-[#5b6b77]">
+              {alerts.status === 'ready' ? alertCount : '...'}
             </span>
-            <p className="mt-3 text-[12.5px] font-medium text-[#1f2d38]">Vous êtes à jour</p>
-            <p className="mt-1 text-[11.5px] leading-relaxed text-[#93a1ab]">
-              Les alertes et échéances du cockpit apparaîtront ici.
-            </p>
           </div>
+          {alerts.status === 'loading' && alerts.items.length === 0 ? (
+            <p className="px-4 py-6 text-center text-[12px] text-[#93a1ab]">Chargement des alertes...</p>
+          ) : alerts.status === 'error' ? (
+            <p className="px-4 py-6 text-center text-[12px] text-red-600">Impossible de charger les alertes.</p>
+          ) : alerts.items.length === 0 ? (
+            <p className="px-4 py-6 text-center text-[12.5px] text-[#4b5c68]">Aucune alerte à traiter.</p>
+          ) : (
+            <ul className="max-h-[320px] divide-y divide-[#f0f3f5] overflow-y-auto">
+              {alerts.items.slice(0, 6).map((a) => (
+                <li key={a.key} className="flex gap-2.5 px-4 py-2.5">
+                  <span
+                    className={`mt-1.5 h-2 w-2 flex-none rounded-full ${a.niveau === 'rouge' ? 'bg-[#cc0000]' : 'bg-[#f9a825]'}`}
+                    aria-label={a.niveau === 'rouge' ? 'Urgent' : 'À surveiller'}
+                  />
+                  <div className="min-w-0">
+                    <p className="text-[10.5px] font-semibold uppercase tracking-wide text-[#8a99a4]">{a.cat}</p>
+                    <p className="text-[12px] leading-snug text-[#1f2d38]">{a.msg}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
           <Link
             to="/actions"
             onClick={closeMenus}
@@ -419,7 +464,7 @@ export default function Topbar({ collapsed, onToggleCollapse, onOpenMobileNav, o
           </div>
 
           <div className="border-t border-[#eef1f4] bg-[#fafbfc] px-4 py-2 text-[10px] uppercase tracking-[0.14em] text-[#a3b0ba]">
-            Cockpit Commercial · PFS
+            Sales Cockpit · PFS
           </div>
         </div>
       )}

@@ -67,7 +67,7 @@ export default function Encaissements() {
 
   const reste = selected ? Math.max(0, Number(selected.montant_total) - Number(selected.total_verse)) : 0
 
-  // Le paddy n'a pas de suivi d'échéance structuré côté backend — pas la peine de demander
+  // Le paddy n'a pas de suivi d'échéance structuré côté backend, pas la peine de demander
   // une prochaine date de paiement pour ce type de transaction.
   const supportsEcheance = selected && ['vente', 'echeance'].includes(selected.type)
   const soldeApresVersement = selected ? reste - (Number(form.montant) || 0) : 0
@@ -153,7 +153,7 @@ export default function Encaissements() {
 
       {selected && (
         <Panel
-          title={`${TYPE_LABEL[selected.type] || 'Contrat'} ${selected.numero || ''} — ${selected.client_nom}`}
+          title={`${TYPE_LABEL[selected.type] || 'Contrat'} ${selected.numero || ''} · ${selected.client_nom}`}
           sub={`Montant ${selected.type === 'vente' ? 'total' : selected.type === 'depot' ? 'dû (quantités vendues déclarées)' : 'mensuel'} : ${fmt(selected.montant_total)}`}
           right={<button className="btn-secondary text-sm" onClick={() => setSelected(null)}>← Retour aux résultats</button>}
         >

@@ -249,15 +249,15 @@ export default function Ventes() {
           <div>
             <label className="label">Produit</label>
             <select className="input" value={form.produit} onChange={setProduit} required>
-              <option value="">— Choisir un produit —</option>
+              <option value="">Choisir un produit</option>
               {produits.map((p) => (
                 <option key={p.id} value={p.nom}>
-                  {p.nom}{p.prix_kg ? ` — ${Number(p.prix_kg).toLocaleString('fr-FR')} F/kg` : ''}
+                  {p.nom}{p.prix_kg ? ` · ${Number(p.prix_kg).toLocaleString('fr-FR')} F/kg` : ''}
                 </option>
               ))}
             </select>
             {produits.length === 0 && (
-              <p className="text-xs text-amber-600 mt-1">Aucun produit au catalogue — demandez à votre manager d'en ajouter.</p>
+              <p className="text-xs text-amber-600 mt-1">Aucun produit au catalogue. Demandez à votre manager d'en ajouter.</p>
             )}
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -282,7 +282,7 @@ export default function Ventes() {
           <div>
             <label className="label">Conditions de paiement</label>
             <select className="input" value={form.conditions_paiement} onChange={set('conditions_paiement')}>
-              <option value="">— Non précisé —</option>
+              <option value="">Non précisé</option>
               {CONDITIONS_PAIEMENT.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
             <p className="text-xs text-gray-400 mt-1">Détermine l'échéance par défaut si aucune date n'est précisée.</p>

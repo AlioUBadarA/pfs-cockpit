@@ -139,7 +139,7 @@ export default function ContratsClients() {
   }
 
   // CA contractualisé = échéancier réellement généré (quantité/prix par mois, sur la durée
-  // exacte du contrat) — plus fiable que l'ancienne estimation quantite_mensuelle*prix*12,
+  // exacte du contrat), plus fiable que l'ancienne estimation quantite_mensuelle*prix*12,
   // qui ignorait aussi bien la durée réelle que les variations mensuelles.
   const caAnnuelTotal = items.filter(i => i.statut === 'Actif')
     .reduce((s, i) => s + Number(i.ca_contractualise ?? (i.quantite_mensuelle || 0) * (i.prix_unitaire || 0) * 12), 0)
@@ -244,7 +244,7 @@ export default function ContratsClients() {
           <div>
             <label className="label">Produits du contrat *</label>
             {produits.length === 0 ? (
-              <p className="text-xs text-amber-600">Aucun produit au catalogue — demandez à votre manager d'en ajouter.</p>
+              <p className="text-xs text-amber-600">Aucun produit au catalogue. Demandez à votre manager d'en ajouter.</p>
             ) : (
               <div className="flex flex-wrap gap-2 mt-1">
                 {produits.map((p) => {
@@ -260,7 +260,7 @@ export default function ContratsClients() {
                           : 'bg-white text-gray-600 border-gray-300 hover:border-[#1b75bc]'
                       }`}
                     >
-                      {p.nom}{p.prix_kg ? ` — ${Number(p.prix_kg).toLocaleString('fr-FR')} F/kg` : ''}
+                      {p.nom}{p.prix_kg ? ` · ${Number(p.prix_kg).toLocaleString('fr-FR')} F/kg` : ''}
                     </button>
                   )
                 })}
@@ -279,7 +279,7 @@ export default function ContratsClients() {
             </div>
           </div>
           <p className="text-xs text-gray-400 -mt-2">
-            Valeurs de départ appliquées à chaque mois de l'échéancier généré à la création — modifiables ensuite mois par mois (quantité et prix peuvent varier).
+            Valeurs de départ appliquées à chaque mois de l'échéancier généré à la création, modifiables ensuite mois par mois (quantité et prix peuvent varier).
           </p>
           {form.quantite_mensuelle && form.prix_unitaire && (
             <div className="bg-green-50 rounded-lg px-3 py-2 text-sm">
@@ -297,7 +297,7 @@ export default function ContratsClients() {
             </div>
           </div>
           <p className="text-xs text-gray-400 -mt-2">
-            Un contrat récurrent engage sur une durée déterminée — les deux dates sont nécessaires pour générer l'échéancier mensuel.
+            Un contrat récurrent engage sur une durée déterminée : les deux dates sont nécessaires pour générer l'échéancier mensuel.
           </p>
           <div>
             <label className="label">Statut</label>
@@ -321,7 +321,7 @@ export default function ContratsClients() {
       </Modal>
 
       {/* Échéancier mensuel du contrat */}
-      <Modal open={!!echModal} onClose={() => setEchModal(null)} title={`Échéancier — ${echModal?.client_nom || ''}`} width="max-w-3xl">
+      <Modal open={!!echModal} onClose={() => setEchModal(null)} title={`Échéancier · ${echModal?.client_nom || ''}`} width="max-w-3xl">
         {echLoading ? (
           <div className="flex justify-center py-8"><span className="w-6 h-6 border-4 border-[#62bb46] border-t-transparent rounded-full animate-spin" /></div>
         ) : echList.length === 0 ? (
