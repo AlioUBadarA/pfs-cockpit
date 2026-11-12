@@ -128,7 +128,7 @@ export default function Insights() {
         <p className="text-sm text-gray-500 mt-0.5">Opportunités, risques et plan d'actions prioritaires</p>
       </div>
 
-      <Panel title="Plan d'actions prioritaires" sub="recommandations générées à partir des signaux du cockpit">
+      <Panel title="Plan d'actions prioritaires" sub="conseils tirés des données du cockpit">
         <div className="flex flex-col gap-2.5">
           {actionsPrioritaires.map((a) => (
             <div key={a.n} className="flex gap-3.5 items-center px-3.5 py-3 rounded-lg" style={{ background: '#faf8f4', border: '1px solid #f0ebe1' }}>
@@ -175,7 +175,7 @@ export default function Insights() {
           {produitsDeclin.map((p, i) => <Li key={i} main={p.produit} sub="tendance baissière" val={`${p.taux_marge} %`} color="#CC0000" />)}
         </Block>
 
-        <Block title="Zones à fort potentiel" color="#5a6b7a" empty="Renseignez la région et le potentiel annuel des clients pour activer ce panneau.">
+        <Block title="Zones à fort potentiel" color="#5a6b7a" empty="Saisissez la région et le potentiel annuel des clients. Ce panneau s'affichera alors.">
           {zones.map((z, i) => <Li key={i} main={z.region} sub={`CA actuel ${fmt(z.ca)}`} val={`+${fmt(z.gap)} pot.`} color="#1B5E20" />)}
         </Block>
       </div>

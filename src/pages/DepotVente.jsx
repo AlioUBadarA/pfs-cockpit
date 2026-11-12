@@ -268,7 +268,7 @@ export default function DepotVente() {
             <input type="date" className="input" value={form.date_depot} onChange={set('date_depot')} required />
           </div>
           <p className="text-xs text-gray-400 -mt-2">
-            Le distributeur ne devra que les quantités qu'il déclarera avoir vendues (rapports périodiques, après création).
+            Le distributeur paie seulement les quantités vendues. Il les déclare dans des rapports réguliers après la création.
           </p>
           <div>
             <label className="label">Note</label>

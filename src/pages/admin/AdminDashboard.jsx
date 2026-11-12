@@ -101,7 +101,7 @@ export default function AdminDashboard() {
     } catch (err) {
       const msg = err.response?.data?.error || 'Erreur'
       if (!force && isSuperadmin && msg.includes('encore rattachés')) {
-        if (confirm(`${msg}\n\nForcer la suppression : tous les comptes, ventes, clients et emplois de cette rizerie seront archivés puis supprimés définitivement. Continuer ?`)) {
+        if (confirm(`${msg}\n\nVoulez-vous forcer la suppression ? Les comptes, ventes, clients et emplois de cette rizerie seront archivés. Ils seront ensuite supprimés pour toujours. Continuer ?`)) {
           return handleDeleteRizerie(r, true)
         }
         return
@@ -512,7 +512,7 @@ export default function AdminDashboard() {
             </button>
           </div>
           <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-3">
-            Un compte support a les mêmes accès qu'un superadmin, sauf créer ou supprimer d'autres comptes support, ce qui reste réservé au vrai superadmin.
+            Un compte support a les mêmes accès qu'un superadmin. Il ne peut pas créer ni supprimer d'autres comptes support. Seul le vrai superadmin le peut.
           </div>
           <div className="card p-0 overflow-x-auto">
             {support.length === 0 ? (
@@ -559,7 +559,7 @@ export default function AdminDashboard() {
             </button>
           </div>
           <div className="bg-red-50 border border-red-200 text-red-800 text-sm rounded-lg px-4 py-3">
-            Accès le plus élevé de la plateforme : un superadmin peut créer/supprimer des rizeries, des comptes et d'autres superadmins. À réserver à des personnes de pleine confiance. Il doit toujours en rester au moins un.
+            Le superadmin a l'accès le plus élevé. Il peut créer et supprimer des rizeries, des comptes et d'autres superadmins. Donnez cet accès à des personnes de confiance. Il doit toujours en rester au moins un.
           </div>
           <div className="card p-0 overflow-x-auto">
             {superadmins.length === 0 ? (
@@ -730,7 +730,7 @@ export default function AdminDashboard() {
               <label className="label">Mot de passe provisoire *</label>
               <input type="text" className="input" value={sForm.password} onChange={setS('password')} required minLength={12} placeholder="Min. 12 caractères" />
             </div>
-            <p className="text-xs text-gray-400">Ce compte aura les mêmes accès admin que vous, à l'exception de la gestion des comptes support.</p>
+            <p className="text-xs text-gray-400">Ce compte aura les mêmes accès que vous. Il ne pourra pas gérer les comptes support.</p>
             <div className="flex gap-3 pt-2">
               <button type="button" className="btn-secondary flex-1" onClick={() => setModal(null)}>Annuler</button>
               <button type="submit" disabled={saving} className="btn-primary flex-1 flex items-center justify-center gap-2">
@@ -760,7 +760,7 @@ export default function AdminDashboard() {
               <label className="label">Mot de passe provisoire *</label>
               <input type="text" className="input" value={saForm.password} onChange={setSa('password')} required minLength={12} placeholder="Min. 12 caractères" />
             </div>
-            <p className="text-xs text-red-600">Accès complet à la plateforme, y compris la création/suppression d'autres superadmins. À réserver à des personnes de pleine confiance.</p>
+            <p className="text-xs text-red-600">Ce compte a un accès complet. Il peut créer et supprimer d'autres superadmins. Donnez cet accès à des personnes de confiance.</p>
             <div className="flex gap-3 pt-2">
               <button type="button" className="btn-secondary flex-1" onClick={() => setModal(null)}>Annuler</button>
               <button type="submit" disabled={saving} className="btn-primary flex-1 flex items-center justify-center gap-2">

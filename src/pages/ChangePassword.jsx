@@ -49,7 +49,7 @@ export default function ChangePassword() {
         <h2 className="font-display text-lg font-bold text-gray-900 mb-1">Changer le mot de passe</h2>
         {forced ? (
           <p className="text-sm text-gray-600 mb-4">
-            Un administrateur vous demande de changer votre mot de passe avant de continuer.
+            Un administrateur demande un nouveau mot de passe. Changez-le pour continuer.
           </p>
         ) : (
           <p className="text-sm text-gray-600 mb-4">Modifiez le mot de passe de votre compte.</p>

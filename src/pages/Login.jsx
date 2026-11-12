@@ -171,7 +171,7 @@ export default function Login() {
             Le suivi commercial des rizeries accompagnées par PFS.
           </h2>
           <p className="mt-4 max-w-[42ch] text-[17px] leading-relaxed text-white/90">
-            Ventes, contrats, encaissements et prévisions, dans un même outil partagé par les équipes des rizeries.
+            Ventes, contrats, encaissements et prévisions. Un seul outil pour les équipes des rizeries.
           </p>
         </div>
       </aside>
@@ -250,7 +250,7 @@ export default function Login() {
                   <p>{error}</p>
                   {isSuspended && (
                     <p className="mt-1.5 text-[13px] opacity-90">
-                      Contactez l'administrateur PFS pour régulariser votre situation.
+                      Contactez l'administrateur PFS.
                     </p>
                   )}
                 </div>
@@ -401,7 +401,7 @@ export default function Login() {
             <div className="login-rise login-rise-4 mt-3 flex items-start gap-2 text-[13px] leading-relaxed text-[#83919b]">
               <LockIcon className="mt-0.5 h-3.5 w-3.5 flex-none" />
               <p>
-                Accès sur invitation uniquement. Contactez l'administrateur PFS pour obtenir un compte.
+                Accès sur invitation uniquement. Demandez un compte à l'administrateur PFS.
               </p>
             </div>
 

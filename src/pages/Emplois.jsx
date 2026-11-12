@@ -324,7 +324,7 @@ export default function Emplois() {
 
           {!editing && (
             <p className="text-xs text-gray-400">
-              L'accès à l'application (compte, rôle, objectifs) se définit après la création, via "Affecter".
+              Après la création, cliquez sur "Affecter". Vous réglez alors le compte, le rôle et les objectifs.
             </p>
           )}
           {error && <p className="text-sm text-red-600">{error}</p>}
@@ -347,7 +347,7 @@ export default function Emplois() {
               {rolesDisponibles.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
             </select>
             {affectForm.role_plateforme === 'comptable' && (
-              <p className="text-xs text-gray-400 mt-1">Le comptable valide les encaissements déclarés par les commerciaux, pour toute la rizerie.</p>
+              <p className="text-xs text-gray-400 mt-1">Le comptable valide les encaissements des commerciaux. Il le fait pour toute la rizerie.</p>
             )}
           </div>
           <IdentifiantField
@@ -365,7 +365,7 @@ export default function Emplois() {
             <div>
               <label className="label">Objectif annuel (F, optionnel)</label>
               <input type="number" min="0" className="input" value={affectForm.objectif_annuel} onChange={setA('objectif_annuel')} placeholder="Réparti également sur les 12 mois" />
-              <p className="text-xs text-gray-400 mt-1">Ajustable ensuite mois par mois depuis la page Prévisions.</p>
+              <p className="text-xs text-gray-400 mt-1">Vous pourrez l'ajuster mois par mois dans Prévisions.</p>
             </div>
           )}
           {affectError && <p className="text-sm text-red-600">{affectError}</p>}

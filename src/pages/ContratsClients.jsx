@@ -134,7 +134,7 @@ export default function ContratsClients() {
       })
       setEchList((prev) => prev.map((e) => e.id === echeanceId ? { ...e, ...r.data } : e))
     } catch {
-      setError("Erreur lors de la mise à jour de l'échéance")
+      setError("La mise à jour de l'échéance a échoué")
     } finally { setEchSaving(null) }
   }
 
@@ -279,7 +279,7 @@ export default function ContratsClients() {
             </div>
           </div>
           <p className="text-xs text-gray-400 -mt-2">
-            Valeurs de départ appliquées à chaque mois de l'échéancier généré à la création, modifiables ensuite mois par mois (quantité et prix peuvent varier).
+            Ces valeurs s'appliquent à chaque mois de l'échéancier. Vous pourrez ensuite les modifier mois par mois.
           </p>
           {form.quantite_mensuelle && form.prix_unitaire && (
             <div className="bg-green-50 rounded-lg px-3 py-2 text-sm">

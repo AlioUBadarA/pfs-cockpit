@@ -285,7 +285,7 @@ export default function Ventes() {
               <option value="">Non précisé</option>
               {CONDITIONS_PAIEMENT.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
-            <p className="text-xs text-gray-400 mt-1">Détermine l'échéance par défaut si aucune date n'est précisée.</p>
+            <p className="text-xs text-gray-400 mt-1">Sans date saisie, ce choix fixe l'échéance.</p>
           </div>
           <div className="flex gap-3 pt-2">
             <button type="button" className="btn-secondary flex-1" onClick={() => setModalOpen(false)}>Annuler</button>

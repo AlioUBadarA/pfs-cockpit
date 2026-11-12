@@ -234,7 +234,7 @@ export default function Equipe() {
       </div>
 
       <p className="text-xs text-gray-400 -mt-3">
-        La création d'un commercial se fait désormais depuis RH (Affecter), pour garder une fiche employé complète.
+        Pour créer un commercial, passez par RH (Affecter). La fiche employé reste ainsi complète.
       </p>
 
       {error && !editModal && !pwdModal && !assignModal && (

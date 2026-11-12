@@ -107,7 +107,7 @@ export default function AdminUserDetail() {
     } catch (err) {
       const msg = err.response?.data?.error || 'Erreur'
       if (!force && isSuperadmin && msg.includes('Impossible de supprimer')) {
-        if (confirm(`${msg}\n\nForcer la suppression : les ventes, clients, emplois et contrats de ce compte (et de son équipe) seront archivés puis supprimés définitivement. Continuer ?`)) {
+        if (confirm(`${msg}\n\nVoulez-vous forcer la suppression ? Les ventes, clients, emplois et contrats de ce compte seront archivés. Ceux de son équipe aussi. Ils seront ensuite supprimés pour toujours. Continuer ?`)) {
           return doDelete(true)
         }
         return
