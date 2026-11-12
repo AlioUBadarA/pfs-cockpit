@@ -28,7 +28,7 @@ export default function DemoBanner() {
       <div className="flex items-center gap-2 min-w-0">
         <span className="text-[10px] font-bold uppercase tracking-wide bg-white/20 rounded-full px-2 py-0.5 flex-none">Démo</span>
         <span className="truncate">
-          Données fictives : testez librement, rien n'est enregistré sur le serveur.
+          Données fictives. Testez librement. Rien n'est enregistré sur le serveur.
         </span>
       </div>
       <div className="flex items-center gap-2 flex-none">

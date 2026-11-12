@@ -340,7 +340,7 @@ export default function Login() {
                     <div>
                       <p className="font-semibold text-[#123d5c]">Réinitialisation par l'administrateur</p>
                       <p className="mt-0.5">
-                        Pour des raisons de sécurité, contactez l'administrateur PFS pour obtenir un nouveau mot de passe.
+                        Contactez l'administrateur PFS. Il vous donnera un nouveau mot de passe.
                       </p>
                     </div>
                   </div>

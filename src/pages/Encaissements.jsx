@@ -112,7 +112,7 @@ export default function Encaissements() {
     <div className="space-y-5">
       <div>
         <h2 className="font-display text-xl font-bold text-gray-900">Encaissements</h2>
-        <p className="text-sm text-gray-500 mt-0.5">Recherchez une vente ou un contrat par numéro de transaction ou nom du client pour enregistrer un paiement, en une ou plusieurs tranches.</p>
+        <p className="text-sm text-gray-500 mt-0.5">Cherchez une vente ou un contrat par numéro ou par nom du client. Enregistrez ensuite le paiement. Le client peut payer en plusieurs fois.</p>
       </div>
 
       {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">{error}</div>}
@@ -275,7 +275,7 @@ export default function Encaissements() {
                 min={form.date}
                 required
               />
-              <p className="text-xs text-gray-400 mt-1">Il restera un solde après cette tranche : indiquez quand le client s'engage à payer la suite.</p>
+              <p className="text-xs text-gray-400 mt-1">Il restera un solde après ce versement. Indiquez la date du prochain paiement.</p>
             </div>
           )}
           {error && <p className="text-sm text-red-600">{error}</p>}

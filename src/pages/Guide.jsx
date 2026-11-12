@@ -6,40 +6,40 @@ const sectionsRizier = [
   {
     titre: '1. Démarrer la journée',
     contenu: [
-      { q: 'Direction', r: 'La page d\'accueil donne la photo du jour : CA, encaissements, alertes prioritaires. C\'est le premier écran à consulter chaque matin.' },
-      { q: 'Planning semaine', r: 'Dans "Clients & Ventes → Planning semaine", organisez les visites de vos commerciaux jour par jour : quel client ou prospect voir, avec quelle action à mener.' },
+      { q: 'Direction', r: 'La page d\'accueil montre la photo du jour. Vous y voyez le CA, les encaissements et les alertes. Consultez-la chaque matin.' },
+      { q: 'Planning semaine', r: 'Ouvrez "Clients & Ventes → Planning semaine". Organisez les visites de vos commerciaux jour par jour. Indiquez le client ou le prospect à voir. Indiquez aussi l\'action à mener.' },
     ]
   },
   {
     titre: '2. Catalogue Produits',
     contenu: [
-      { q: 'Créer un produit', r: '"Clients & Ventes → Produits" : ajoutez chaque référence (riz brisé 25%, riz entier...) avec son prix de vente et son coût de revient. La marge se calcule automatiquement.' },
-      { q: 'Utilisation', r: 'Ce catalogue alimente ensuite la liste déroulante "Produit" lors de la création d\'une vente ou d\'un contrat. Plus de saisie libre source d\'erreurs.' },
+      { q: 'Créer un produit', r: 'Ouvrez "Clients & Ventes → Produits". Ajoutez chaque référence (riz brisé 25%, riz entier...). Saisissez son prix de vente et son coût de revient. La marge se calcule seule.' },
+      { q: 'Utilisation', r: 'Le catalogue remplit la liste "Produit" des ventes et des contrats. Vous ne tapez plus le nom à la main. Vous évitez ainsi les erreurs.' },
     ]
   },
   {
     titre: '3. Clients et ventes',
     contenu: [
-      { q: 'Portefeuille (Clients)', r: 'Liste de tous vos clients avec leur score RFM (récence, fréquence, montant). Vous pouvez y associer les "produits suivis" pour chaque client.' },
-      { q: 'Créer une vente', r: 'Dans "Ventes", chaque nouvelle vente génère automatiquement un numéro de transaction (ex: V-2026-0007). Si le client n\'existe pas encore dans le Portefeuille, il est créé automatiquement ; s\'il existe déjà, ses informations sont mises à jour.' },
-      { q: 'Contrats clients / paddy', r: 'Les contrats récurrents (clients aval, producteurs paddy amont) ont eux aussi un numéro de contrat pour les suivre dans le temps. Un contrat se clôture en passant son statut à "Terminé".' },
-      { q: 'Clôture d\'une vente', r: 'Une vente est automatiquement marquée "Payée" (clôturée) dès que le total des encaissements couvre son montant. Aucune action manuelle n\'est nécessaire.' },
+      { q: 'Portefeuille (Clients)', r: 'Cette page liste tous vos clients. Chaque client a un score RFM (récence, fréquence, montant). Vous pouvez lui associer des "produits suivis".' },
+      { q: 'Créer une vente', r: 'Ouvrez "Ventes". Chaque nouvelle vente reçoit un numéro (ex : V-2026-0007). Un client absent du Portefeuille est créé seul. Un client existant est mis à jour.' },
+      { q: 'Contrats clients / paddy', r: 'Les contrats récurrents ont aussi un numéro. Ils concernent les clients aval et les producteurs de paddy. Pour clôturer un contrat, passez son statut à "Terminé".' },
+      { q: 'Clôture d\'une vente', r: 'Une vente passe seule au statut "Payée" quand les encaissements couvrent son montant. Vous n\'avez rien à faire.' },
     ]
   },
   {
     titre: '4. Encaissements et recouvrement',
     contenu: [
-      { q: 'Encaisser un paiement', r: 'Dans "Encaissements", recherchez la transaction par son numéro ou par le nom du client, puis enregistrez le montant reçu. Un client peut payer en plusieurs tranches : chaque versement vient s\'ajouter à l\'historique.' },
-      { q: 'Recouvrement (Créances)', r: 'Suivez les impayés par ancienneté (1-30j, 31-60j...) et relancez les clients en retard directement depuis cette page.' },
+      { q: 'Encaisser un paiement', r: 'Ouvrez "Encaissements". Cherchez la vente par son numéro ou par le nom du client. Saisissez le montant reçu. Un client peut payer en plusieurs fois. Chaque versement s\'ajoute à l\'historique.' },
+      { q: 'Recouvrement (Créances)', r: 'Cette page classe les impayés par ancienneté (1-30j, 31-60j...). Vous pouvez relancer les clients en retard depuis cette page.' },
     ]
   },
   {
     titre: '5. Pilotage de l\'activité',
     contenu: [
-      { q: 'Prospection', r: 'Le pipeline de prospects (anciennement "Pipeline") suit chaque opportunité de Nouveau jusqu\'à Gagné/Perdu.' },
-      { q: 'Journal du jour', r: 'Vue caisse : ventes et encaissements du jour, filtrable par période.' },
-      { q: 'Rentabilité / Prévisions', r: 'Suivez la marge réelle par produit et comparez aux objectifs mensuels.' },
-      { q: 'Emplois', r: 'Gérez la liste des employés de la rizerie (poste, contrat, salaire). La masse salariale se calcule automatiquement.' },
+      { q: 'Prospection', r: 'Cette page suit chaque prospect. Il passe de l\'étape Nouveau à l\'étape Gagné ou Perdu.' },
+      { q: 'Journal du jour', r: 'Cette page montre les ventes et les encaissements du jour. Vous pouvez changer la période.' },
+      { q: 'Rentabilité / Prévisions', r: 'Suivez la marge réelle par produit. Comparez-la aux objectifs du mois.' },
+      { q: 'Emplois', r: 'Gérez la liste des employés de la rizerie. Saisissez le poste, le contrat et le salaire. La masse salariale se calcule seule.' },
     ]
   },
 ]
@@ -48,24 +48,24 @@ const sectionsCommercial = [
   {
     titre: '1. Vos outils au quotidien',
     contenu: [
-      { q: 'Planning semaine', r: 'Dans "Planning semaine", organisez vos visites jour par jour : quel client ou prospect voir, avec quelle action à mener. C\'est votre feuille de route terrain.' },
-      { q: 'Ventes', r: 'Enregistrez chaque vente : client, produit (sélectionné dans le catalogue), quantité et prix. Le client est automatiquement ajouté ou mis à jour dans le Portefeuille.' },
-      { q: 'Prospection', r: 'Suivez vos prospects étape par étape (Nouveau → Qualifié → Proposition → Négociation → Gagné/Perdu) pour ne jamais perdre une opportunité de vue.' },
-      { q: 'Activités', r: 'Notez chaque visite, appel ou relance. C\'est votre mémoire de terrain, utile pour préparer la prochaine visite.' },
+      { q: 'Planning semaine', r: 'Organisez vos visites jour par jour. Indiquez le client ou le prospect à voir. Indiquez aussi l\'action à mener. C\'est votre feuille de route.' },
+      { q: 'Ventes', r: 'Enregistrez chaque vente. Saisissez le client, le produit, la quantité et le prix. Le client est ajouté ou mis à jour dans le Portefeuille.' },
+      { q: 'Prospection', r: 'Suivez vos prospects étape par étape : Nouveau, Qualifié, Proposition, Négociation, Gagné ou Perdu. Vous ne perdez aucune piste.' },
+      { q: 'Activités', r: 'Notez chaque visite, chaque appel et chaque relance. Ces notes vous aident à préparer la visite suivante.' },
     ]
   },
   {
     titre: '2. Encaisser un client',
     contenu: [
-      { q: 'Retrouver une transaction', r: 'Dans "Encaissements", recherchez par le numéro donné au client (ex: V-2026-0007) ou par son nom.' },
-      { q: 'Paiement en plusieurs fois', r: 'Si le client paie en plusieurs tranches, enregistrez chaque versement séparément. Le solde restant se met à jour automatiquement.' },
+      { q: 'Retrouver une transaction', r: 'Ouvrez "Encaissements". Cherchez par le numéro donné au client (ex : V-2026-0007). Vous pouvez aussi chercher par son nom.' },
+      { q: 'Paiement en plusieurs fois', r: 'Le client peut payer en plusieurs fois. Enregistrez chaque versement à part. Le reste à payer se met à jour seul.' },
     ]
   },
   {
     titre: '3. Bien vendre',
     contenu: [
-      { q: 'Argumentaire de vente', r: 'Scripts d\'accroche, réponses aux objections courantes et techniques de closing. Consultez cette page avant chaque tournée client.' },
-      { q: 'Recouvrement', r: 'Si un de vos clients est en retard de paiement, vous pouvez le voir et enregistrer une relance directement depuis la page Recouvrement.' },
+      { q: 'Argumentaire de vente', r: 'Cette page donne des phrases d\'accroche. Elle donne aussi des réponses aux objections. Lisez-la avant chaque tournée.' },
+      { q: 'Recouvrement', r: 'Un client est en retard de paiement ? Vous le voyez sur la page Recouvrement. Vous pouvez y noter une relance.' },
     ]
   },
 ]
@@ -120,7 +120,7 @@ export default function Guide() {
     <div className="space-y-4">
       <div>
         <h2 className="font-display text-xl font-bold text-gray-900">Guide d'utilisation</h2>
-        <p className="text-sm text-gray-500 mt-1">Comment utiliser la plateforme au quotidien, selon votre rôle.</p>
+        <p className="text-sm text-gray-500 mt-1">Utilisez la plateforme au quotidien. Le guide change selon votre rôle.</p>
       </div>
 
       <PageTabs

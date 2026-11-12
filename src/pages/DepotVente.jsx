@@ -144,7 +144,7 @@ export default function DepotVente() {
         <button onClick={openNew} className="btn-primary text-sm">+ Nouveau dépôt</button>
       </div>
       <p className="text-sm text-gray-500 -mt-3">
-        Marchandise déposée chez un distributeur : il ne règle que ce qu'il a effectivement vendu, déclaré par rapports périodiques.
+        La marchandise est déposée chez un distributeur. Il paie seulement ce qu'il a vendu. Il déclare ses ventes dans des rapports réguliers.
       </p>
 
       {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">{error}</div>}

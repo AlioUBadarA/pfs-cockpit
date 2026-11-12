@@ -297,7 +297,7 @@ export default function ContratsClients() {
             </div>
           </div>
           <p className="text-xs text-gray-400 -mt-2">
-            Un contrat récurrent engage sur une durée déterminée : les deux dates sont nécessaires pour générer l'échéancier mensuel.
+            Un contrat récurrent a une durée fixe. Les deux dates servent à créer l'échéancier mensuel.
           </p>
           <div>
             <label className="label">Statut</label>
@@ -378,7 +378,7 @@ export default function ContratsClients() {
             </table>
           </div>
         )}
-        <p className="text-xs text-gray-400 mt-3">Les paiements se font depuis la page Encaissements, en recherchant le contrat par numéro ou nom du client.</p>
+        <p className="text-xs text-gray-400 mt-3">Les paiements se font sur la page Encaissements. Cherchez le contrat par numéro ou par nom du client.</p>
       </Modal>
     </div>
   )

@@ -18,7 +18,7 @@ export default function ImpersonationBanner() {
         <span className="text-lg">👁️</span>
         <span>
           Vous naviguez dans l'espace de <strong>{user?.rizerie || user?.nom}</strong>
-          <span className="ml-2 text-xs font-normal opacity-70">(vue en lecture/écriture active)</span>
+          <span className="ml-2 text-xs font-normal opacity-70">(lecture et écriture actives)</span>
         </span>
       </div>
       <button
