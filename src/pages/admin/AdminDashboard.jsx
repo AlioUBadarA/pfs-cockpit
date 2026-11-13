@@ -11,6 +11,8 @@ import PhoneField from '../../components/PhoneField'
 import IdentifiantField from '../../components/IdentifiantField'
 import { useAuth } from '../../context/AuthContext'
 import Country from 'country-state-city/lib/country'
+import AdminConnexionsRiziers from './AdminConnexionsRiziers'
+import AdminSuspensions from './AdminSuspensions'
 
 const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : 'jamais'
@@ -19,6 +21,8 @@ const fmtPays = (iso) => iso ? (Country.getCountryByCode(iso)?.flag || '') + ' '
 const BASE_TABS = [
   { key: 'rizeries', label: 'Rizeries' },
   { key: 'comptes',  label: 'Comptes' },
+  { key: 'connexions-riziers', label: 'Connexions riziers' },
+  { key: 'suspensions', label: 'Comptes suspendus' },
 ]
 
 export default function AdminDashboard() {
@@ -276,7 +280,17 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      <PageTabs tabs={TABS} active={tab} setActive={setTab} />
+      <PageTabs
+        tabs={TABS.map(t => t.key === 'suspensions' ? { ...t, badge: stats?.comptes_suspendus } : t)}
+        active={tab}
+        setActive={setTab}
+      />
+
+      {/* ── ONGLET CONNEXIONS RIZIERS ── */}
+      {tab === 'connexions-riziers' && <AdminConnexionsRiziers />}
+
+      {/* ── ONGLET COMPTES SUSPENDUS ── */}
+      {tab === 'suspensions' && <AdminSuspensions onChange={load} />}
 
       {/* ── ONGLET RIZERIES ── */}
       {tab === 'rizeries' && (
@@ -473,7 +487,14 @@ export default function AdminDashboard() {
                             </td>
                             <td className="table-cell">
                               {u.suspended
-                                ? <span className="text-xs font-medium text-red-600">🚫 Suspendu</span>
+                                ? (
+                                  <div className="max-w-[200px]">
+                                    <span className="text-xs font-medium text-red-600">🚫 Suspendu{u.suspended_at ? ` le ${fmtDate(u.suspended_at)}` : ''}</span>
+                                    {u.suspended_reason && (
+                                      <div className="text-xs text-gray-500 truncate" title={u.suspended_reason}>{u.suspended_reason}</div>
+                                    )}
+                                  </div>
+                                )
                                 : <span className="text-xs font-medium text-green-600">✅ Actif</span>
                               }
                             </td>
