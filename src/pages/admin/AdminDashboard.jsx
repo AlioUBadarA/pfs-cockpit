@@ -10,13 +10,12 @@ import LocationFields from '../../components/LocationFields'
 import PhoneField from '../../components/PhoneField'
 import IdentifiantField from '../../components/IdentifiantField'
 import { useAuth } from '../../context/AuthContext'
-import Country from 'country-state-city/lib/country'
 import AdminConnexionsRiziers from './AdminConnexionsRiziers'
 import AdminSuspensions from './AdminSuspensions'
 
 const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : 'jamais'
-const fmtPays = (iso) => iso ? (Country.getCountryByCode(iso)?.flag || '') + ' ' + (Country.getCountryByCode(iso)?.name || iso) : null
+import { fmtPays } from '../../utils/pays'
 
 const BASE_TABS = [
   { key: 'rizeries', label: 'Rizeries' },

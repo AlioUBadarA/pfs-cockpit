@@ -1,18 +1,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import Country from 'country-state-city/lib/country'
 import api from '../../services/api'
 import RoleBadge from '../../components/RoleBadge'
-
-// Le pays d'une rizerie peut être un code ISO (« SN ») ou un nom (« Sénégal »).
-const fmtPays = (p) => {
-  if (!p) return null
-  if (/^[A-Z]{2}$/.test(p)) {
-    const c = Country.getCountryByCode(p)
-    if (c) return `${c.flag} ${c.name}`
-  }
-  return p
-}
+import { fmtPays } from '../../utils/pays'
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : null
 const fmtDateHeure = (d) => d

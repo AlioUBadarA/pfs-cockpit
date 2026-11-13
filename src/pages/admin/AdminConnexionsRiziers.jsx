@@ -3,19 +3,10 @@ import { Link } from 'react-router-dom'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts'
-import Country from 'country-state-city/lib/country'
 import api from '../../services/api'
 import KpiCard from '../../components/KpiCard'
 
-// Le pays d'une rizerie peut être un code ISO (« SN ») ou un nom (« Sénégal »).
-const fmtPays = (p) => {
-  if (!p) return null
-  if (/^[A-Z]{2}$/.test(p)) {
-    const c = Country.getCountryByCode(p)
-    if (c) return `${c.flag} ${c.name}`
-  }
-  return p
-}
+import { fmtPays, nomPays } from '../../utils/pays'
 
 const fmtDateHeure = (d) => d
   ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
@@ -113,7 +104,7 @@ export default function AdminConnexionsRiziers() {
         <div className="flex items-center gap-2">
           <select className="input text-sm py-1.5 w-48" value={pays} onChange={e => setPays(e.target.value)}>
             <option value="">Tous les pays</option>
-            {(data?.pays || []).map(p => <option key={p} value={p}>{fmtPays(p)}</option>)}
+            {[...(data?.pays || [])].sort((a, b) => nomPays(a).localeCompare(nomPays(b), 'fr')).map(p => <option key={p} value={p}>{fmtPays(p)}</option>)}
           </select>
           <button onClick={load} className="btn-secondary text-sm">↻ Actualiser</button>
         </div>
