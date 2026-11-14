@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { lazy, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Layout from './components/Layout'
@@ -6,35 +6,35 @@ import Login from './pages/Login'
 import ServiceIndisponible from './pages/ServiceIndisponible'
 import { isDemoMode } from './demo/demoMode'
 import { probeServer, useServerStatus } from './services/serverStatus'
-import ChangePassword from './pages/ChangePassword'
-import Dashboard from './pages/Dashboard'
-import PilotageSemaine from './pages/Pilotage'
-import Argumentaire from './pages/Argumentaire'
-import Ventes from './pages/Ventes'
-import Clients from './pages/Clients'
-import Prospection from './pages/Prospection'
-import Creances from './pages/Creances'
-import Rentabilite from './pages/Rentabilite'
-import Forecast from './pages/Forecast'
-import Actions from './pages/Actions'
-import Insights from './pages/Insights'
-import ContratsClients from './pages/ContratsClients'
-import ContratsPaddy from './pages/ContratsPaddy'
-import DepotVente from './pages/DepotVente'
-import Equipe from './pages/Equipe'
-import Emplois from './pages/Emplois'
-import Managers from './pages/Managers'
-import Journal from './pages/Journal'
-import Activites from './pages/Activites'
-import Produits from './pages/Produits'
-import Encaissements from './pages/Encaissements'
-import Comptabilite from './pages/Comptabilite'
-import Guide from './pages/Guide'
-import AdminDashboard from './pages/admin/AdminDashboard'
-import AdminUserDetail from './pages/admin/AdminUserDetail'
-import AdminAudit from './pages/admin/AdminAudit'
-import AdminImpactRizao from './pages/admin/AdminImpactRizao'
-import AdminConnexions from './pages/admin/AdminConnexions'
+const ChangePassword = lazy(() => import('./pages/ChangePassword'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const PilotageSemaine = lazy(() => import('./pages/Pilotage'))
+const Argumentaire = lazy(() => import('./pages/Argumentaire'))
+const Ventes = lazy(() => import('./pages/Ventes'))
+const Clients = lazy(() => import('./pages/Clients'))
+const Prospection = lazy(() => import('./pages/Prospection'))
+const Creances = lazy(() => import('./pages/Creances'))
+const Rentabilite = lazy(() => import('./pages/Rentabilite'))
+const Forecast = lazy(() => import('./pages/Forecast'))
+const Actions = lazy(() => import('./pages/Actions'))
+const Insights = lazy(() => import('./pages/Insights'))
+const ContratsClients = lazy(() => import('./pages/ContratsClients'))
+const ContratsPaddy = lazy(() => import('./pages/ContratsPaddy'))
+const DepotVente = lazy(() => import('./pages/DepotVente'))
+const Equipe = lazy(() => import('./pages/Equipe'))
+const Emplois = lazy(() => import('./pages/Emplois'))
+const Managers = lazy(() => import('./pages/Managers'))
+const Journal = lazy(() => import('./pages/Journal'))
+const Activites = lazy(() => import('./pages/Activites'))
+const Produits = lazy(() => import('./pages/Produits'))
+const Encaissements = lazy(() => import('./pages/Encaissements'))
+const Comptabilite = lazy(() => import('./pages/Comptabilite'))
+const Guide = lazy(() => import('./pages/Guide'))
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
+const AdminUserDetail = lazy(() => import('./pages/admin/AdminUserDetail'))
+const AdminAudit = lazy(() => import('./pages/admin/AdminAudit'))
+const AdminImpactRizao = lazy(() => import('./pages/admin/AdminImpactRizao'))
+const AdminConnexions = lazy(() => import('./pages/admin/AdminConnexions'))
 
 const CHANGE_PASSWORD_PATH = '/profil/mot-de-passe'
 

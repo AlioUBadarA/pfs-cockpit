@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import DemoBanner from './DemoBanner'
@@ -118,7 +118,9 @@ export default function Layout() {
 
         <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-7xl">
-            <Outlet />
+            <Suspense fallback={<div className="flex justify-center py-20" role="status" aria-label="Chargement"><span className="w-7 h-7 border-4 border-[#62bb46] border-t-transparent rounded-full animate-spin" /></div>}>
+              <Outlet />
+            </Suspense>
           </div>
         </main>
 
