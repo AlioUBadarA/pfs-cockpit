@@ -7,9 +7,8 @@ import RoleBadge from '../../components/RoleBadge'
 import IdentifiantField from '../../components/IdentifiantField'
 import PasswordField from '../../components/PasswordField'
 import { useAuth } from '../../context/AuthContext'
+import { formatCFA as fmt, formatDate as fmtDate } from '../../utils/format'
 
-const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-'
 
 export default function AdminUserDetail() {
   const { id } = useParams()

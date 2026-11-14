@@ -7,8 +7,8 @@ import api from '../services/api'
 import KpiCard from '../components/KpiCard'
 import Panel from '../components/Panel'
 import BarList from '../components/BarList'
+import { formatCFA as fmt } from '../utils/format'
 
-const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
 const pct = (n) => n != null ? Math.round(n) + ' %' : '-'
 
 const CustomTooltip = ({ active, payload, label }) => {

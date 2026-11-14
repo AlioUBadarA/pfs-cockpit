@@ -5,8 +5,8 @@ import {
 } from 'recharts'
 import api from '../../services/api'
 import KpiCard from '../../components/KpiCard'
+import { formatDate as fmtDate } from '../../utils/format'
 
-const fmtDate  = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-'
 const fmtHeure = (d) => d ? new Date(d).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '-'
 const fmtDateCourt = (d) => {
   if (!d) return ''

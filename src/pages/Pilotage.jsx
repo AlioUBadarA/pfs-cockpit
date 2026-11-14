@@ -2,10 +2,10 @@ import { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
 import KpiCard from '../components/KpiCard'
 import Modal from '../components/Modal'
+import { formatCFA as fmt } from '../utils/format'
 
 const JOURS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi']
 
-const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
 const pct = (n) => n != null ? Number(n).toFixed(1) + ' %' : '-'
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : 'jamais'
 

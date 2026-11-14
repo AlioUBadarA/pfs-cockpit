@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import api from '../../services/api'
+import { formatCFA as fmt } from '../../utils/format'
 
-const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
 
 const RIZERIE_COLORS = ['#1b75bc', '#62bb46', '#F9A825', '#9C27B0', '#00897B', '#E64A19', '#5C6BC0']
 

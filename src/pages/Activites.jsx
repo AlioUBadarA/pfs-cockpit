@@ -5,10 +5,10 @@ import BarList from '../components/BarList'
 import KpiCard from '../components/KpiCard'
 import DataTable from '../components/DataTable'
 import Modal from '../components/Modal'
+import { formatDate as fmtDate } from '../utils/format'
 
 const TYPES = ['Visite client', 'Appel', 'Réunion', 'Démonstration', 'Négociation', 'Relance', 'Contrat signé']
 const RESULTATS = ['Positif', 'Négatif', 'Neutre']
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-'
 const INIT = { date: new Date().toISOString().slice(0, 10), type: 'Visite client', cible: '', resultat: 'Neutre', note: '' }
 
 export default function Activites() {

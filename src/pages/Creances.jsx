@@ -4,9 +4,9 @@ import KpiCard from '../components/KpiCard'
 import Panel from '../components/Panel'
 import BarList from '../components/BarList'
 import KebabMenu from '../components/KebabMenu'
+import { formatDate as fmtDate } from '../utils/format'
 
 const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '0 F'
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-'
 
 const BUCKETS = ['Non échu', '1-30 j', '31-60 j', '61-90 j', '91-120 j', '>120 j']
 const BUCKET_COLOR = { 'Non échu': '#1B5E20', '1-30 j': '#7a9a4e', '31-60 j': '#F9A825', '61-90 j': '#d98324', '91-120 j': '#c1521d', '>120 j': '#CC0000' }

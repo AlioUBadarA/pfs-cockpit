@@ -14,9 +14,9 @@ import { useAuth } from '../../context/AuthContext'
 import AdminConnexionsRiziers from './AdminConnexionsRiziers'
 import AdminSuspensions from './AdminSuspensions'
 
-const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : 'jamais'
 import { fmtPays } from '../../utils/pays'
+import { formatCFA as fmt } from '../../utils/format'
 
 const BASE_TABS = [
   { key: 'rizeries', label: 'Rizeries' },

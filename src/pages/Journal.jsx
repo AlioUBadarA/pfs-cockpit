@@ -4,9 +4,9 @@ import Panel from '../components/Panel'
 import BarList from '../components/BarList'
 import KpiCard from '../components/KpiCard'
 import DataTable from '../components/DataTable'
+import { formatDate as fmtDate } from '../utils/format'
 
 const fmt = (n) => Number(n || 0).toLocaleString('fr-FR') + ' F'
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-'
 const today = () => new Date().toISOString().slice(0, 10)
 const daysAgo = (n) => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10)
 const monthStart = () => today().slice(0, 7) + '-01'

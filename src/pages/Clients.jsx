@@ -7,6 +7,7 @@ import DataTable from '../components/DataTable'
 import KpiCard from '../components/KpiCard'
 import RfmGrid from '../components/RfmGrid'
 import { useAuth } from '../context/AuthContext'
+import { formatCFA as fmt } from '../utils/format'
 
 // Valeurs alignées sur TYPES_VALIDES (gcr/routes/clients.js) et la contrainte CHECK de schema.sql,
 // un libellé français plus lisible est affiché, mais la valeur envoyée à l'API doit matcher exactement.
@@ -25,7 +26,6 @@ const CLIENT_INIT = {
   telephone: '', volume_estime: '', valorise: '', horaire: '', produits_interet: [],
 }
 
-const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
 const fmtM = (n) => (Number(n || 0) / 1e6).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' M'
 
 // Scoring RFM identique au HTML de référence : récence (jours depuis dernier achat),

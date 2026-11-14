@@ -1,11 +1,10 @@
 import { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
 import Modal from '../components/Modal'
+import { formatCFA as fmt, formatDate as fmtDate } from '../utils/format'
 
 const STATUTS = ['Actif','Suspendu','Terminé']
 const ECH_STATUTS = ['En cours','En retard','Paye']
-const fmt = (n) => n ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-'
 const MOIS_LABELS = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc']
 
 const statutColor = (s) => ({

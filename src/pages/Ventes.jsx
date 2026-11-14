@@ -4,6 +4,7 @@ import Modal from '../components/Modal'
 import KebabMenu from '../components/KebabMenu'
 import { useAuth } from '../context/AuthContext'
 import { printBonCommande, printFacture } from '../utils/printDocument'
+import { formatCFA as fmt, formatDate as fmtDate } from '../utils/format'
 
 // Valeurs exactes du backend
 const STATUTS_DB   = ['En cours', 'Paye', 'En retard']
@@ -11,8 +12,6 @@ const STATUT_LABEL = { 'Paye': 'Payé', 'En cours': 'En cours', 'En retard': 'En
 // Valeurs exactes du backend (gcr/utils/paiement.js)
 const CONDITIONS_PAIEMENT = ['Comptant', 'J+15', 'J+30', 'J+45', 'J+60', 'J+90', '50% comptant / 50% J+15', '50% comptant / 50% J+30']
 
-const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-'
 
 const VENTE_INIT = {
   client_nom: '', produit: '', quantite: '', prix_unitaire: '',

@@ -3,9 +3,9 @@ import api from '../services/api'
 import Modal from '../components/Modal'
 import KebabMenu from '../components/KebabMenu'
 import { useAuth } from '../context/AuthContext'
+import { formatCFA as fmt } from '../utils/format'
 
 const TENDANCES = ['hausse', 'stable', 'déclin']
-const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
 
 const tendanceColor = (t) => ({
   hausse:  'bg-green-100 text-green-700',

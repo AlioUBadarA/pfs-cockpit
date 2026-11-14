@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
 import Modal from '../components/Modal'
+import { formatCFA as fmt, formatDate as fmtDate } from '../utils/format'
 
 const STATUTS = ['En cours', 'Clôturé']
 const STATUT_PAIEMENT_LABEL = { 'En cours': 'En cours', 'Paye': 'Payé' }
@@ -9,9 +10,7 @@ const TYPES_MOUVEMENT = [
   { value: 'retour', label: 'Quantité retournée (invendu)' },
 ]
 
-const fmt = (n) => n ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
 const fmtQ = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' kg' : '-'
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-'
 
 const statutColor = (s) => ({
   'En cours':  'bg-blue-100 text-blue-700',

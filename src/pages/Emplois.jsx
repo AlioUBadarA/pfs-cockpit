@@ -5,6 +5,7 @@ import RoleBadge from '../components/RoleBadge'
 import IdentifiantField from '../components/IdentifiantField'
 import PasswordField from '../components/PasswordField'
 import { useAuth } from '../context/AuthContext'
+import { formatDate as fmtDate } from '../utils/format'
 
 const TYPES = ['CDI','CDD','Temps partiel','Stage','Journalier']
 const SEXES = ['Homme','Femme']
@@ -16,7 +17,6 @@ const ROLES_AFFECTABLES = [
   { value: 'comptable', label: 'Comptable' },
 ]
 
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-'
 const fmtSalaire = (n) => n ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
 
 const typeColor = (t) => ({

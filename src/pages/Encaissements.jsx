@@ -6,9 +6,8 @@ import DataTable from '../components/DataTable'
 import KebabMenu from '../components/KebabMenu'
 import { useAuth } from '../context/AuthContext'
 import { printRecu, printFacture } from '../utils/printDocument'
+import { formatCFA as fmt, formatDate as fmtDate } from '../utils/format'
 
-const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-'
 const MODES = ['Espèces', 'Virement', 'Chèque', 'Mobile Money']
 
 const statutColor = (s) => ({

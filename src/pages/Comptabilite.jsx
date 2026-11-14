@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
 import Modal from '../components/Modal'
 import KpiCard from '../components/KpiCard'
+import { formatCFA as fmt, formatDate as fmtDate } from '../utils/format'
 
 const TYPE_LABEL = { vente: 'Vente', echeance: 'Échéance contrat', contrat: 'Contrat', paddy: 'Contrat paddy' }
 const TABS = [
@@ -10,8 +11,6 @@ const TABS = [
   { key: 'rejete', label: 'Rejetés' },
 ]
 
-const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-'
 const fmtDateTime = (d) => d ? new Date(d).toLocaleString('fr-FR') : '-'
 
 export default function Comptabilite() {
