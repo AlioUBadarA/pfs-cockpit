@@ -162,7 +162,9 @@ export default function StatusPage({
 
           <div className="mt-6 flex items-center gap-2 border-t border-[#edf1f4] pt-4 text-[10.5px] uppercase tracking-[0.14em] text-[#93a1ab]">
             <GrainMark className="h-4 w-4 flex-none text-[#62bb46]" />
-            Filière riz · Afrique de l'Ouest
+           Sales Cockpit · Partners In Food Solutions
+
+
           </div>
         </section>
       </main>
