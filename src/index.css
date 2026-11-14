@@ -134,6 +134,27 @@ body {
   background-color: #1667a6;
 }
 
+/* ── Pages d'état : service indisponible / erreur inattendue ── */
+@keyframes status-rise {
+  from { opacity: 0; transform: translate3d(0, 14px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes status-pulse {
+  0%, 100% { opacity: .45; transform: scale(.92); }
+  50%      { opacity: 1; transform: scale(1); }
+}
+
+.status-rise  { animation: status-rise .6s cubic-bezier(.22, 1, .36, 1) both; }
+.status-pulse { animation: status-pulse 2.4s ease-in-out infinite; }
+
+.status-grid {
+  background-image: radial-gradient(rgba(27, 117, 188, .16) 1px, transparent 1px);
+  background-size: 26px 26px;
+  -webkit-mask-image: radial-gradient(ellipse at 78% 12%, #000 4%, transparent 62%);
+  mask-image: radial-gradient(ellipse at 78% 12%, #000 4%, transparent 62%);
+}
+
 /* Layout : panneaux déroulants et tiroir de navigation */
 @keyframes cc-pop-in {
   from { opacity: 0; transform: translateY(-6px) scale(.99); }
@@ -165,6 +186,8 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .login-rise,
+  .status-rise,
+  .status-pulse,
   .cc-pop,
   .cc-drawer-in {
     animation: none !important;

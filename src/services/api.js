@@ -1,15 +1,15 @@
 import axios from 'axios'
 import { isDemoMode, demoAdapter } from '../demo/demoMode'
 import { API_BASE_URL } from './apiConfig'
-import {
-  isServerUnavailableError,
-  looksLikeSuspensionPage,
-  reportServerDown,
-  reportServerUp,
-} from './serverStatus'
+import { classifyServerError, reportServerDown, reportServerUp } from './serverStatus'
+
+// Délai maximal d'une requête : au-delà, on considère le service indisponible.
+// Généreux pour laisser le temps à une instance Render de sortir de veille.
+export const API_TIMEOUT_MS = 60_000
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: API_TIMEOUT_MS,
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -30,12 +30,13 @@ api.interceptors.response.use(
     return response
   },
   (error) => {
-    // Serveur éteint / suspendu sur Render : on lève le drapeau global pour afficher
-    // la page personnalisée au lieu d'une erreur brute.
-    if (isServerUnavailableError(error)) {
+    // Serveur arrêté, suspendu, en erreur 5xx ou base de données inaccessible :
+    // on lève le drapeau global pour afficher la page personnalisée.
+    const failureReason = classifyServerError(error)
+    if (failureReason) {
       error.isServerDown = true
-      const suspended = looksLikeSuspensionPage(error.response?.data, error.response?.headers)
-      reportServerDown(suspended ? 'suspended' : 'unreachable')
+      error.serverDownReason = failureReason
+      reportServerDown(failureReason)
       return Promise.reject(error)
     }
 
