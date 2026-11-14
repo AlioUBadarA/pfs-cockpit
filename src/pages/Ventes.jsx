@@ -5,6 +5,7 @@ import KebabMenu from '../components/KebabMenu'
 import { useAuth } from '../context/AuthContext'
 import { printBonCommande, printFacture } from '../utils/printDocument'
 import { formatCFA as fmt, formatDate as fmtDate } from '../utils/format'
+import { askConfirm } from '../utils/askConfirm'
 
 // Valeurs exactes du backend
 const STATUTS_DB   = ['En cours', 'Paye', 'En retard']
@@ -87,7 +88,7 @@ export default function Ventes() {
   }
 
   const deleteVente = async (id) => {
-    if (!confirm('Supprimer cette vente ?')) return
+    if (!(await askConfirm('Supprimer cette vente ?'))) return
     try {
       await api.delete(`/api/ventes/${id}`)
       setVentes((prev) => prev.filter((v) => v.id !== id))

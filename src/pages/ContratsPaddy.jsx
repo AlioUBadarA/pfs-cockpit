@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
 import Modal from '../components/Modal'
 import { formatCFA as fmt, formatDate as fmtDate } from '../utils/format'
+import { askConfirm } from '../utils/askConfirm'
 
 const STATUTS = ['Actif','Suspendu','Terminé']
 
@@ -74,7 +75,7 @@ export default function ContratsPaddy() {
   }
 
   const del = async (id) => {
-    if (!confirm('Supprimer ce contrat ?')) return
+    if (!(await askConfirm('Supprimer ce contrat ?'))) return
     try { await api.delete(`/api/contrats/paddy/${id}`); setItems(p => p.filter(i => i.id !== id)) }
     catch { setError('Erreur suppression') }
   }

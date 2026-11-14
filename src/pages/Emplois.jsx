@@ -6,6 +6,7 @@ import IdentifiantField from '../components/IdentifiantField'
 import PasswordField from '../components/PasswordField'
 import { useAuth } from '../context/AuthContext'
 import { formatDate as fmtDate } from '../utils/format'
+import { askConfirm } from '../utils/askConfirm'
 
 const TYPES = ['CDI','CDD','Temps partiel','Stage','Journalier']
 const SEXES = ['Homme','Femme']
@@ -111,7 +112,7 @@ export default function Emplois() {
   }
 
   const del = async (id) => {
-    if (!confirm('Supprimer cet employé ?')) return
+    if (!(await askConfirm('Supprimer cet employé ?'))) return
     try { await api.delete(`/api/emplois/${id}`); setItems(p => p.filter(i => i.id !== id)) }
     catch { setError('Erreur suppression') }
   }

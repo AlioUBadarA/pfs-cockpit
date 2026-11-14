@@ -4,6 +4,7 @@ import Modal from '../components/Modal'
 import Panel from '../components/Panel'
 import BarList from '../components/BarList'
 import KpiCard from '../components/KpiCard'
+import { askConfirm } from '../utils/askConfirm'
 
 const STATUTS   = ['Nouveau','Qualifié','Proposition','Négociation','Gagné','Perdu']
 const PRIORITES = ['Haute','Normale','Basse']
@@ -99,7 +100,7 @@ export default function Prospection() {
   }
 
   const deleteItem = async (id) => {
-    if (!confirm('Supprimer ce prospect ?')) return
+    if (!(await askConfirm('Supprimer ce prospect ?'))) return
     try {
       await api.delete(`/api/prospection/${id}`)
       setItems(prev => prev.filter(i => i.id !== id))

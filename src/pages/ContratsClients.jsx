@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
 import Modal from '../components/Modal'
 import { formatCFA as fmt, formatDate as fmtDate } from '../utils/format'
+import { askConfirm } from '../utils/askConfirm'
 
 const STATUTS = ['Actif','Suspendu','Terminé']
 const ECH_STATUTS = ['En cours','En retard','Paye']
@@ -103,7 +104,7 @@ export default function ContratsClients() {
   }
 
   const del = async (id) => {
-    if (!confirm('Supprimer ce contrat ?')) return
+    if (!(await askConfirm('Supprimer ce contrat ?'))) return
     try { await api.delete(`/api/contrats/clients/${id}`); setItems(p => p.filter(i => i.id !== id)) }
     catch { setError('Erreur suppression') }
   }

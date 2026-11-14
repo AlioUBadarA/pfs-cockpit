@@ -17,6 +17,7 @@ import AdminSuspensions from './AdminSuspensions'
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : 'jamais'
 import { fmtPays } from '../../utils/pays'
 import { formatCFA as fmt } from '../../utils/format'
+import { askConfirm } from '../../utils/askConfirm'
 
 const BASE_TABS = [
   { key: 'rizeries', label: 'Rizeries' },
@@ -98,14 +99,14 @@ export default function AdminDashboard() {
   }
 
   const handleDeleteRizerie = async (r, force = false) => {
-    if (!force && !confirm(`Supprimer la rizerie "${r.nom}" ?`)) return
+    if (!force && !(await askConfirm(`Supprimer la rizerie "${r.nom}" ?`))) return
     try {
       await api.delete(`/api/admin/rizeries/${r.id}`, force ? { data: { force: true } } : undefined)
       load()
     } catch (err) {
       const msg = err.response?.data?.error || 'Erreur'
       if (!force && isSuperadmin && msg.includes('encore rattachés')) {
-        if (confirm(`${msg}\n\nVoulez-vous forcer la suppression ? Les comptes, ventes, clients et emplois de cette rizerie seront archivés. Ils seront ensuite supprimés pour toujours. Continuer ?`)) {
+        if (await askConfirm(`${msg}\n\nVoulez-vous forcer la suppression ? Les comptes, ventes, clients et emplois de cette rizerie seront archivés. Ils seront ensuite supprimés pour toujours. Continuer ?`)) {
           return handleDeleteRizerie(r, true)
         }
         return
@@ -154,7 +155,7 @@ export default function AdminDashboard() {
   }
 
   const handleDeleteSupport = async (s) => {
-    if (!confirm(`Supprimer définitivement le compte support "${s.nom}" ?`)) return
+    if (!(await askConfirm(`Supprimer définitivement le compte support "${s.nom}" ?`))) return
     try {
       await api.delete(`/api/admin/support/${s.id}`)
       load()
@@ -174,7 +175,7 @@ export default function AdminDashboard() {
   }
 
   const handleDeleteSuperadmin = async (s) => {
-    if (!confirm(`Supprimer définitivement le compte superadmin "${s.nom}" ?`)) return
+    if (!(await askConfirm(`Supprimer définitivement le compte superadmin "${s.nom}" ?`))) return
     try {
       await api.delete(`/api/admin/superadmins/${s.id}`)
       load()

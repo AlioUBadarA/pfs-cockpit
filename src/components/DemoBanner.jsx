@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { resetDemoData } from '../demo/demoMode'
+import { askConfirm } from '../utils/askConfirm'
 
 export default function DemoBanner() {
   const { isDemo, logout } = useAuth()
@@ -11,7 +12,7 @@ export default function DemoBanner() {
   if (!isDemo) return null
 
   const handleReset = async () => {
-    if (!confirm('Réinitialiser la démo ? Toutes vos modifications seront effacées.')) return
+    if (!(await askConfirm('Réinitialiser la démo ? Toutes vos modifications seront effacées.'))) return
     setResetting(true)
     await resetDemoData()
     // Recharge la page courante pour que chaque écran relise les données d'origine

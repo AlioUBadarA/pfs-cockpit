@@ -4,6 +4,7 @@ import Panel from '../components/Panel'
 import KpiCard from '../components/KpiCard'
 import DataTable from '../components/DataTable'
 import { useAuth } from '../context/AuthContext'
+import { askConfirm } from '../utils/askConfirm'
 
 const fmt = (n) => Number(n || 0).toLocaleString('fr-FR') + ' F'
 
@@ -29,7 +30,7 @@ export default function Managers() {
   useEffect(() => { load() }, [load])
 
   const deleteManager = async (mg) => {
-    if (!confirm(`Supprimer le manager "${mg.nom}" ? Son équipe sera rattachée directement à vous.`)) return
+    if (!(await askConfirm(`Supprimer le manager "${mg.nom}" ? Son équipe sera rattachée directement à vous.`))) return
     try {
       await api.delete(`/api/equipe/${mg.id}`)
       load()

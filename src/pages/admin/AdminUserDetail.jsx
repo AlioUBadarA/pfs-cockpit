@@ -8,6 +8,7 @@ import IdentifiantField from '../../components/IdentifiantField'
 import PasswordField from '../../components/PasswordField'
 import { useAuth } from '../../context/AuthContext'
 import { formatCFA as fmt, formatDate as fmtDate } from '../../utils/format'
+import { askConfirm } from '../../utils/askConfirm'
 
 
 export default function AdminUserDetail() {
@@ -107,7 +108,7 @@ export default function AdminUserDetail() {
     } catch (err) {
       const msg = err.response?.data?.error || 'Erreur'
       if (!force && isSuperadmin && msg.includes('Impossible de supprimer')) {
-        if (confirm(`${msg}\n\nVoulez-vous forcer la suppression ? Les ventes, clients, emplois et contrats de ce compte seront archivés. Ceux de son équipe aussi. Ils seront ensuite supprimés pour toujours. Continuer ?`)) {
+        if (await askConfirm(`${msg}\n\nVoulez-vous forcer la suppression ? Les ventes, clients, emplois et contrats de ce compte seront archivés. Ceux de son équipe aussi. Ils seront ensuite supprimés pour toujours. Continuer ?`)) {
           return doDelete(true)
         }
         return
@@ -131,7 +132,7 @@ export default function AdminUserDetail() {
   }
 
   const doDeleteVendeur = async (vid, vnom) => {
-    if (!confirm(`Supprimer le compte vendeur "${vnom}" ? Les données (ventes, clients) seront conservées.`)) return
+    if (!(await askConfirm(`Supprimer le compte vendeur "${vnom}" ? Les données (ventes, clients) seront conservées.`))) return
     setSaving(true)
     try {
       await api.delete(`/api/admin/users/${vid}`)

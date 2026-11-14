@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import api from '../../services/api'
 import RoleBadge from '../../components/RoleBadge'
 import { fmtPays } from '../../utils/pays'
+import { askConfirm } from '../../utils/askConfirm'
 
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : null
 const fmtDateHeure = (d) => d
@@ -35,7 +36,7 @@ export default function AdminSuspensions({ onChange }) {
   useEffect(() => { load() }, [load])
 
   const reactiver = async (u) => {
-    if (!window.confirm(`Réactiver le compte de ${u.nom} ?`)) return
+    if (!(await askConfirm(`Réactiver le compte de ${u.nom} ?`))) return
     setSaving(u.id)
     try {
       await api.patch(`/api/admin/users/${u.id}/suspend`, { suspended: false, reason: '' })

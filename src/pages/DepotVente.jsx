@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
 import Modal from '../components/Modal'
 import { formatCFA as fmt, formatDate as fmtDate } from '../utils/format'
+import { askConfirm } from '../utils/askConfirm'
 
 const STATUTS = ['En cours', 'Clôturé']
 const STATUT_PAIEMENT_LABEL = { 'En cours': 'En cours', 'Paye': 'Payé' }
@@ -98,7 +99,7 @@ export default function DepotVente() {
   }
 
   const del = async (id) => {
-    if (!confirm('Supprimer ce dépôt ?')) return
+    if (!(await askConfirm('Supprimer ce dépôt ?'))) return
     try { await api.delete(`/api/depots/${id}`); setItems((p) => p.filter((i) => i.id !== id)) }
     catch { setError('Erreur suppression') }
   }

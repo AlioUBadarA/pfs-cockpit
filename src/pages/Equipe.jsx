@@ -8,6 +8,7 @@ import KebabMenu from '../components/KebabMenu'
 import RoleBadge from '../components/RoleBadge'
 import PasswordField from '../components/PasswordField'
 import { useAuth } from '../context/AuthContext'
+import { askConfirm } from '../utils/askConfirm'
 
 const fmt = (n) => Number(n || 0).toLocaleString('fr-FR') + ' F'
 
@@ -127,7 +128,7 @@ export default function Equipe() {
   const openEdit = (v) => { setForm({ nom: v.nom, email: v.email, telephone: v.telephone || '' }); setError(''); setEditModal(v) }
 
   const deleteUser = async (id) => {
-    if (!confirm('Supprimer ce compte ? Les données (ventes, clients) seront conservées.')) return
+    if (!(await askConfirm('Supprimer ce compte ? Les données (ventes, clients) seront conservées.'))) return
     try {
       await api.delete(`/api/equipe/${id}`)
       setVendeurs(prev => prev.filter(v => v.id !== id))
@@ -135,7 +136,7 @@ export default function Equipe() {
   }
 
   const handlePromote = async (v) => {
-    if (!confirm(`Promouvoir ${v.nom} au rang de Manager ?\nIl pourra désormais gérer une équipe.`)) return
+    if (!(await askConfirm(`Promouvoir ${v.nom} au rang de Manager ?\nIl pourra désormais gérer une équipe.`))) return
     try { await api.patch(`/api/equipe/${v.id}/role`, { role: 'manager' }); load() }
     catch (err) { setError(err.response?.data?.error || 'Erreur') }
   }

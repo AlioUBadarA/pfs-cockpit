@@ -4,6 +4,7 @@ import Modal from '../components/Modal'
 import KebabMenu from '../components/KebabMenu'
 import { useAuth } from '../context/AuthContext'
 import { formatCFA as fmt } from '../utils/format'
+import { askConfirm } from '../utils/askConfirm'
 
 const TENDANCES = ['hausse', 'stable', 'déclin']
 
@@ -64,7 +65,7 @@ export default function Produits() {
   }
 
   const del = async (id) => {
-    if (!confirm('Supprimer ce produit ?')) return
+    if (!(await askConfirm('Supprimer ce produit ?'))) return
     try { await api.delete(`/api/produits/${id}`); setItems(p => p.filter(i => i.id !== id)) }
     catch { setError('Erreur suppression') }
   }

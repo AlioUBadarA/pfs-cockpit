@@ -8,6 +8,7 @@ import KpiCard from '../components/KpiCard'
 import RfmGrid from '../components/RfmGrid'
 import { useAuth } from '../context/AuthContext'
 import { formatCFA as fmt } from '../utils/format'
+import { askConfirm } from '../utils/askConfirm'
 
 // Valeurs alignées sur TYPES_VALIDES (gcr/routes/clients.js) et la contrainte CHECK de schema.sql,
 // un libellé français plus lisible est affiché, mais la valeur envoyée à l'API doit matcher exactement.
@@ -124,7 +125,7 @@ export default function Clients() {
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('Supprimer définitivement ce client et toutes ses données ?')) return
+    if (!(await askConfirm('Supprimer définitivement ce client et toutes ses données ?'))) return
     try {
       await api.delete(`/api/clients/${id}`)
       setModalOpen(false)
