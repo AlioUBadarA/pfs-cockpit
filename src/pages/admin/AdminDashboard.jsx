@@ -9,6 +9,7 @@ import PageTabs from '../../components/PageTabs'
 import LocationFields from '../../components/LocationFields'
 import PhoneField from '../../components/PhoneField'
 import IdentifiantField from '../../components/IdentifiantField'
+import PasswordField from '../../components/PasswordField'
 import { useAuth } from '../../context/AuthContext'
 import AdminConnexionsRiziers from './AdminConnexionsRiziers'
 import AdminSuspensions from './AdminSuspensions'
@@ -715,7 +716,7 @@ export default function AdminDashboard() {
             />
             <div>
               <label className="label">Mot de passe provisoire *</label>
-              <input type="text" className="input" value={cForm.password} onChange={setC('password')} required minLength={12} placeholder="Min. 12 caractères" />
+              <PasswordField value={cForm.password} onChange={setC('password')} required minLength={12} placeholder="Min. 12 caractères" />
             </div>
             <div>
               <label className="label">Ville</label>
@@ -748,7 +749,7 @@ export default function AdminDashboard() {
             />
             <div>
               <label className="label">Mot de passe provisoire *</label>
-              <input type="text" className="input" value={sForm.password} onChange={setS('password')} required minLength={12} placeholder="Min. 12 caractères" />
+              <PasswordField value={sForm.password} onChange={setS('password')} required minLength={12} placeholder="Min. 12 caractères" />
             </div>
             <p className="text-xs text-gray-400">Ce compte aura les mêmes accès que vous. Il ne pourra pas gérer les comptes support.</p>
             <div className="flex gap-3 pt-2">
@@ -778,7 +779,7 @@ export default function AdminDashboard() {
             />
             <div>
               <label className="label">Mot de passe provisoire *</label>
-              <input type="text" className="input" value={saForm.password} onChange={setSa('password')} required minLength={12} placeholder="Min. 12 caractères" />
+              <PasswordField value={saForm.password} onChange={setSa('password')} required minLength={12} placeholder="Min. 12 caractères" />
             </div>
             <p className="text-xs text-red-600">Ce compte a un accès complet. Il peut créer et supprimer d'autres superadmins. Donnez cet accès à des personnes de confiance.</p>
             <div className="flex gap-3 pt-2">
@@ -801,7 +802,7 @@ export default function AdminDashboard() {
             <div><label className="label">Email *</label>
               <input type="email" className="input" value={sForm.email} onChange={setS('email')} required /></div>
             <div><label className="label">Nouveau mot de passe <span className="text-gray-400 font-normal">(laisser vide pour ne pas changer)</span></label>
-              <input type="text" className="input" value={sForm.password} onChange={setS('password')} minLength={12} placeholder="Min. 12 caractères" /></div>
+              <PasswordField value={sForm.password} onChange={setS('password')} minLength={12} placeholder="Min. 12 caractères" /></div>
             <div className="flex gap-3 pt-2">
               <button type="button" className="btn-secondary flex-1" onClick={() => setModal(null)}>Annuler</button>
               <button type="submit" disabled={saving} className="btn-primary flex-1">{saving ? '...' : 'Sauvegarder'}</button>
@@ -819,7 +820,7 @@ export default function AdminDashboard() {
             <div><label className="label">Email *</label>
               <input type="email" className="input" value={saForm.email} onChange={setSa('email')} required /></div>
             <div><label className="label">Nouveau mot de passe <span className="text-gray-400 font-normal">(laisser vide pour ne pas changer)</span></label>
-              <input type="text" className="input" value={saForm.password} onChange={setSa('password')} minLength={12} placeholder="Min. 12 caractères" /></div>
+              <PasswordField value={saForm.password} onChange={setSa('password')} minLength={12} placeholder="Min. 12 caractères" /></div>
             <p className="text-xs text-red-600">Modification d'un compte à accès complet. Vérifiez bien l'email avant de sauvegarder.</p>
             <div className="flex gap-3 pt-2">
               <button type="button" className="btn-secondary flex-1" onClick={() => setModal(null)}>Annuler</button>

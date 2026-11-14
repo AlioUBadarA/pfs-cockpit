@@ -3,6 +3,7 @@ import api from '../services/api'
 import Modal from '../components/Modal'
 import RoleBadge from '../components/RoleBadge'
 import IdentifiantField from '../components/IdentifiantField'
+import PasswordField from '../components/PasswordField'
 import { useAuth } from '../context/AuthContext'
 
 const TYPES = ['CDI','CDD','Temps partiel','Stage','Journalier']
@@ -359,7 +360,7 @@ export default function Emplois() {
           />
           <div>
             <label className="label">Mot de passe provisoire *</label>
-            <input type="text" className="input" value={affectForm.password} onChange={setA('password')} required minLength={12} placeholder="Min. 12 caractères" />
+            <PasswordField value={affectForm.password} onChange={setA('password')} required minLength={12} placeholder="Min. 12 caractères" />
           </div>
           {['vendeur', 'manager', 'directeur'].includes(affectForm.role_plateforme) && (
             <div>

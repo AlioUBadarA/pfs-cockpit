@@ -6,6 +6,7 @@ import DataTable from '../components/DataTable'
 import KpiCard from '../components/KpiCard'
 import KebabMenu from '../components/KebabMenu'
 import RoleBadge from '../components/RoleBadge'
+import PasswordField from '../components/PasswordField'
 import { useAuth } from '../context/AuthContext'
 
 const fmt = (n) => Number(n || 0).toLocaleString('fr-FR') + ' F'
@@ -337,7 +338,7 @@ export default function Equipe() {
         <form onSubmit={handlePwd} className="space-y-4">
           <div>
             <label className="label">Nouveau mot de passe *</label>
-            <input type="password" className="input" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} required minLength={12} />
+            <PasswordField value={newPwd} onChange={(e) => setNewPwd(e.target.value)} required minLength={12} />
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-2">

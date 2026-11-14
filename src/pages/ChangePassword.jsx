@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import PasswordField from '../components/PasswordField'
 import { useAuth } from '../context/AuthContext'
 
 export default function ChangePassword() {
@@ -58,23 +59,24 @@ export default function ChangePassword() {
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="label">Mot de passe actuel</label>
-            <input
-              type="password" className="input" required
+            <PasswordField
+              required
+              autoComplete="current-password"
               value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
             />
           </div>
           <div>
             <label className="label">Nouveau mot de passe</label>
-            <input
-              type="password" className="input" required minLength={12}
+            <PasswordField
+              required minLength={12}
               placeholder="Min. 12 caractères"
               value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
             />
           </div>
           <div>
             <label className="label">Confirmer le nouveau mot de passe</label>
-            <input
-              type="password" className="input" required minLength={12}
+            <PasswordField
+              required minLength={12}
               value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
             />
           </div>

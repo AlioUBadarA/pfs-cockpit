@@ -5,6 +5,7 @@ import KpiCard from '../../components/KpiCard'
 import StatutBadge from '../../components/StatutBadge'
 import RoleBadge from '../../components/RoleBadge'
 import IdentifiantField from '../../components/IdentifiantField'
+import PasswordField from '../../components/PasswordField'
 import { useAuth } from '../../context/AuthContext'
 
 const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '-'
@@ -403,7 +404,7 @@ export default function AdminUserDetail() {
           <form onSubmit={doPassword} className="space-y-3">
             <div>
               <label className="label">Nouveau mot de passe</label>
-              <input type="text" className="input" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={12} placeholder="Min. 12 caractères" />
+              <PasswordField value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={12} placeholder="Min. 12 caractères" />
             </div>
             <div className="flex gap-3 pt-2">
               <button type="button" className="btn-secondary flex-1" onClick={() => setShowPassword(false)}>Annuler</button>
@@ -471,7 +472,7 @@ export default function AdminUserDetail() {
             />
             <div>
               <label className="label">Mot de passe provisoire * (min. 12 caractères)</label>
-              <input type="text" className="input" value={vendeurForm.password} onChange={e => setVendeurForm({...vendeurForm, password: e.target.value})} required minLength={12} />
+              <PasswordField value={vendeurForm.password} onChange={e => setVendeurForm({...vendeurForm, password: e.target.value})} required minLength={12} />
             </div>
             <p className="text-xs text-gray-400">Ce compte sera rattaché à <strong>{user.rizerie || user.nom}</strong>.</p>
             <div className="flex gap-3 pt-2">
