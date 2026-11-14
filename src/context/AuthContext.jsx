@@ -5,14 +5,21 @@ import { isDemoMode, setDemoMode, clearDemoData } from '../demo/demoMode'
 
 const AuthContext = createContext(null)
 
+function safeJsonParse(val) {
+  if (!val) return null
+  try {
+    return JSON.parse(val)
+  } catch {
+    return null
+  }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem('pfs_user')
-    return stored ? JSON.parse(stored) : null
+    return safeJsonParse(localStorage.getItem('pfs_user'))
   })
   const [impersonating, setImpersonating] = useState(() => {
-    const stored = localStorage.getItem('pfs_impersonating')
-    return stored ? JSON.parse(stored) : null
+    return safeJsonParse(localStorage.getItem('pfs_impersonating'))
   })
   const [loading, setLoading] = useState(false)
   const [isDemo, setIsDemo] = useState(() => isDemoMode())
@@ -100,7 +107,7 @@ export function AuthProvider({ children }) {
       localStorage.removeItem('pfs_admin_token')
       localStorage.removeItem('pfs_admin_user')
       localStorage.removeItem('pfs_impersonating')
-      setUser(JSON.parse(adminUser))
+      setUser(safeJsonParse(adminUser))
       setImpersonating(null)
     }
   }

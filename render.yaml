@@ -4,8 +4,6 @@ services:
     env: static
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
-    # En-têtes de sécurité. Pas de Content-Security-Policy ici :
-    # une CSP stricte pourrait bloquer les appels vers l'API (VITE_API_URL).
     headers:
       - path: /*
         name: Strict-Transport-Security
@@ -19,6 +17,18 @@ services:
       - path: /*
         name: Referrer-Policy
         value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'self'; connect-src 'self' https://gcr-3qft.onrender.com https://fonts.googleapis.com https://fonts.gstatic.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self'; frame-ancestors 'none';"
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache, no-store, must-revalidate
     routes:
       - type: rewrite
         source: /*

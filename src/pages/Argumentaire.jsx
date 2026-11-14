@@ -9,23 +9,40 @@ import api from '../services/api'
 // cout   : exemple de coût de revient au kg
 // marge  : exemple de marge brute au kg
 const PAYS_CONFIG = {
-  'Sénégal':         { adj: 'sénégalaise',   devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
-  'Côte d\'Ivoire':  { adj: 'ivoirienne',    devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
-  'Mali':            { adj: 'malienne',       devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
-  'Burkina Faso':    { adj: 'burkinabè',      devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
-  'Niger':           { adj: 'nigérienne',     devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
-  'Bénin':           { adj: 'béninoise',      devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
-  'Togo':            { adj: 'togolaise',      devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
-  'Cameroun':        { adj: 'camerounaise',   devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
-  'Guinée':          { adj: 'guinéenne',      devise: 'GNF',   prix: '9 000 GNF/kg', cout: '7 200 GNF/kg', marge: '1 800 GNF/kg' },
-  'Guinée-Bissau':   { adj: 'bissau-guinéenne', devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
-  'Mauritanie':      { adj: 'mauritanienne',  devise: 'MRU',   prix: '80 MRU/kg', cout: '64 MRU/kg', marge: '16 MRU/kg' },
-  'Gambie':          { adj: 'gambienne',      devise: 'GMD',   prix: '45 GMD/kg', cout: '36 GMD/kg', marge: '9 GMD/kg' },
-  'Sierra Leone':    { adj: 'sierra-léonaise', devise: 'SLL',  prix: '7 000 SLL/kg', cout: '5 600 SLL/kg', marge: '1 400 SLL/kg' },
-  'Libéria':         { adj: 'libérienne',     devise: 'LRD',   prix: '35 LRD/kg', cout: '28 LRD/kg', marge: '7 LRD/kg' },
+  // Codes ISO (stockés en base)
+  'SN': { nom: 'Sénégal', adj: 'sénégalaise', devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
+  'CI': { nom: 'Côte d\'Ivoire', adj: 'ivoirienne', devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
+  'ML': { nom: 'Mali', adj: 'malienne', devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
+  'BF': { nom: 'Burkina Faso', adj: 'burkinabè', devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
+  'NE': { nom: 'Niger', adj: 'nigérienne', devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
+  'BJ': { nom: 'Bénin', adj: 'béninoise', devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
+  'TG': { nom: 'Togo', adj: 'togolaise', devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
+  'CM': { nom: 'Cameroun', adj: 'camerounaise', devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
+  'GN': { nom: 'Guinée', adj: 'guinéenne', devise: 'GNF', prix: '9 000 GNF/kg', cout: '7 200 GNF/kg', marge: '1 800 GNF/kg' },
+  'GW': { nom: 'Guinée-Bissau', adj: 'bissau-guinéenne', devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
+  'MR': { nom: 'Mauritanie', adj: 'mauritanienne', devise: 'MRU', prix: '80 MRU/kg', cout: '64 MRU/kg', marge: '16 MRU/kg' },
+  'GM': { nom: 'Gambie', adj: 'gambienne', devise: 'GMD', prix: '45 GMD/kg', cout: '36 GMD/kg', marge: '9 GMD/kg' },
+  'SL': { nom: 'Sierra Leone', adj: 'sierra-léonaise', devise: 'SLL', prix: '7 000 SLL/kg', cout: '5 600 SLL/kg', marge: '1 400 SLL/kg' },
+  'LR': { nom: 'Libéria', adj: 'libérienne', devise: 'LRD', prix: '35 LRD/kg', cout: '28 LRD/kg', marge: '7 LRD/kg' },
+
+  // Noms complets (rétrocompatibilité / mode démo)
+  'Sénégal': { nom: 'Sénégal', adj: 'sénégalaise', devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
+  'Côte d\'Ivoire': { nom: 'Côte d\'Ivoire', adj: 'ivoirienne', devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
+  'Mali': { nom: 'Mali', adj: 'malienne', devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
+  'Burkina Faso': { nom: 'Burkina Faso', adj: 'burkinabè', devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
+  'Niger': { nom: 'Niger', adj: 'nigérienne', devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
+  'Bénin': { nom: 'Bénin', adj: 'béninoise', devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
+  'Togo': { nom: 'Togo', adj: 'togolaise', devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
+  'Cameroun': { nom: 'Cameroun', adj: 'camerounaise', devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
+  'Guinée': { nom: 'Guinée', adj: 'guinéenne', devise: 'GNF', prix: '9 000 GNF/kg', cout: '7 200 GNF/kg', marge: '1 800 GNF/kg' },
+  'Guinée-Bissau': { nom: 'Guinée-Bissau', adj: 'bissau-guinéenne', devise: 'F CFA', prix: '350 F/kg', cout: '280 F/kg', marge: '70 F/kg' },
+  'Mauritanie': { nom: 'Mauritanie', adj: 'mauritanienne', devise: 'MRU', prix: '80 MRU/kg', cout: '64 MRU/kg', marge: '16 MRU/kg' },
+  'Gambie': { nom: 'Gambie', adj: 'gambienne', devise: 'GMD', prix: '45 GMD/kg', cout: '36 GMD/kg', marge: '9 GMD/kg' },
+  'Sierra Leone': { nom: 'Sierra Leone', adj: 'sierra-léonaise', devise: 'SLL', prix: '7 000 SLL/kg', cout: '5 600 SLL/kg', marge: '1 400 SLL/kg' },
+  'Libéria': { nom: 'Libéria', adj: 'libérienne', devise: 'LRD', prix: '35 LRD/kg', cout: '28 LRD/kg', marge: '7 LRD/kg' },
 }
 
-const DEFAULT_CONFIG = { adj: 'locale', devise: 'FCFA', prix: '350/kg', cout: '280/kg', marge: '70/kg' }
+const DEFAULT_CONFIG = { nom: null, adj: 'locale', devise: 'FCFA', prix: '350/kg', cout: '280/kg', marge: '70/kg' }
 
 function getSections(pays, cfg) {
   return [
@@ -124,7 +141,8 @@ export default function Argumentaire() {
     }
   }, [pays])
 
-  const cfg = PAYS_CONFIG[pays] || DEFAULT_CONFIG
+  const cfg = (pays && PAYS_CONFIG[pays]) || DEFAULT_CONFIG
+  const nomMarche = cfg.nom || pays
   const sections = getSections(pays, cfg)
 
   return (
@@ -133,7 +151,7 @@ export default function Argumentaire() {
         <h2 className="font-display text-xl font-bold text-gray-900">Argumentaire &amp; Entretien de vente</h2>
         <p className="text-sm text-gray-500 mt-1">
           Phrases, réponses aux objections et conseils pour vos visites
-          {pays ? `, adapté pour le marché ${pays}` : ''}.
+          {nomMarche ? `, adapté pour le marché ${nomMarche}` : ''}.
         </p>
       </div>
 

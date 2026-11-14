@@ -106,7 +106,7 @@ export default function Ventes() {
     }
   }
 
-  const ventеMenuItems = (v) => [
+  const venteMenuItems = (v) => [
     { icon: '⎙', label: 'Bon de commande', onClick: () => printBonCommande(v, user) },
     ...(v.statut_paiement === 'Paye' ? [{ icon: '🧾', label: 'Facture', onClick: () => handlePrintFacture(v) }] : []),
     ...(!isVendeur ? [{ icon: '🗑', label: 'Supprimer', onClick: () => deleteVente(v.id), danger: true }] : []),
@@ -225,7 +225,7 @@ export default function Ventes() {
                       menuKey={v.id}
                       open={openMenu === v.id}
                       onToggle={(k) => setOpenMenu(k)}
-                      items={ventеMenuItems(v)}
+                      items={venteMenuItems(v)}
                     />
                   </td>
                 </tr>

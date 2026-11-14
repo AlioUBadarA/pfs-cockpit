@@ -5,6 +5,16 @@ const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-'
 const STATUT_LABEL = { Paye: 'Payé', 'En cours': 'En cours', 'En retard': 'En retard', Actif: 'Actif' }
 const STATUT_COLOR = { Paye: '#1B5E20', 'En cours': '#F9A825', 'En retard': '#CC0000' }
 
+function escapeHtml(str) {
+  if (str == null) return ''
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 function css() {
   return `
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -52,21 +62,22 @@ function css() {
 }
 
 function emetteurBlock(user) {
-  const lines = [user?.rizerie || user?.nom]
-  if (user?.ville) lines.push(user.ville)
-  if (user?.telephone) lines.push(`Tél : ${user.telephone}`)
+  const nom = escapeHtml(user?.rizerie || user?.nom || 'PFS')
+  const lines = []
+  if (user?.ville) lines.push(escapeHtml(user.ville))
+  if (user?.telephone) lines.push(`Tél : ${escapeHtml(user.telephone)}`)
   return `
-    <div class="emetteur-name">${user?.rizerie || 'PFS'}</div>
-    <div class="emetteur-info">${lines.slice(1).join('<br>')}</div>
+    <div class="emetteur-name">${nom}</div>
+    <div class="emetteur-info">${lines.join('<br>')}</div>
   `
 }
 
-function wrap(title, body, user) {
+function wrap(title, body) {
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>${title}</title>
+  <title>${escapeHtml(title)}</title>
   <style>${css()}</style>
 </head>
 <body onload="window.print()">
@@ -75,10 +86,24 @@ function wrap(title, body, user) {
 </html>`
 }
 
+function openPrintWindow(title, body) {
+  const win = window.open('', '_blank')
+  if (!win) {
+    if (typeof window !== 'undefined' && window.alert) {
+      window.alert("Impossible d'ouvrir l'impression. Veuillez autoriser les fenêtres surgissantes (pop-ups) pour ce site.")
+    }
+    return
+  }
+  win.document.open()
+  win.document.write(wrap(title, body))
+  win.document.close()
+}
+
 // ─── BON DE COMMANDE ─────────────────────────────────────────────────────────
 
 export function printBonCommande(vente, user) {
-  const statut = STATUT_LABEL[vente.statut_paiement] || vente.statut_paiement
+  const rawStatut = STATUT_LABEL[vente.statut_paiement] || vente.statut_paiement || ''
+  const statut = escapeHtml(rawStatut)
   const sColor = STATUT_COLOR[vente.statut_paiement] || '#555'
 
   const body = `
@@ -87,9 +112,9 @@ export function printBonCommande(vente, user) {
       <div class="doc-block">
         <div class="doc-type">Bon de commande</div>
         <div class="doc-meta">
-          N° <strong>${vente.numero || '-'}</strong><br>
-          Date : ${fmtDate(vente.date_vente)}<br>
-          ${vente.date_echeance ? `Échéance : ${fmtDate(vente.date_echeance)}<br>` : ''}
+          N° <strong>${escapeHtml(vente.numero || '-')}</strong><br>
+          Date : ${escapeHtml(fmtDate(vente.date_vente))}<br>
+          ${vente.date_echeance ? `Échéance : ${escapeHtml(fmtDate(vente.date_echeance))}<br>` : ''}
           <span class="statut-badge" style="background:${sColor}22;color:${sColor}">${statut}</span>
         </div>
       </div>
@@ -99,12 +124,12 @@ export function printBonCommande(vente, user) {
     <div class="two-col">
       <div>
         <div class="section-label">Client</div>
-        <div class="client-name">${vente.client_nom}</div>
-        ${vente.client_telephone ? `<div class="client-info">Tél : ${vente.client_telephone}</div>` : ''}
+        <div class="client-name">${escapeHtml(vente.client_nom || '-')}</div>
+        ${vente.client_telephone ? `<div class="client-info">Tél : ${escapeHtml(vente.client_telephone)}</div>` : ''}
       </div>
       <div style="text-align:right">
         <div class="section-label">Commercial</div>
-        <div class="client-name">${vente.vendeur_nom || user?.nom || '-'}</div>
+        <div class="client-name">${escapeHtml(vente.vendeur_nom || user?.nom || '-')}</div>
       </div>
     </div>
 
@@ -119,7 +144,7 @@ export function printBonCommande(vente, user) {
       </thead>
       <tbody>
         <tr>
-          <td>${vente.produit}</td>
+          <td>${escapeHtml(vente.produit || '-')}</td>
           <td class="r">${fmtN(vente.quantite)} kg</td>
           <td class="r">${fmt(vente.prix_unitaire)} / kg</td>
           <td class="r"><strong>${fmt(vente.montant)}</strong></td>
@@ -134,33 +159,32 @@ export function printBonCommande(vente, user) {
       </div>
     </div>
 
-    ${vente.mode ? `<p style="font-size:11px;color:#555;margin-bottom:20px">Mode de paiement : <strong>${vente.mode}</strong></p>` : ''}
+    ${vente.mode ? `<p style="font-size:11px;color:#555;margin-bottom:20px">Mode de paiement : <strong>${escapeHtml(vente.mode)}</strong></p>` : ''}
 
-    ${vente.note ? `<div class="note-box"><div class="note-label">Note</div>${vente.note}</div>` : ''}
+    ${vente.note ? `<div class="note-box"><div class="note-label">Note</div>${escapeHtml(vente.note)}</div>` : ''}
 
     <div class="footer">
       <div class="sign-box">
         <div class="sign-label">Signature client</div>
         <div class="sign-space"></div>
-        <div class="sign-name">${vente.client_nom}</div>
+        <div class="sign-name">${escapeHtml(vente.client_nom || '')}</div>
       </div>
       <div class="sign-box">
         <div class="sign-label">Signature émetteur</div>
         <div class="sign-space"></div>
-        <div class="sign-name">${vente.vendeur_nom || user?.nom || ''}</div>
+        <div class="sign-name">${escapeHtml(vente.vendeur_nom || user?.nom || '')}</div>
       </div>
     </div>
   `
 
-  const win = window.open('', '_blank')
-  win.document.write(wrap(`Bon de commande - ${vente.numero}`, body, user))
-  win.document.close()
+  openPrintWindow(`Bon de commande - ${vente.numero || ''}`, body)
 }
 
 // ─── REÇU DE PAIEMENT ────────────────────────────────────────────────────────
 
 export function printRecu(transaction, versement, totalVerse, resteAdu, user) {
-  const statut = resteAdu <= 0 ? 'Soldé' : 'Partiellement réglé'
+  const rawStatut = resteAdu <= 0 ? 'Soldé' : 'Partiellement réglé'
+  const statut = escapeHtml(rawStatut)
   const sColor = resteAdu <= 0 ? '#1B5E20' : '#F9A825'
 
   const body = `
@@ -169,8 +193,8 @@ export function printRecu(transaction, versement, totalVerse, resteAdu, user) {
       <div class="doc-block">
         <div class="doc-type">Reçu de paiement</div>
         <div class="doc-meta">
-          Réf. <strong>${transaction.numero || '-'}</strong><br>
-          Date : ${fmtDate(versement.date || new Date())}<br>
+          Réf. <strong>${escapeHtml(transaction.numero || '-')}</strong><br>
+          Date : ${escapeHtml(fmtDate(versement.date || new Date()))}<br>
           <span class="statut-badge" style="background:${sColor}22;color:${sColor}">${statut}</span>
         </div>
       </div>
@@ -180,18 +204,18 @@ export function printRecu(transaction, versement, totalVerse, resteAdu, user) {
     <div class="two-col" style="margin-bottom:28px">
       <div>
         <div class="section-label">Client</div>
-        <div class="client-name">${transaction.client_nom}</div>
+        <div class="client-name">${escapeHtml(transaction.client_nom || '-')}</div>
       </div>
       <div style="text-align:right">
         <div class="section-label">Émis par</div>
-        <div class="client-name">${user?.nom || '-'}</div>
+        <div class="client-name">${escapeHtml(user?.nom || '-')}</div>
       </div>
     </div>
 
     <div class="total-box" style="margin-bottom:24px;max-width:340px;margin-left:auto;margin-right:auto">
       <div class="total-row"><span>Montant total de la transaction</span><span>${fmt(transaction.montant_total)}</span></div>
       <div class="total-row paid"><span>Montant encaissé ce jour</span><span>${fmt(versement.montant)}</span></div>
-      ${versement.mode ? `<div class="total-row" style="background:#f8f8f8"><span>Mode de paiement</span><span>${versement.mode}</span></div>` : ''}
+      ${versement.mode ? `<div class="total-row" style="background:#f8f8f8"><span>Mode de paiement</span><span>${escapeHtml(versement.mode)}</span></div>` : ''}
       <div class="total-row paid"><span>Total encaissé à ce jour</span><span>${fmt(totalVerse)}</span></div>
       <div class="total-row ${resteAdu > 0 ? 'due' : ''}">
         <span>${resteAdu > 0 ? 'Reste à payer' : 'Compte soldé'}</span>
@@ -203,29 +227,28 @@ export function printRecu(transaction, versement, totalVerse, resteAdu, user) {
       <div class="sign-box">
         <div class="sign-label">Signature client</div>
         <div class="sign-space"></div>
-        <div class="sign-name">${transaction.client_nom}</div>
+        <div class="sign-name">${escapeHtml(transaction.client_nom || '')}</div>
       </div>
       <div class="sign-box">
         <div class="sign-label">Cachet émetteur</div>
         <div class="sign-space"></div>
-        <div class="sign-name">${user?.rizerie || user?.nom || ''}</div>
+        <div class="sign-name">${escapeHtml(user?.rizerie || user?.nom || '')}</div>
       </div>
     </div>
 
     <p style="font-size:10px;color:#bbb;text-align:center;margin-top:32px">
-      Document généré le ${new Date().toLocaleDateString('fr-FR')} · ${user?.rizerie || 'PFS'}
+      Document généré le ${escapeHtml(new Date().toLocaleDateString('fr-FR'))} · ${escapeHtml(user?.rizerie || 'PFS')}
     </p>
   `
 
-  const win = window.open('', '_blank')
-  win.document.write(wrap(`Reçu - ${transaction.numero}`, body, user))
-  win.document.close()
+  openPrintWindow(`Reçu - ${transaction.numero || ''}`, body)
 }
 
 // ─── FACTURE ─────────────────────────────────────────────────────────────────
 
 export function printFacture(vente, versements, user) {
-  const statut  = STATUT_LABEL[vente.statut_paiement] || vente.statut_paiement
+  const rawStatut = STATUT_LABEL[vente.statut_paiement] || vente.statut_paiement || ''
+  const statut  = escapeHtml(rawStatut)
   const sColor  = STATUT_COLOR[vente.statut_paiement] || '#555'
   const totalVerse = (versements || []).reduce((s, v) => s + Number(v.montant || 0), 0)
   const resteAdu   = Math.max(0, Number(vente.montant || 0) - totalVerse)
@@ -233,8 +256,8 @@ export function printFacture(vente, versements, user) {
   const versementsRows = (versements || []).length
     ? (versements || []).map(v => `
         <tr>
-          <td>${fmtDate(v.date)}</td>
-          <td>${v.mode || '-'}</td>
+          <td>${escapeHtml(fmtDate(v.date))}</td>
+          <td>${escapeHtml(v.mode || '-')}</td>
           <td style="text-align:right"><strong>${fmt(v.montant)}</strong></td>
         </tr>`).join('')
     : `<tr><td colspan="3" style="color:#aaa;text-align:center">Aucun versement enregistré</td></tr>`
@@ -245,9 +268,9 @@ export function printFacture(vente, versements, user) {
       <div class="doc-block">
         <div class="doc-type">Facture</div>
         <div class="doc-meta">
-          N° <strong>${vente.numero || '-'}</strong><br>
-          Date : ${fmtDate(vente.date_vente)}<br>
-          ${vente.date_echeance ? `Échéance : ${fmtDate(vente.date_echeance)}<br>` : ''}
+          N° <strong>${escapeHtml(vente.numero || '-')}</strong><br>
+          Date : ${escapeHtml(fmtDate(vente.date_vente))}<br>
+          ${vente.date_echeance ? `Échéance : ${escapeHtml(fmtDate(vente.date_echeance))}<br>` : ''}
           <span class="statut-badge" style="background:${sColor}22;color:${sColor}">${statut}</span>
         </div>
       </div>
@@ -257,12 +280,12 @@ export function printFacture(vente, versements, user) {
     <div class="two-col">
       <div>
         <div class="section-label">Facturé à</div>
-        <div class="client-name">${vente.client_nom}</div>
-        ${vente.client_telephone ? `<div class="client-info">Tél : ${vente.client_telephone}</div>` : ''}
+        <div class="client-name">${escapeHtml(vente.client_nom || '-')}</div>
+        ${vente.client_telephone ? `<div class="client-info">Tél : ${escapeHtml(vente.client_telephone)}</div>` : ''}
       </div>
       <div style="text-align:right">
         <div class="section-label">Émis par</div>
-        <div class="client-name">${vente.vendeur_nom || user?.nom || '-'}</div>
+        <div class="client-name">${escapeHtml(vente.vendeur_nom || user?.nom || '-')}</div>
       </div>
     </div>
 
@@ -277,7 +300,7 @@ export function printFacture(vente, versements, user) {
       </thead>
       <tbody>
         <tr>
-          <td>${vente.produit}</td>
+          <td>${escapeHtml(vente.produit || '-')}</td>
           <td class="r">${fmtN(vente.quantite)} kg</td>
           <td class="r">${fmt(vente.prix_unitaire)} / kg</td>
           <td class="r"><strong>${fmt(vente.montant)}</strong></td>
@@ -304,23 +327,21 @@ export function printFacture(vente, versements, user) {
       </table>
     ` : ''}
 
-    ${vente.note ? `<div class="note-box"><div class="note-label">Note</div>${vente.note}</div>` : ''}
+    ${vente.note ? `<div class="note-box"><div class="note-label">Note</div>${escapeHtml(vente.note)}</div>` : ''}
 
     <div class="footer">
       <div class="sign-box">
         <div class="sign-label">Signature client</div>
         <div class="sign-space"></div>
-        <div class="sign-name">${vente.client_nom}</div>
+        <div class="sign-name">${escapeHtml(vente.client_nom || '')}</div>
       </div>
       <div class="sign-box">
         <div class="sign-label">Cachet émetteur</div>
         <div class="sign-space"></div>
-        <div class="sign-name">${user?.rizerie || user?.nom || ''}</div>
+        <div class="sign-name">${escapeHtml(user?.rizerie || user?.nom || '')}</div>
       </div>
     </div>
   `
 
-  const win = window.open('', '_blank')
-  win.document.write(wrap(`Facture - ${vente.numero}`, body, user))
-  win.document.close()
+  openPrintWindow(`Facture - ${vente.numero || ''}`, body)
 }
