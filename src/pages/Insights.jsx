@@ -38,9 +38,10 @@ export default function Insights() {
   const [rentabilite, setRentabilite] = useState(null)
   const [actions, setActions] = useState(null)
   const [clients, setClients] = useState([])
+  const [partiel, setPartiel] = useState(0)
 
   useEffect(() => {
-    Promise.all([
+    Promise.allSettled([
       api.get('/api/dashboard'),
       api.get('/api/prospection'),
       api.get('/api/rentabilite'),
@@ -48,13 +49,19 @@ export default function Insights() {
       api.get('/api/clients'),
     ])
       .then(([d, p, r, a, c]) => {
-        setDash(d.data)
-        setProspects(p.data || [])
-        setRentabilite(r.data)
-        setActions(a.data)
-        setClients(c.data || [])
+        // Le tableau de bord est indispensable. Les autres blocs peuvent manquer.
+        if (d.status !== 'fulfilled') {
+          setError('Erreur de chargement')
+          return
+        }
+        setDash(d.value.data)
+        if (p.status === 'fulfilled') setProspects(p.value.data || [])
+        if (r.status === 'fulfilled') setRentabilite(r.value.data)
+        if (a.status === 'fulfilled') setActions(a.value.data)
+        if (c.status === 'fulfilled') setClients(c.value.data || [])
+        const manquants = [p, r, a, c].filter((x) => x.status !== 'fulfilled').length
+        if (manquants > 0) setPartiel(manquants)
       })
-      .catch(() => setError('Erreur de chargement'))
       .finally(() => setLoading(false))
   }, [])
 
@@ -127,6 +134,12 @@ export default function Insights() {
         <h2 className="font-display text-xl font-bold text-gray-900">Analyses & Actions</h2>
         <p className="text-sm text-gray-500 mt-0.5">Opportunités, risques et plan d'actions prioritaires</p>
       </div>
+
+      {partiel > 0 && (
+        <div role="alert" className="bg-amber-50 border border-amber-200 text-amber-800 rounded-lg px-4 py-3 text-sm">
+          {partiel === 1 ? 'Un bloc de données n\'a pas pu être chargé.' : `${partiel} blocs de données n'ont pas pu être chargés.`} Les chiffres liés peuvent être incomplets. Rechargez la page pour réessayer.
+        </div>
+      )}
 
       <Panel title="Plan d'actions prioritaires" sub="conseils tirés des données du cockpit">
         <div className="flex flex-col gap-2.5">
