@@ -1,7 +1,11 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Layout from './components/Layout'
 import Login from './pages/Login'
+import ServiceIndisponible from './pages/ServiceIndisponible'
+import { isDemoMode } from './demo/demoMode'
+import { probeServer, useServerStatus } from './services/serverStatus'
 import ChangePassword from './pages/ChangePassword'
 import Dashboard from './pages/Dashboard'
 import PilotageSemaine from './pages/Pilotage'
@@ -82,6 +86,21 @@ function ComptableRoute({ children }) {
   return children
 }
 
+function ServerGuard({ children }) {
+  const serverDown = useServerStatus()
+  const { isDemo } = useAuth()
+
+  // Vérifie l'API dès l'ouverture du site (même si l'utilisateur n'est pas connecté),
+  // pour afficher la page personnalisée au lieu de la page « suspendue » de Render.
+  useEffect(() => {
+    if (isDemoMode()) return
+    probeServer()
+  }, [])
+
+  if (serverDown && !isDemo) return <ServiceIndisponible />
+  return children
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -134,7 +153,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <ServerGuard>
+          <AppRoutes />
+        </ServerGuard>
       </AuthProvider>
     </BrowserRouter>
   )

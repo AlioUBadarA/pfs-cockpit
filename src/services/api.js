@@ -1,8 +1,15 @@
 import axios from 'axios'
 import { isDemoMode, demoAdapter } from '../demo/demoMode'
+import { API_BASE_URL } from './apiConfig'
+import {
+  isServerUnavailableError,
+  looksLikeSuspensionPage,
+  reportServerDown,
+  reportServerUp,
+} from './serverStatus'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://gcr-3qft.onrender.com',
+  baseURL: API_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -18,8 +25,23 @@ api.interceptors.request.use((config) => {
 })
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    reportServerUp()
+    return response
+  },
   (error) => {
+    // Serveur éteint / suspendu sur Render : on lève le drapeau global pour afficher
+    // la page personnalisée au lieu d'une erreur brute.
+    if (isServerUnavailableError(error)) {
+      error.isServerDown = true
+      const suspended = looksLikeSuspensionPage(error.response?.data, error.response?.headers)
+      reportServerDown(suspended ? 'suspended' : 'unreachable')
+      return Promise.reject(error)
+    }
+
+    // Le serveur a répondu (ex. 401) : il est donc disponible.
+    if (error.response) reportServerUp()
+
     if (error.response?.status === 401) {
       const requestUrl = error.config?.url || ''
       const isAuthEndpoint = requestUrl.includes('/api/auth/')

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState } from 'react'
 import api from '../services/api'
+import { SERVER_DOWN_MESSAGE } from '../services/serverStatus'
 import { isDemoMode, setDemoMode, clearDemoData } from '../demo/demoMode'
 
 const AuthContext = createContext(null)
@@ -25,7 +26,7 @@ export function AuthProvider({ children }) {
       setUser(data.user)
       return { ok: true }
     } catch (err) {
-      return { ok: false, message: err.response?.data?.error || 'Erreur de connexion' }
+      return { ok: false, message: err.isServerDown ? SERVER_DOWN_MESSAGE : (err.response?.data?.error || 'Erreur de connexion') }
     } finally {
       setLoading(false)
     }
@@ -113,7 +114,7 @@ export function AuthProvider({ children }) {
       setUser(data.user)
       return { ok: true }
     } catch (err) {
-      return { ok: false, message: err.response?.data?.error || "Erreur d'inscription" }
+      return { ok: false, message: err.isServerDown ? SERVER_DOWN_MESSAGE : (err.response?.data?.error || "Erreur d'inscription") }
     } finally {
       setLoading(false)
     }
