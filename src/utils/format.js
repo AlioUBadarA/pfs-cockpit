@@ -2,7 +2,8 @@
 
 export function formatCFA(n) {
   if (n == null || n === '' || Number.isNaN(Number(n))) return '-'
-  return Number(n).toLocaleString('fr-FR') + ' F'
+  // Espace insécable avant « F » : un montant ne se coupe jamais en fin de ligne.
+  return Number(n).toLocaleString('fr-FR') + ' F'
 }
 
 export function formatNumber(n) {

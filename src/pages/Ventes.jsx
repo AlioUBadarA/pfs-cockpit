@@ -180,12 +180,12 @@ export default function Ventes() {
                 <tr key={v.id} className="hover:bg-gray-50">
                   <td className="table-cell whitespace-nowrap font-mono text-xs text-gray-500">{v.numero || '-'}</td>
                   <td className="table-cell whitespace-nowrap">{fmtDate(v.date_vente)}</td>
-                  <td className="table-cell font-medium">{v.client_nom}</td>
-                  <td className="table-cell">{v.produit}</td>
-                  <td className="table-cell text-right">{Number(v.quantite).toLocaleString('fr-FR')}</td>
-                  <td className="table-cell text-right">{fmt(v.prix_unitaire)}</td>
-                  <td className="table-cell text-right font-semibold">{fmt(v.montant)}</td>
-                  <td className="table-cell text-right">
+                  <td className="table-cell font-medium min-w-[10rem]">{v.client_nom}</td>
+                  <td className="table-cell min-w-[11rem]">{v.produit}</td>
+                  <td className="table-cell text-right whitespace-nowrap tabular-nums">{Number(v.quantite).toLocaleString('fr-FR')}</td>
+                  <td className="table-cell text-right whitespace-nowrap tabular-nums">{fmt(v.prix_unitaire)}</td>
+                  <td className="table-cell text-right font-semibold whitespace-nowrap tabular-nums">{fmt(v.montant)}</td>
+                  <td className="table-cell text-right whitespace-nowrap tabular-nums">
                     {v.statut_paiement === 'Paye' ? (
                       <span className="text-xs text-green-700">Soldé</span>
                     ) : (
@@ -206,7 +206,7 @@ export default function Ventes() {
                       <span className="text-gray-300">-</span>
                     )}
                   </td>
-                  <td className="table-cell">
+                  <td className="table-cell whitespace-nowrap">
                     <div className="flex items-center gap-1.5">
                       <select
                         value={v.statut_paiement}

@@ -5,7 +5,11 @@ const norm = (s) => s.replace(/\s/g, ' ')
 
 describe('formatCFA', () => {
   it('affiche 0 F pour zéro', () => {
-    expect(formatCFA(0)).toBe('0 F')
+    expect(norm(formatCFA(0))).toBe('0 F')
+  })
+  it('ne coupe jamais un montant : espace insécable avant F', () => {
+    expect(formatCFA(2100000).endsWith(' F')).toBe(true)
+    expect(/ /.test(formatCFA(2100000))).toBe(false)
   })
   it('affiche un tiret pour une valeur absente', () => {
     expect(formatCFA(null)).toBe('-')

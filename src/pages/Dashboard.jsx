@@ -4,7 +4,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts'
 import api from '../services/api'
-import KpiCard from '../components/KpiCard'
+
 import Panel from '../components/Panel'
 import BarList from '../components/BarList'
 import { formatCFA as fmt } from '../utils/format'
@@ -61,18 +61,47 @@ export default function Dashboard() {
         <p className="text-sm text-gray-500 mt-0.5">Vue exécutive consolidée &middot; pilotage de la rizerie</p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard title="CA cumulé YTD" value={fmt(kpis.ca_ytd)} sub={`sur ${kpis.nb_ventes_ytd ?? 0} commandes`} color="#1b75bc" />
-        <KpiCard title="Projection annuelle" value={fmt(kpis.projection_annuel)} sub={`objectif ${fmt(kpis.objectif_annuel)}`} />
-        <KpiCard title="Atteinte objectif" value={pct(kpis.taux_atteinte)} color={kpis.taux_atteinte >= 100 ? '#1B5E20' : kpis.taux_atteinte >= 80 ? '#F9A825' : '#CC0000'} />
-        <KpiCard title="Marge nette" value={fmt(kpis.marge_nette)} sub={`${kpis.taux_marge_nette ?? 0} % du CA`} />
-        <KpiCard title="Encaissé ce mois" value={fmt(kpis.encaisse_mois)} sub={`${fmt(kpis.encaisse_ytd)} cumulé YTD`} color="#1B5E20" />
-        <KpiCard title="Créances ouvertes" value={fmt(kpis.total_creances)} sub={`${kpis.nb_creances ?? 0} en attente`} color="#CC0000" />
-        <KpiCard title="Recouvrement" value={kpis.taux_recouvrement != null ? `${kpis.taux_recouvrement} %` : '-'} sub="versements / facturé" color={kpis.taux_recouvrement >= 80 ? '#1B5E20' : kpis.taux_recouvrement >= 50 ? '#F9A825' : '#CC0000'} />
-        <KpiCard title="Prospection espérée" value={fmt(kpis.pipeline_espere)} sub={`${kpis.pipeline_nb ?? 0} prospect(s) en cours`} color="#5a6b7a" />
-        <KpiCard title="Clients actifs" value={`${kpis.clients_actifs ?? 0} / ${kpis.clients_total ?? 0}`} sub={`${kpis.clients_dormants ?? 0} dormants`} />
-        <KpiCard title="Alertes critiques" value={mv.cmd_retard ?? 0} sub="à traiter" color="#CC0000" />
-      </div>
+      {/* Ce qui demande une action passe en premier, et seulement s'il y en a. */}
+      {(mv.cmd_retard ?? 0) > 0 && (
+        <Link
+          to="/actions"
+          className="flex items-center justify-between gap-3 rounded-lg px-4 py-3 text-sm font-medium"
+          style={{ background: '#fdecec', color: '#a32020' }}
+        >
+          <span>{mv.cmd_retard} alerte{mv.cmd_retard > 1 ? 's' : ''} critique{mv.cmd_retard > 1 ? 's' : ''} à traiter</span>
+          <span aria-hidden="true">Voir →</span>
+        </Link>
+      )}
+
+      {/* Le chiffre qui compte : le CA de l'année, face à l'objectif. */}
+      <section className="card">
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--cc-text-muted)' }}>Chiffre d'affaires de l'année</p>
+            <p className="font-display text-4xl font-bold tabular-nums mt-1" style={{ color: 'var(--cc-text)' }}>{fmt(kpis.ca_ytd)}</p>
+            <p className="text-sm mt-1" style={{ color: 'var(--cc-text-muted)' }}>sur {kpis.nb_ventes_ytd ?? 0} commandes</p>
+          </div>
+          <div className="sm:text-right">
+            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--cc-text-muted)' }}>Marge nette</p>
+            <p className="font-display text-2xl font-semibold tabular-nums mt-1" style={{ color: 'var(--cc-text)' }}>{fmt(kpis.marge_nette)}</p>
+            <p className="text-sm mt-1" style={{ color: 'var(--cc-text-muted)' }}>{kpis.taux_marge_nette ?? 0} % du CA</p>
+          </div>
+        </div>
+        <Progression atteinte={kpis.taux_atteinte} projection={kpis.projection_annuel} objectif={kpis.objectif_annuel} />
+      </section>
+
+      {/* Les autres chiffres : deux bandeaux compacts, sans cartes. Couleur seulement si action. */}
+      <section className="card p-0">
+        <Bandeau titre="Trésorerie">
+          <Chiffre libelle="Encaissé ce mois" valeur={fmt(kpis.encaisse_mois)} detail={`${fmt(kpis.encaisse_ytd)} depuis janvier`} />
+          <Chiffre libelle="Créances ouvertes" valeur={fmt(kpis.total_creances)} detail={`${kpis.nb_creances ?? 0} en attente`} alerte={(kpis.nb_creances ?? 0) > 0} />
+          <Chiffre libelle="Recouvrement" valeur={kpis.taux_recouvrement != null ? `${kpis.taux_recouvrement} %` : '-'} detail="versements / facturé" alerte={kpis.taux_recouvrement != null && kpis.taux_recouvrement < 50} />
+        </Bandeau>
+        <Bandeau titre="Développement">
+          <Chiffre libelle="Prospection espérée" valeur={fmt(kpis.pipeline_espere)} detail={`${kpis.pipeline_nb ?? 0} prospect(s) en cours`} />
+          <Chiffre libelle="Clients actifs" valeur={`${kpis.clients_actifs ?? 0} / ${kpis.clients_total ?? 0}`} detail={`${kpis.clients_dormants ?? 0} dormants`} />
+        </Bandeau>
+      </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div className="lg:col-span-2">
@@ -132,6 +161,47 @@ export default function Dashboard() {
           </div>
         </Panel>
       </div>
+    </div>
+  )
+}
+
+/** Barre d'atteinte de l'objectif annuel : vert si atteint, bleu si en bonne voie, rouge sinon. */
+function Progression({ atteinte, projection, objectif }) {
+  const taux = Math.max(0, Number(atteinte) || 0)
+  const couleur = taux >= 100 ? '#1B5E20' : taux >= 80 ? 'var(--cc-accent)' : '#CC0000'
+  return (
+    <div className="mt-5">
+      <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
+        <span>
+          <span className="font-semibold tabular-nums" style={{ color: couleur }}>{pct(atteinte)}</span>
+          <span style={{ color: 'var(--cc-text-muted)' }}> de l'objectif atteint</span>
+        </span>
+        <span className="tabular-nums" style={{ color: 'var(--cc-text-muted)' }}>
+          Projection {fmt(projection)} · objectif {fmt(objectif)}
+        </span>
+      </div>
+      <div className="h-2 rounded-full mt-2 overflow-hidden" style={{ background: '#e8edf1' }} role="progressbar" aria-valuenow={Math.round(taux)} aria-valuemin={0} aria-valuemax={100} aria-label="Atteinte de l'objectif annuel">
+        <div className="h-full rounded-full" style={{ width: `${Math.min(100, taux)}%`, background: couleur }} />
+      </div>
+    </div>
+  )
+}
+
+function Bandeau({ titre, children }) {
+  return (
+    <div className="flex flex-col sm:flex-row border-b last:border-b-0" style={{ borderColor: 'var(--cc-border)' }}>
+      <p className="px-5 pt-4 sm:py-4 sm:w-36 shrink-0 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--cc-text-muted)' }}>{titre}</p>
+      <div className="flex-1 grid grid-cols-1 sm:grid-cols-3">{children}</div>
+    </div>
+  )
+}
+
+function Chiffre({ libelle, valeur, detail, alerte = false }) {
+  return (
+    <div className="px-5 py-4">
+      <p className="text-xs" style={{ color: 'var(--cc-text-muted)' }}>{libelle}</p>
+      <p className="font-display text-xl font-semibold tabular-nums mt-0.5" style={{ color: alerte ? '#CC0000' : 'var(--cc-text)' }}>{valeur}</p>
+      <p className="text-[11px] mt-0.5" style={{ color: 'var(--cc-text-muted)' }}>{detail}</p>
     </div>
   )
 }
