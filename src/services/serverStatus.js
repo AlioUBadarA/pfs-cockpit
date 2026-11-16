@@ -7,19 +7,16 @@ import { API_BASE_URL } from './apiConfig'
  * ─────────────────────────────────────────────────────────────────────────────
  * Disponibilité du service (frontend statique + API sur Render)
  * ─────────────────────────────────────────────────────────────────────────────
- * Quand l'API est arrêtée, suspendue (facture impayée) ou que sa base de données
- * est inaccessible, le navigateur reçoit soit une erreur réseau, soit un code
- * 5xx, soit la page HTML « Service Suspended » de Render.
- *
- * Ce module centralise la détection pour que toute l'application bascule sur une
- * page personnalisée, sans jamais exposer de détail technique à l'utilisateur.
+ * La page "Service indisponible" ne doit s'afficher que lorsque le serveur est
+ * réellement hors ligne sur Render : injoignable (erreur réseau / instance
+ * arrêtée ou endormie non réveillée), délai d'attente dépassé, ou page de
+ * suspension Render. Dès que le serveur répond (même avec une erreur applicative
+ * 4xx/5xx), il est considéré comme "on" et l'application reste visible.
  *
  * Raisons possibles (jamais affichées telles quelles) :
- *   - unreachable  : erreur réseau, DNS, CORS
+ *   - unreachable  : erreur réseau, DNS, serveur injoignable
  *   - timeout      : délai d'attente dépassé
  *   - suspended    : page de suspension Render
- *   - database     : erreur serveur qui ressemble à une panne de base de données
- *   - server-error : autre erreur 5xx
  */
 
 const listeners = new Set()
@@ -36,8 +33,9 @@ const PROBE_CACHE_TTL_MS = 2 * 60 * 1000
 const PROBE_TIMEOUT_MS = 60_000
 const RETRY_INTERVAL_MS = 45_000
 
-// Statuts considérés comme « service indisponible ».
-const UNAVAILABLE_STATUSES = new Set([408, 500, 502, 503, 504, 521, 522, 523, 524])
+// (Les statuts HTTP seuls ne suffisent pas à distinguer un serveur Render hors
+// ligne d'une erreur applicative : seule l'absence de réponse réseau, le timeout
+// ou une page de suspension Render indiquent un serveur réellement hors ligne.)
 
 // Motifs typiques d'une connexion base de données perdue côté serveur.
 // Utilisés uniquement pour qualifier la panne en interne, jamais affichés.
@@ -151,19 +149,21 @@ export function looksLikeDatabaseError(data) {
 function classifyResponse(response) {
   if (!response) return null
 
+  // Page de suspension/indisponibilité Render : le service est hors ligne.
   if (looksLikeSuspensionPage(response.data, response.headers)) return 'suspended'
 
-  const status = Number(response.status)
-  if (!UNAVAILABLE_STATUSES.has(status)) return null
-
-  if (looksLikeDatabaseError(response.data)) return 'database'
-  if (status === 408) return 'timeout'
-  return 'server-error'
+  // Toute autre réponse HTTP provient du serveur applicatif : le serveur est
+  // démarré ("on"), donc la page Service indisponible ne doit pas s'afficher.
+  return null
 }
 
 /**
  * Retourne la raison de l'indisponibilité, ou null si l'erreur est « métier »
- * (401, 403, 404, 409, 422…) et ne doit pas masquer l'application.
+ * (401, 403, 404, 409, 422…), applicative (5xx serveur démarré) ou ne doit pas
+ * masquer l'application.
+ *
+ * La page Service indisponible ne doit s'afficher que lorsque le serveur Render
+ * est réellement hors ligne : injoignable, en timeout réseau, ou suspendu.
  */
 export function classifyServerError(error) {
   if (!error) return null
@@ -191,12 +191,9 @@ export function isServerUnavailableError(error) {
 
 /*
  * On interroge une route légère de l'API (GET, sans effet de bord) :
- * - réponse HTTP saine (200, 401, 404…) → le serveur est debout ;
- * - 408/5xx ou page « Service Suspended » → service arrêté/suspendu ;
- * - erreur réseau ou timeout → serveur injoignable.
- *
- * Si le backend expose /api/health, il peut renvoyer 503 quand la base est
- * indisponible (voir docs/service-indisponible.md).
+ * - toute réponse HTTP (200, 4xx, 5xx…) → le serveur est démarré ("on") ;
+ * - page « Service Suspended » de Render → service suspendu/hors ligne ;
+ * - erreur réseau ou timeout → serveur injoignable/hors ligne.
  */
 export function probeServer({ timeout = PROBE_TIMEOUT_MS, force = false } = {}) {
   if (inFlightProbe) return inFlightProbe
