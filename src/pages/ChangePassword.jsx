@@ -25,10 +25,13 @@ export default function ChangePassword() {
     }
     setSaving(true)
     try {
-      await api.patch('/api/auth/me/password', {
+      const { data } = await api.patch('/api/auth/me/password', {
         current_password: currentPassword,
         new_password: newPassword,
       })
+      // Le serveur ferme toutes les sessions ouvertes avec l'ancien mot de passe et renvoie
+      // un nouveau token pour celle-ci : sans lui, la requête suivante serait refusée (401).
+      if (data?.token) localStorage.setItem('pfs_token', data.token)
       updateUser({ must_change_password: false })
       setCurrentPassword(''); setNewPassword(''); setConfirmPassword('')
       if (forced) {

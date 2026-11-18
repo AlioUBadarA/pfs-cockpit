@@ -43,6 +43,17 @@ api.interceptors.response.use(
     // Le serveur a répondu (ex. 401) : il est donc disponible.
     if (error.response) reportServerUp()
 
+    // Mot de passe temporaire pas encore changé : le serveur refuse tout sauf le changement
+    // de mot de passe. On renvoie vers la page dédiée au lieu d'afficher des erreurs.
+    if (error.response?.status === 403 && error.response?.data?.code === 'PASSWORD_CHANGE_REQUIRED') {
+      try {
+        const stored = JSON.parse(localStorage.getItem('pfs_user') || 'null')
+        if (stored) localStorage.setItem('pfs_user', JSON.stringify({ ...stored, must_change_password: true }))
+      } catch { /* stockage illisible : la redirection suffit */ }
+      if (window.location.pathname !== '/profil/mot-de-passe') window.location.href = '/profil/mot-de-passe'
+      return Promise.reject(error)
+    }
+
     if (error.response?.status === 401) {
       const requestUrl = error.config?.url || ''
       const isAuthEndpoint = requestUrl.includes('/api/auth/')

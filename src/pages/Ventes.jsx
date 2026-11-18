@@ -273,12 +273,17 @@ export default function Ventes() {
           <div className="bg-gray-50 rounded-lg px-3 py-2 text-sm">
             Montant total : <strong className="text-[#1b75bc]">{montantCalc}</strong>
           </div>
-          <div>
-            <label className="label">Statut paiement</label>
-            <select className="input" value={form.statut_paiement} onChange={set('statut_paiement')}>
-              {STATUTS_DB.map((s) => <option key={s} value={s}>{STATUT_LABEL[s]}</option>)}
-            </select>
-          </div>
+          {/* Le statut de paiement est réservé aux responsables (permission ventes:statut,
+              appliquée par le serveur). Un vendeur crée une vente « En cours » ; elle passe à
+              « Payé » par un versement. */}
+          {!isVendeur && (
+            <div>
+              <label className="label">Statut paiement</label>
+              <select className="input" value={form.statut_paiement} onChange={set('statut_paiement')}>
+                {STATUTS_DB.map((s) => <option key={s} value={s}>{STATUT_LABEL[s]}</option>)}
+              </select>
+            </div>
+          )}
           <div>
             <label className="label">Conditions de paiement</label>
             <select className="input" value={form.conditions_paiement} onChange={set('conditions_paiement')}>
