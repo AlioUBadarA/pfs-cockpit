@@ -5,7 +5,6 @@ import Panel from '../components/Panel'
 import BarList from '../components/BarList'
 import DataTable from '../components/DataTable'
 import KpiCard from '../components/KpiCard'
-import RfmGrid from '../components/RfmGrid'
 import { useAuth } from '../context/AuthContext'
 import { formatCFA as fmt } from '../utils/format'
 import { askConfirm } from '../utils/askConfirm'
@@ -194,7 +193,7 @@ export default function Clients() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h2 className="font-display text-xl font-bold text-gray-900">Portefeuille</h2>
-          <p className="text-sm text-gray-500 mt-0.5">Carte RFM, valeur et fidélisation des clients</p>
+          <p className="text-sm text-gray-500 mt-0.5">Valeur et fidélisation des clients</p>
         </div>
         <button onClick={openNew} className="btn-primary text-sm">+ Ajouter un client</button>
       </div>
@@ -215,14 +214,9 @@ export default function Clients() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Panel title="Carte des clients" sub="ancienneté du dernier achat × nb d'achats · taille = nb clients">
-              <RfmGrid clients={clients} />
-            </Panel>
-            <Panel title="Catégories de clients" sub="selon leur comportement d'achat">
-              <BarList items={segArr} labelWidth="140px" color="#5a6b7a" />
-            </Panel>
-          </div>
+          <Panel title="Catégories de clients" sub="selon leur comportement d'achat">
+            <BarList items={segArr} labelWidth="140px" color="#5a6b7a" />
+          </Panel>
 
           <Panel
             title="Portefeuille clients"
