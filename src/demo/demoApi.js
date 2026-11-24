@@ -835,11 +835,70 @@ route('patch', '/api/emplois/:id/affecter', ({ id, body }) => {
 route('get', '/api/activites', () => [...db.activites]
   .sort((a, b) => b.date.localeCompare(a.date))
   .map((a) => ({ ...a, vendeur_nom: userNom(a.vendeur_id) })))
+// Une activité porte sur un client ou un prospect, comme dans l'API.
+const cibleDemo = (body) => {
+  if (!body.client_id === !body.prospect_id) fail(400, 'Choisissez un client ou un prospect')
+  const c = body.client_id ? byId(db.clients, body.client_id) : byId(db.prospects, body.prospect_id)
+  if (!c) fail(404, body.client_id ? 'Client non trouvé' : 'Prospect non trouvé')
+  return { nom: c.nom, telephone: c.telephone, zone: c.zone, type: body.client_id ? 'client' : 'prospect' }
+}
 route('post', '/api/activites', ({ body }) => {
-  const a = { id: newId(), vendeur_id: DEMO_USER.id, ...pickFields(body, ['date', 'type', 'cible', 'resultat', 'note']) }
+  const cible = cibleDemo(body)
+  const a = { id: newId(), vendeur_id: DEMO_USER.id, ...pickFields(body, ['date', 'type', 'resultat', 'note', 'client_id', 'prospect_id']), cible: cible.nom }
   db.activites.push(a)
   return a
 })
+
+// Tâches (planning J-1 et assignations), en mémoire
+const jourIso = (n = 0) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10) }
+const taches = () => (db.taches ||= [])
+const vueTache = (t) => ({ ...t, commercial_nom: userNom(t.user_id), createur_nom: userNom(t.cree_par),
+  en_retard: t.statut === 'a_faire' && t.date_prevue < jourIso(0) })
+route('get', '/api/taches/jour', () => taches().filter((t) => t.user_id === DEMO_USER.id
+  && (t.date_prevue === jourIso(0) || (t.statut === 'a_faire' && t.date_prevue < jourIso(0)))).map(vueTache))
+route('get', '/api/taches/rapport', ({ params: query = {} }) => {
+  const du = query.du || jourIso(0); const au = query.au || du
+  const liste = taches().filter((t) => t.user_id !== DEMO_USER.id && t.date_prevue >= du && t.date_prevue <= au).map(vueTache)
+  const resume = db.users.filter((u) => u.id !== DEMO_USER.id && ['vendeur', 'manager'].includes(u.role)).map((u) => {
+    const ses = liste.filter((t) => t.user_id === u.id)
+    return { id: u.id, nom: u.nom, role: u.role, prevues: ses.length, terminees: ses.filter((t) => t.statut === 'terminee').length,
+      non_realisees: ses.filter((t) => t.statut === 'non_realisee').length, a_faire: ses.filter((t) => t.statut === 'a_faire').length,
+      en_retard: ses.filter((t) => t.en_retard).length,
+      planning_demain: taches().filter((t) => t.user_id === u.id && t.date_prevue === jourIso(1) && t.origine === 'planning').length }
+  })
+  return { du, au, resume, taches: liste }
+})
+route('get', '/api/taches', ({ params: query = {} }) => taches()
+  .filter((t) => (!query.du || t.date_prevue >= query.du) && (!query.au || t.date_prevue <= query.au) && (!query.user_id || t.user_id === query.user_id))
+  .map(vueTache))
+route('post', '/api/taches', ({ body }) => {
+  const assignee = body.user_id || DEMO_USER.id
+  if (assignee === DEMO_USER.id && DEMO_USER.role === 'vendeur' && !(body.date_prevue > jourIso(0))) fail(400, 'Le planning se fait au plus tard la veille. Choisissez demain ou une date plus tardive.')
+  if (body.date_prevue < jourIso(0)) fail(400, 'La date est déjà passée')
+  let corps = body
+  if (body.vente_id && !body.client_id && !body.prospect_id) {
+    const v = byId(db.ventes, body.vente_id) || notFound()
+    const c = db.clients.find((x) => x.nom === v.client_nom)
+    if (!c) fail(400, 'Choisissez un client ou un prospect')
+    corps = { ...body, client_id: c.id }
+  }
+  const cible = cibleDemo(corps)
+  const t = { id: newId(), user_id: assignee, cree_par: DEMO_USER.id, origine: assignee === DEMO_USER.id ? 'planning' : 'assignation',
+    date_prevue: body.date_prevue, type: body.type, client_id: corps.client_id || null, prospect_id: corps.prospect_id || null,
+    vente_id: body.vente_id || null, alerte_key: body.alerte_key || null, consigne: body.consigne || null, statut: 'a_faire',
+    cible_nom: cible.nom, cible_telephone: cible.telephone, cible_zone: cible.zone, cible_type: cible.type, created_at: todayIso() }
+  taches().push(t)
+  return vueTache(t)
+})
+route('post', '/api/taches/:id/terminer', ({ id, body }) => {
+  const t = byId(taches(), id) || notFound()
+  if (t.statut !== 'a_faire') fail(400, 'Cette tâche est déjà close')
+  if (!body.compte_rendu || body.compte_rendu.trim().length < 3) fail(400, 'Écrivez un commentaire sur le déroulement')
+  Object.assign(t, { statut: body.statut || 'terminee', resultat: body.statut === 'non_realisee' ? null : (body.resultat || 'Neutre'), compte_rendu: body.compte_rendu.trim() })
+  if (t.statut === 'terminee') db.activites.push({ id: newId(), vendeur_id: t.user_id, date: jourIso(0), type: t.type === 'Visite' ? 'Visite client' : t.type, cible: t.cible_nom, resultat: t.resultat, note: t.compte_rendu })
+  return vueTache(t)
+})
+route('delete', '/api/taches/:id', ({ id }) => { db.taches = taches().filter((t) => !(t.id === id && t.statut === 'a_faire')); return { ok: true } })
 
 // Planning semaine
 route('get', '/api/pilotage/:semaine', ({ semaine }) => db.pilotage[semaine] || [])

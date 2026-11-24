@@ -2,8 +2,23 @@ import { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
 import KpiCard from '../components/KpiCard'
 import Panel from '../components/Panel'
+import AssignerTache from '../components/AssignerTache'
+import { useAuth } from '../context/AuthContext'
 
 const fmt = (n) => Number(n || 0).toLocaleString('fr-FR') + ' F'
+
+// Une alerte devient une tâche pour le commercial concerné. Elle doit viser un client :
+// l'alerte « Objectif sous cible » ne s'assigne donc pas.
+function tacheDepuisAlerte(a) {
+  const nom = (a.msg || '').split(' — ')[0]
+  if (a.cat === 'Client inactif') {
+    return { user_id: a.owner || '', type: 'Visite', cible: { type: 'client', id: a.entity_id, nom }, alerte_key: a.key, consigne: a.msg }
+  }
+  if (a.cat === 'Créance en retard') {
+    return { user_id: a.owner || '', type: 'Recouvrement', vente_id: a.entity_id, cible_libelle: nom, alerte_key: a.key, consigne: a.msg }
+  }
+  return null
+}
 
 const ICONS = {
   'Client inactif': '◷',
@@ -18,6 +33,10 @@ export default function Actions() {
   const [error, setError] = useState('')
   const [vue, setVue] = useState('À traiter')
   const [cat, setCat] = useState('Toutes')
+  const [assigner, setAssigner] = useState(null)
+  const [info, setInfo] = useState('')
+  const { isManager, isDirecteur, isRizier } = useAuth()
+  const responsable = isManager || isDirecteur || isRizier
 
   const load = useCallback(() => {
     setLoading(true)
@@ -63,6 +82,9 @@ export default function Actions() {
       </div>
 
       {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">{error}</div>}
+      {info && <div className="bg-green-50 border border-green-200 text-green-800 text-sm rounded-lg px-4 py-3" role="status">{info}</div>}
+      <AssignerTache open={!!assigner} initial={assigner} onClose={() => setAssigner(null)}
+        onCree={(t) => setInfo(`Tâche assignée à ${t.commercial_nom} pour le ${new Date(t.date_prevue).toLocaleDateString('fr-FR')}.`)} />
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <KpiCard title="À traiter" value={stats.a_traiter ?? 0} sub="non encore traitées" color="#CC0000" />
@@ -113,6 +135,14 @@ export default function Actions() {
                   <div className="text-[13px] font-semibold tabular-nums">{fmt(a.valeur)}</div>
                   <div className="text-[11px] text-gray-400">{a.owner_nom || '-'}</div>
                 </div>
+                {responsable && !a.traitee && tacheDepuisAlerte(a) && (
+                  <button
+                    onClick={() => { setInfo(''); setAssigner(tacheDepuisAlerte(a)) }}
+                    className="text-xs font-semibold px-2.5 py-1.5 rounded-md border flex-none bg-white text-[#1b75bc] border-[#1b75bc]"
+                  >
+                    Assigner
+                  </button>
+                )}
                 <button
                   onClick={() => toggle(a)}
                   className={`text-xs font-semibold px-2.5 py-1.5 rounded-md border flex-none ${a.traitee ? 'bg-white text-gray-500 border-gray-300' : 'text-white'}`}

@@ -5,11 +5,13 @@ import BarList from '../components/BarList'
 import KpiCard from '../components/KpiCard'
 import DataTable from '../components/DataTable'
 import Modal from '../components/Modal'
+import ClientPicker from '../components/ClientPicker'
 import { formatDate as fmtDate } from '../utils/format'
 
-const TYPES = ['Visite client', 'Appel', 'Réunion', 'Démonstration', 'Négociation', 'Relance', 'Contrat signé']
+// Une activité porte toujours sur un client ou un prospect choisi dans la liste.
+const TYPES = ['Visite client', 'Appel', 'Réunion', 'Démonstration', 'Négociation', 'Relance', 'Contrat signé', 'Vente', 'Recouvrement', 'Prospection', 'Livraison', 'Alerte', 'Autre']
 const RESULTATS = ['Positif', 'Négatif', 'Neutre']
-const INIT = { date: new Date().toISOString().slice(0, 10), type: 'Visite client', cible: '', resultat: 'Neutre', note: '' }
+const INIT = { date: new Date().toISOString().slice(0, 10), type: 'Visite client', cible: null, resultat: 'Neutre', note: '' }
 
 export default function Activites() {
   const [activites, setActivites] = useState([])
@@ -33,10 +35,12 @@ export default function Activites() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!form.cible) { setError('Choisissez un client ou un prospect.'); return }
     setSaving(true)
     setError('')
     try {
-      await api.post('/api/activites', form)
+      const { cible, ...reste } = form
+      await api.post('/api/activites', { ...reste, [cible.type === 'prospect' ? 'prospect_id' : 'client_id']: cible.id })
       setModalOpen(false)
       setForm(INIT)
       load()
@@ -127,8 +131,8 @@ export default function Activites() {
             </div>
           </div>
           <div>
-            <label className="label">Cible (client / prospect)</label>
-            <input className="input" value={form.cible} onChange={set('cible')} placeholder="Ex: Boutique Diallo" />
+            <label className="label" htmlFor="activite-cible">Client ou prospect *</label>
+            <ClientPicker id="activite-cible" required value={form.cible} onChange={(c) => setForm((p) => ({ ...p, cible: c }))} />
           </div>
           <div>
             <label className="label">Résultat</label>

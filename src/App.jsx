@@ -29,6 +29,7 @@ const Emplois = lazy(() => import('./pages/Emplois'))
 const Managers = lazy(() => import('./pages/Managers'))
 const Journal = lazy(() => import('./pages/Journal'))
 const Activites = lazy(() => import('./pages/Activites'))
+const Taches = lazy(() => import('./pages/Taches'))
 const Produits = lazy(() => import('./pages/Produits'))
 const Encaissements = lazy(() => import('./pages/Encaissements'))
 const Comptabilite = lazy(() => import('./pages/Comptabilite'))
@@ -132,6 +133,7 @@ function AppRoutes() {
         <Route path="managers"   element={<ManagerRoute><Managers /></ManagerRoute>} />
         <Route path="journal"    element={<Journal />} />
         <Route path="activites"  element={<Activites />} />
+        <Route path="taches"     element={<Taches />} />
         <Route path="produits"   element={<Produits />} />
         <Route path="encaissements" element={<Encaissements />} />
         <Route path="comptabilite" element={<ComptableRoute><Comptabilite /></ComptableRoute>} />

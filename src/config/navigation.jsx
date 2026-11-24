@@ -25,7 +25,8 @@ const USER_NAVIGATION = [
         label: 'Planning & suivi',
         icon: 'calendar',
         children: [
-          { key: 'pilotage-semaine', to: '/pilotage', label: 'Planning semaine', managerOnly: true },
+          { key: 'taches', to: '/taches', label: 'Planning et tâches' },
+          { key: 'pilotage-semaine', to: '/pilotage', label: 'Objectifs de la semaine', managerOnly: true },
           { key: 'journal', to: '/journal', label: 'Journal du jour' },
           { key: 'activites', to: '/activites', label: 'Activités' },
         ],
