@@ -5,7 +5,8 @@ import Panel from '../components/Panel'
 import Modal from '../components/Modal'
 import DataTable from '../components/DataTable'
 import KebabMenu from '../components/KebabMenu'
-import { ModeButtons, PreuveFields, MODES_AVEC_PREUVE, ValidationBadge } from '../components/PaiementFields'
+import { ModeButtons, PreuveFields, ValidationBadge } from '../components/PaiementFields'
+import { useRegles } from '../utils/regles'
 import { useAuth } from '../context/AuthContext'
 import { printRecu, printFacture } from '../utils/printDocument'
 import { emetteur, ouvrirPreuve } from '../utils/entreprise'
@@ -29,6 +30,7 @@ const FORM_INIT = () => ({
 // facture attend la validation.
 export default function Encaissements() {
   const { user, isVendeur, isComptable } = useAuth()
+  const { regles } = useRegles()
   const [q, setQ] = useState('')
   const [results, setResults] = useState([])
   const [searching, setSearching] = useState(false)
@@ -75,7 +77,7 @@ export default function Encaissements() {
   }
 
   const openNewVersement = (montantPropose) => {
-    setForm({ ...FORM_INIT(), montant: montantPropose > 0 ? String(montantPropose) : '' })
+    setForm({ ...FORM_INIT(), mode: regles.modes_paiement[0] || 'Espèces', montant: montantPropose > 0 ? String(montantPropose) : '' })
     setFormError('')
     setModalOpen(true)
   }
@@ -122,7 +124,7 @@ export default function Encaissements() {
       setFormError('La prochaine date de paiement est requise tant qu\'il reste un solde')
       return
     }
-    if (MODES_AVEC_PREUVE.includes(form.mode) && !form.preuve) {
+    if (regles.modes_preuve.includes(form.mode) && !form.preuve) {
       setFormError(`Ajoutez la preuve du paiement par ${form.mode}`)
       return
     }
@@ -328,7 +330,7 @@ export default function Encaissements() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="label">Mode de paiement</label>
-            <ModeButtons value={form.mode} onChange={(m) => setForm((p) => ({ ...p, mode: m, preuve: null, reference: '' }))} />
+            <ModeButtons value={form.mode} modes={regles.modes_paiement} onChange={(m) => setForm((p) => ({ ...p, mode: m, preuve: null, reference: '' }))} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -346,6 +348,7 @@ export default function Encaissements() {
             onReference={(v) => setForm((p) => ({ ...p, reference: v }))}
             preuve={form.preuve}
             onPreuve={(v) => setForm((p) => ({ ...p, preuve: v }))}
+            modesPreuve={regles.modes_preuve}
           />
           {form.montant && (
             <p className="text-xs text-gray-500">

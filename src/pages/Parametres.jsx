@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import api from '../services/api'
 import { chargerEntreprise, oublierEntreprise, lireFichierPourApi } from '../utils/entreprise'
+import ReglesRizerie from '../components/ReglesRizerie'
 
 const ONGLETS = [
   { key: 'general', label: 'Informations générales' },
   { key: 'adresse', label: 'Adresse et contact' },
   { key: 'documents', label: 'Logo et documents' },
+  { key: 'regles', label: 'Règles commerciales' },
 ]
 
 const CHAMPS = {
@@ -142,6 +144,11 @@ export default function Parametres() {
           ))}
         </div>
 
+        {onglet === 'regles' ? (
+          <div className="p-5">
+            <ReglesRizerie key={data?.id} regles={data?.parametres} peutModifier={peutModifier} onEnregistre={() => oublierEntreprise()} />
+          </div>
+        ) : (
         <form onSubmit={enregistrer} className="p-5 space-y-5">
           {onglet !== 'documents' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -233,6 +240,7 @@ export default function Parametres() {
             </div>
           )}
         </form>
+        )}
       </div>
     </div>
   )

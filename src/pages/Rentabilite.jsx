@@ -5,6 +5,7 @@ import KpiCard from '../components/KpiCard'
 import Panel from '../components/Panel'
 import DataTable from '../components/DataTable'
 import BarList from '../components/BarList'
+import { useRegles } from '../utils/regles'
 
 const fmt = (n) => Number(n).toLocaleString('fr-FR') + ' F'
 
@@ -22,6 +23,9 @@ function TauxBadge({ taux }) {
 export default function Rentabilite() {
   const [annee, setAnnee]       = useState(new Date().getFullYear())
   const [tauxCout, setTauxCout] = useState(70)
+  // Taux de coût par défaut réglé par la rizerie (Paramètres > Règles commerciales).
+  const { regles, pret: reglesPretes } = useRegles()
+  useEffect(() => { if (reglesPretes) setTauxCout(regles.taux_cout_defaut_pct) }, [reglesPretes, regles.taux_cout_defaut_pct])
   const [data, setData]         = useState(null)
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState('')

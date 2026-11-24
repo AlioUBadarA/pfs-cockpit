@@ -773,6 +773,13 @@ route('put', '/api/rizerie/logo', ({ body }) => {
   return { a_logo: true }
 })
 route('delete', '/api/rizerie/logo', () => { rizerieDemo().logo_data_url = null; return { a_logo: false } })
+route('put', '/api/rizerie/parametres', ({ body }) => {
+  const r = rizerieDemo()
+  if (Array.isArray(body.conditions_paiement) && !body.conditions_paiement.length) fail(400, 'Choisissez au moins une condition de paiement valide')
+  if (Array.isArray(body.modes_paiement) && !body.modes_paiement.length) fail(400, 'Choisissez au moins un mode de paiement valide')
+  r.parametres = { ...(r.parametres || {}), ...body }
+  return { parametres: r.parametres }
+})
 
 // Équipe & managers
 route('get', '/api/equipe', () => db.users.map(equipeView))

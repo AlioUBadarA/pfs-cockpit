@@ -13,8 +13,8 @@ const REFERENCE_LABEL = {
 }
 
 // Boutons de mode de paiement, sur le modèle d'une caisse.
-export function ModeButtons({ value, onChange, avecCredit = false }) {
-  const options = avecCredit ? ['', ...MODES] : MODES
+export function ModeButtons({ value, onChange, avecCredit = false, modes = MODES }) {
+  const options = avecCredit ? ['', ...modes] : modes
   return (
     <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Mode de paiement">
       {options.map((m) => {
@@ -42,10 +42,10 @@ export function ModeButtons({ value, onChange, avecCredit = false }) {
 
 // Référence et preuve de paiement. La preuve est obligatoire pour un chèque, un virement ou du
 // Mobile Money. `preuve` est l'objet { nom, data } prêt pour l'API.
-export function PreuveFields({ mode, reference, onReference, preuve, onPreuve }) {
+export function PreuveFields({ mode, reference, onReference, preuve, onPreuve, modesPreuve = MODES_AVEC_PREUVE }) {
   const [erreur, setErreur] = useState('')
   const inputRef = useRef(null)
-  if (!MODES_AVEC_PREUVE.includes(mode)) return null
+  if (!modesPreuve.includes(mode)) return null
 
   const choisir = async (e) => {
     setErreur('')

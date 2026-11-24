@@ -3,13 +3,12 @@ import { Link, useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import ClientPicker, { clientPayload } from '../components/ClientPicker'
-import { ModeButtons, PreuveFields, MODES_AVEC_PREUVE } from '../components/PaiementFields'
+import { ModeButtons, PreuveFields } from '../components/PaiementFields'
+import { useRegles } from '../utils/regles'
 import { printBonCommande, printRecu } from '../utils/printDocument'
 import { emetteur } from '../utils/entreprise'
 import { formatCFA as fmt } from '../utils/format'
 
-// Valeurs exactes du backend (gcr/utils/paiement.js)
-const CONDITIONS_PAIEMENT = ['Comptant', 'J+15', 'J+30', 'J+45', 'J+60', 'J+90', '50% comptant / 50% J+15', '50% comptant / 50% J+30']
 
 const TENDANCE = {
   hausse: { label: 'En hausse', className: 'text-green-700 bg-green-50' },
@@ -40,6 +39,8 @@ function IconSac() {
 export default function NouvelleVente() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  // Règles de la rizerie : conditions proposées, modes acceptés, preuve exigée.
+  const { regles, pret: reglesPretes } = useRegles()
   const [produits, setProduits] = useState([])
   const [loadingProduits, setLoadingProduits] = useState(true)
   const [recherche, setRecherche] = useState('')
@@ -58,6 +59,10 @@ export default function NouvelleVente() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [resultat, setResultat] = useState(null)
+
+  useEffect(() => {
+    if (reglesPretes && regles.condition_defaut) setConditions((c) => c || regles.condition_defaut)
+  }, [reglesPretes, regles.condition_defaut])
 
   useEffect(() => {
     api.get('/api/produits')
@@ -101,7 +106,7 @@ export default function NouvelleVente() {
     if (mode) {
       if (!(recu > 0)) return 'Indiquez le montant reçu'
       if (recu > total) return 'Le montant reçu dépasse le total de la vente'
-      if (MODES_AVEC_PREUVE.includes(mode) && !preuve) return `Ajoutez la preuve du paiement par ${mode}`
+      if (regles.modes_preuve.includes(mode) && !preuve) return `Ajoutez la preuve du paiement par ${mode}`
     }
     return ''
   }
@@ -310,14 +315,14 @@ export default function NouvelleVente() {
                 <label className="label">Conditions</label>
                 <select className="input" value={conditions} onChange={(e) => setConditions(e.target.value)}>
                   <option value="">Non précisé</option>
-                  {CONDITIONS_PAIEMENT.map((c) => <option key={c} value={c}>{c}</option>)}
+                  {regles.conditions_paiement.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
             </div>
 
             <div>
               <label className="label">Paiement reçu maintenant</label>
-              <ModeButtons value={mode} onChange={choisirMode} avecCredit />
+              <ModeButtons value={mode} onChange={choisirMode} avecCredit modes={regles.modes_paiement} />
             </div>
 
             {mode && (
@@ -330,7 +335,7 @@ export default function NouvelleVente() {
                   </div>
                   <p className="text-xs text-gray-400 mt-1">Il sera compté dans le CA après validation du comptable ou du manager.</p>
                 </div>
-                <PreuveFields mode={mode} reference={reference} onReference={setReference} preuve={preuve} onPreuve={setPreuve} />
+                <PreuveFields mode={mode} reference={reference} onReference={setReference} preuve={preuve} onPreuve={setPreuve} modesPreuve={regles.modes_preuve} />
               </div>
             )}
 
