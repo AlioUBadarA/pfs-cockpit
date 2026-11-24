@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import KpiCard from '../components/KpiCard'
 import Panel from '../components/Panel'
@@ -89,17 +90,8 @@ export default function Creances() {
 
   useEffect(() => { load() }, [load])
 
-  const marquerPaye = async (id) => {
-    setUpdating(id)
-    try {
-      await api.patch(`/api/ventes/${id}/statut`, { statut_paiement: 'Paye' })
-      load()
-    } catch {
-      setError('Erreur lors de la mise à jour')
-    } finally {
-      setUpdating(null)
-    }
-  }
+  // « Payé » ne se pose plus à la main : la vente se solde par des encaissements validés.
+  const navigate = useNavigate()
 
   const relancer = async (id) => {
     setUpdating(id)
@@ -222,7 +214,7 @@ export default function Creances() {
                         onToggle={(k) => setOpenMenu(k)}
                         items={[
                           { icon: '📣', label: 'Relancer le client', onClick: () => relancer(v.id) },
-                          { icon: '✅', label: 'Marquer payé', onClick: () => marquerPaye(v.id) },
+                          { icon: '💰', label: 'Encaisser', onClick: () => navigate(`/encaissements?${new URLSearchParams({ ref: v.numero || v.client_nom, id: v.id, type: 'vente' })}`) },
                         ]}
                       />
                     )}
