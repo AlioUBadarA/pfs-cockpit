@@ -207,8 +207,8 @@ export default function Parametres() {
 
               <div>
                 <p className="label">Aperçu de l'en-tête</p>
-                <div className="border border-gray-200 rounded-lg p-4 flex items-start gap-3">
-                  {logo && <img src={logo} alt="" className="max-h-14 max-w-[110px] object-contain" />}
+                <div className="border border-gray-200 rounded-lg p-5 flex flex-col items-center text-center gap-2">
+                  {logo && <img src={logo} alt="" className="max-h-16 max-w-[160px] object-contain" />}
                   <div>
                     <p className="font-bold text-[#1b75bc] text-lg leading-tight">{form.nom || 'Nom de la rizerie'}</p>
                     <p className="text-xs text-gray-500 leading-relaxed">
@@ -218,6 +218,7 @@ export default function Parametres() {
                         .filter(Boolean).map((l) => <span key={l} className="block">{l}</span>)}
                     </p>
                   </div>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-gray-800 mt-1">Facture · N° V-2026-0001</p>
                 </div>
               </div>
             </div>

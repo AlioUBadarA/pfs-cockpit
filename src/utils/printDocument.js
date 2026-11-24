@@ -22,12 +22,13 @@ function css() {
   return `
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, Helvetica, sans-serif; font-size: 12px; color: #1a1a1a; background: #fff; padding: 32px 40px; }
-    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; gap: 20px; }
-    .emetteur { display: flex; gap: 14px; align-items: flex-start; }
-    .emetteur-logo { max-height: 72px; max-width: 140px; object-fit: contain; }
+    /* En-tête centré : logo, nom et coordonnées de la rizerie, puis type de document. */
+    .header { display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 20px; gap: 16px; }
+    .emetteur { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .emetteur-logo { max-height: 80px; max-width: 180px; object-fit: contain; }
     .emetteur-name { font-size: 20px; font-weight: 800; color: #1b75bc; letter-spacing: -0.5px; }
-    .emetteur-info { font-size: 10.5px; color: #666; margin-top: 5px; line-height: 1.55; }
-    .doc-block { text-align: right; }
+    .emetteur-info { font-size: 10.5px; color: #666; margin-top: 3px; line-height: 1.55; }
+    .doc-block { text-align: center; }
     .doc-type { font-size: 22px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #1a1a1a; }
     .doc-meta { font-size: 12px; color: #555; margin-top: 6px; line-height: 1.6; }
     .separator { border: none; border-top: 2.5px solid #1b75bc; margin: 20px 0; }
