@@ -1,5 +1,4 @@
 // Argumentaire de vente, mis à jour avec la formation commerciale PFS, cohorte 3 (novembre 2026).
-// Même contenu dans l'app mobile : sales-cockpit-mobile/src/lib/argumentaireC3.ts.
 // Une diapositive : un titre, puis des points, un tableau, un exemple ou une règle.
 
 export const MODULES = [
