@@ -56,6 +56,7 @@ const USER_NAVIGATION = [
         icon: 'wallet',
         children: [
           { key: 'encaissements', to: '/encaissements', label: 'Encaissements' },
+          { key: 'validation', to: '/comptabilite', label: 'Validation des encaissements', managerOnly: true },
           { key: 'creances', to: '/creances', label: 'Recouvrement' },
         ],
       },
@@ -83,6 +84,7 @@ const USER_NAVIGATION = [
     items: [
       { key: 'argumentaire', to: '/argumentaire', label: 'Argumentaire de vente', icon: 'book' },
       { key: 'guide', to: '/guide', label: "Guide d'utilisation", icon: 'help' },
+      { key: 'parametres', to: '/parametres', label: 'Paramètres de la rizerie', icon: 'settings', managerOnly: true },
     ],
   },
 ]
@@ -106,6 +108,8 @@ const COMPTABLE_NAVIGATION = [
     title: 'Comptabilité',
     items: [
       { key: 'comptabilite-validation', to: '/comptabilite', label: 'Validation des encaissements', icon: 'checkSquare', end: true },
+      { key: 'comptabilite-encaissements', to: '/encaissements', label: 'Rechercher une transaction', icon: 'wallet' },
+      { key: 'comptabilite-parametres', to: '/parametres', label: 'Paramètres de la rizerie', icon: 'settings' },
     ],
   },
 ]

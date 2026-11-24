@@ -69,8 +69,12 @@ function venteView(v) {
   const verse = totalVerse('vente', v.id)
   return {
     ...v,
+    lignes: v.lignes || [{ produit: v.produit, quantite: v.quantite, prix_unitaire: v.prix_unitaire, montant: v.montant }],
+    client_telephone: db.clients.find((c) => c.id === v.client_id)?.telephone || null,
     vendeur_nom: userNom(v.vendeur_id),
     total_verse: verse,
+    total_valide: verse,
+    total_declare: 0,
     montant_attendu_prochaine_echeance: Math.max(0, v.montant - verse),
   }
 }
@@ -353,6 +357,7 @@ function transactions() {
     id: v.id, type: 'vente', numero: v.numero, date: v.date_vente, client_nom: v.client_nom,
     montant_total: v.montant, total_verse: totalVerse('vente', v.id), statut: v.statut_paiement,
     date_echeance: v.date_echeance, produit: v.produit, quantite: v.quantite, prix_unitaire: v.prix_unitaire,
+    lignes: v.lignes, total_valide: v.total_verse,
   }))
   const ech = db.echeances.map(echeanceView).map((e) => ({
     id: e.id, type: 'echeance', numero: `${e.contrat_numero}/${String(e.mois).padStart(2, '0')}`, date: e.date_paiement_prevue,
@@ -376,7 +381,14 @@ function enregistrerVersement(type, refId, body) {
   if (!tx) notFound()
   const reste = tx.montant_total - tx.total_verse
   if (montant > reste + 0.5) fail(400, `Le montant dépasse le reste à encaisser (${Math.round(reste).toLocaleString('fr-FR')} F)`)
-  db.versements.push({ id: newId(), type, ref_id: refId, client_nom: tx.client_nom, montant, mode: body.mode || 'Espèces', date: body.date || todayIso() })
+  if (['Chèque', 'Virement', 'Mobile Money'].includes(body.mode) && !body.preuve) {
+    fail(400, `Preuve de paiement obligatoire pour un paiement par ${body.mode}`)
+  }
+  const nouveau = {
+    id: newId(), type, ref_id: refId, client_nom: tx.client_nom, montant, mode: body.mode || 'Espèces',
+    date: body.date || todayIso(), reference: body.reference || null, statut_validation: 'valide', a_preuve: false,
+  }
+  db.versements.push(nouveau)
   const solde = reste - montant <= 0.5
   if (type === 'vente') {
     const v = byId(db.ventes, refId)
@@ -388,7 +400,7 @@ function enregistrerVersement(type, refId, body) {
     if (solde) e.statut_paiement = 'Paye'
     else if (body.prochaine_echeance) e.date_paiement_prevue = body.prochaine_echeance
   }
-  return { ok: true }
+  return nouveau
 }
 
 // Rattache une vente/contrat/dépôt à un client existant, ou le crée s'il est nouveau.
@@ -511,11 +523,30 @@ route('get', '/api/ventes', ({ params }) => {
     .map(venteView)
 })
 route('post', '/api/ventes', ({ body }) => {
-  const quantite = Number(body.quantite)
-  const prix = Number(body.prix_unitaire)
-  if (!(quantite > 0) || !(prix > 0)) fail(400, 'Quantité et prix unitaire doivent être positifs')
-  if (!body.produit) fail(400, 'Le produit est requis')
-  const client = clientPourNom(body.client_nom, DEMO_USER.id)
+  const brutes = Array.isArray(body.lignes) ? body.lignes : [{ produit: body.produit, quantite: body.quantite, prix_unitaire: body.prix_unitaire }]
+  if (!brutes.length) fail(400, 'Ajoutez au moins un produit')
+  const lignes = brutes.map((l) => {
+    const p = l.produit_id ? byId(db.produits, l.produit_id) : null
+    const q = Number(l.quantite)
+    const pu = Number(l.prix_unitaire)
+    if (!(q > 0) || !(pu > 0)) fail(400, 'Chaque quantité et chaque prix doivent être positifs')
+    const nom = p?.nom || l.produit
+    if (!nom) fail(400, 'Chaque ligne doit indiquer un produit')
+    return { id: newId(), produit: nom, quantite: q, prix_unitaire: pu, montant: Math.round(q * pu) }
+  })
+  const quantite = sum(lignes, (l) => l.quantite)
+  const montantTotal = sum(lignes, (l) => l.montant)
+  const prix = Math.round((montantTotal / quantite) * 100) / 100
+  let client = body.client_id ? byId(db.clients, body.client_id) : null
+  if (!client && body.prospect_id) {
+    const pr = byId(db.prospects, body.prospect_id) || fail(400, 'Prospect introuvable')
+    client = clientPourNom(pr.nom, DEMO_USER.id)
+    pr.statut = 'Gagné'
+    pr.client_id = client.id
+  }
+  if (!client && body.client_nom) client = clientPourNom(body.client_nom, DEMO_USER.id)
+  if (!client) fail(400, 'Choisissez un client du portefeuille ou un prospect')
+  if (client.statut === 'Prospect') client.statut = 'Actif'
   const date = body.date_vente || todayIso()
   const year = date.slice(0, 4)
   const seq = db.ventes.filter((v) => v.numero.startsWith(`V-${year}-`)).length + 1
@@ -523,14 +554,23 @@ route('post', '/api/ventes', ({ body }) => {
   const v = {
     id: newId(), numero: `V-${year}-${String(seq).padStart(4, '0')}`,
     date_vente: date, client_id: client.id, client_nom: client.nom,
-    produit: body.produit, quantite, prix_unitaire: prix, montant: Math.round(quantite * prix),
+    produit: lignes.length === 1 ? lignes[0].produit : `${lignes[0].produit} + ${lignes.length - 1} autre${lignes.length > 2 ? 's' : ''}`,
+    lignes, quantite, prix_unitaire: prix, montant: montantTotal,
     conditions_paiement: conditions, vendeur_id: client.vendeur_id || DEMO_USER.id,
     date_echeance: isoDate(addDays(parseDate(date), DELAIS_PAIEMENT[conditions] ?? 30)),
-    statut_paiement: body.statut_paiement || 'En cours', mode: 'Espèces', nb_relances: 0, derniere_relance: null,
+    statut_paiement: 'En cours', mode: body.encaissement?.mode || 'Espèces', nb_relances: 0, derniere_relance: null,
+    note: body.note || '',
   }
   db.ventes.push(v)
-  if (v.statut_paiement === 'Paye') db.versements.push({ id: newId(), type: 'vente', ref_id: v.id, client_nom: v.client_nom, montant: v.montant, mode: 'Espèces', date })
-  return venteView(v)
+  let versement = null
+  if (body.encaissement) {
+    versement = enregistrerVersement('vente', v.id, { ...body.encaissement, date })
+  }
+  return { ...venteView(v), versement }
+})
+route('get', '/api/ventes/:id/facture', ({ id }) => {
+  const v = venteView(byId(db.ventes, id) || notFound())
+  return { ...v, versements: versementsDe('vente', id).sort((a, b) => a.date.localeCompare(b.date)) }
 })
 route('patch', '/api/ventes/:id/statut', ({ id, body }) => {
   const v = byId(db.ventes, id) || notFound()
@@ -658,16 +698,33 @@ route('get', '/api/depots/:id', ({ id }) => {
   return { ...depotView(d), mouvements: db.mouvements.filter((m) => m.depot_id === id).sort((a, b) => b.date.localeCompare(a.date)) }
 })
 route('post', '/api/depots', ({ body }) => {
-  if (!(Number(body.quantite_deposee) > 0)) fail(400, 'La quantité déposée doit être positive')
-  const client = clientPourNom(body.client_nom, DEMO_USER.id)
-  const date = body.date_depot || todayIso()
-  const d = {
-    id: newId(), numero: `DV-${date.slice(0, 4)}-${String(db.depots.length + 1).padStart(3, '0')}`,
-    client_id: client.id, client_nom: client.nom, vendeur_id: client.vendeur_id || DEMO_USER.id,
-    ...pickFields(body, DEPOT_FIELDS), date_depot: date,
+  let client = body.client_id ? byId(db.clients, body.client_id) : null
+  if (!client && body.prospect_id) {
+    const pr = byId(db.prospects, body.prospect_id) || fail(400, 'Prospect introuvable')
+    client = clientPourNom(pr.nom, DEMO_USER.id)
+    pr.statut = 'Gagné'
+    pr.client_id = client.id
   }
-  db.depots.push(d)
-  return depotView(d)
+  if (!client && body.client_nom) client = clientPourNom(body.client_nom, DEMO_USER.id)
+  if (!client) fail(400, 'Choisissez un client du portefeuille ou un prospect')
+  const date = body.date_depot || todayIso()
+  const brutes = Array.isArray(body.lignes) ? body.lignes : [{ produit: body.produit, quantite: body.quantite_deposee, prix_unitaire: body.prix_unitaire }]
+  const lot = `BD-${date.slice(0, 4)}-${String(new Set(db.depots.map((x) => x.lot).filter(Boolean)).size + 1).padStart(4, '0')}`
+  const crees = brutes.map((l) => {
+    const p = l.produit_id ? byId(db.produits, l.produit_id) : null
+    const q = Number(l.quantite ?? l.quantite_deposee)
+    if (!(q > 0)) fail(400, 'La quantité déposée doit être positive')
+    if (!(Number(l.prix_unitaire) > 0)) fail(400, 'Le prix doit être positif')
+    const d = {
+      id: newId(), numero: `DV-${date.slice(0, 4)}-${String(db.depots.length + 1).padStart(3, '0')}`,
+      client_id: client.id, client_nom: client.nom, vendeur_id: client.vendeur_id || DEMO_USER.id,
+      produit: p?.nom || l.produit, quantite_deposee: q, prix_unitaire: Number(l.prix_unitaire),
+      date_depot: date, note: body.note || '', lot,
+    }
+    db.depots.push(d)
+    return depotView(d)
+  })
+  return crees.length === 1 ? crees[0] : { lot, depots: crees }
 })
 route('put', '/api/depots/:id', ({ id, body }) => {
   const d = byId(db.depots, id) || notFound()
@@ -691,6 +748,31 @@ route('delete', '/api/depots/:id', ({ id }) => {
   db.mouvements = db.mouvements.filter((m) => m.depot_id !== id)
   return { ok: true }
 })
+
+// Paramètres de la rizerie
+const RIZERIE_FIELDS = ['nom', 'forme_juridique', 'ninea', 'rccm', 'telephone', 'email', 'site_web', 'adresse', 'ville', 'region', 'pays', 'mentions_documents']
+function rizerieDemo() {
+  if (!db.rizerie) db.rizerie = { id: 'demo-rizerie', nom: DEMO_USER.rizerie, ville: DEMO_USER.ville, pays: DEMO_USER.pays, telephone: DEMO_USER.telephone }
+  return db.rizerie
+}
+route('get', '/api/rizerie', () => {
+  const r = rizerieDemo()
+  return { ...r, a_logo: !!r.logo_data_url, peut_modifier: true }
+})
+route('put', '/api/rizerie', ({ body }) => {
+  const r = rizerieDemo()
+  if ('nom' in body && !String(body.nom || '').trim()) fail(400, 'Le nom de la rizerie est obligatoire')
+  Object.assign(r, pickFields(body, RIZERIE_FIELDS))
+  return { ...r, a_logo: !!r.logo_data_url, peut_modifier: true }
+})
+route('put', '/api/rizerie/logo', ({ body }) => {
+  const data = String(body.fichier?.data || '')
+  if (!/^data:image\/(png|jpeg);base64,/.test(data)) fail(400, 'Type de fichier refusé. Types acceptés : PNG, JPG')
+  if (data.length > 600000) fail(400, 'En mode démo, le logo doit peser moins de 400 Ko')
+  rizerieDemo().logo_data_url = data
+  return { a_logo: true }
+})
+route('delete', '/api/rizerie/logo', () => { rizerieDemo().logo_data_url = null; return { a_logo: false } })
 
 // Équipe & managers
 route('get', '/api/equipe', () => db.users.map(equipeView))

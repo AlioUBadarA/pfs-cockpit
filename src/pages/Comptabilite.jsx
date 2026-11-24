@@ -3,8 +3,9 @@ import api from '../services/api'
 import Modal from '../components/Modal'
 import KpiCard from '../components/KpiCard'
 import { formatCFA as fmt, formatDate as fmtDate } from '../utils/format'
+import { ouvrirPreuve } from '../utils/entreprise'
 
-const TYPE_LABEL = { vente: 'Vente', echeance: 'Échéance contrat', contrat: 'Contrat', paddy: 'Contrat paddy' }
+const TYPE_LABEL = { vente: 'Vente', echeance: 'Échéance contrat', contrat: 'Contrat', paddy: 'Contrat paddy', depot: 'Dépôt-vente' }
 const TABS = [
   { key: 'declare', label: 'À valider' },
   { key: 'valide', label: 'Validés' },
@@ -47,6 +48,10 @@ export default function Comptabilite() {
 
   const openReject = (row) => { setRejectTarget(row); setMotif('') }
 
+  const voirPreuve = async (id) => {
+    try { await ouvrirPreuve(id) } catch { setError('Preuve indisponible') }
+  }
+
   const confirmReject = async (e) => {
     e.preventDefault()
     if (!motif.trim()) return
@@ -68,7 +73,12 @@ export default function Comptabilite() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="font-display text-xl font-bold text-gray-900">Validation des encaissements</h2>
+        <div>
+          <h2 className="font-display text-xl font-bold text-gray-900">Validation des encaissements</h2>
+          <p className="text-sm text-gray-500 mt-0.5">
+            Vérifiez la preuve, puis validez. Un encaissement validé entre dans le CA et permet la facture.
+          </p>
+        </div>
       </div>
 
       {error && (
@@ -107,7 +117,7 @@ export default function Comptabilite() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr>
-                {['N°', 'Type', 'Client', 'Montant', 'Mode', 'Date', 'Déclaré par',
+                {['N°', 'Type', 'Client', 'Montant', 'Mode', 'Référence', 'Preuve', 'Date', 'Déclaré par',
                   ...(tab !== 'declare' ? ['Traité par', 'Le'] : []),
                   ...(tab === 'rejete' ? ['Motif'] : []),
                   ...(tab === 'declare' ? ['Actions'] : []),
@@ -124,6 +134,16 @@ export default function Comptabilite() {
                   <td className="table-cell font-medium">{r.client_nom || '-'}</td>
                   <td className="table-cell text-right font-semibold">{fmt(r.montant)}</td>
                   <td className="table-cell whitespace-nowrap">{r.mode || '-'}</td>
+                  <td className="table-cell whitespace-nowrap text-xs text-gray-500">{r.reference || '-'}</td>
+                  <td className="table-cell whitespace-nowrap">
+                    {r.a_preuve ? (
+                      <button type="button" onClick={() => voirPreuve(r.id)} className="text-xs font-medium text-[#1b75bc] underline">Voir</button>
+                    ) : r.mode && r.mode !== 'Espèces' ? (
+                      <span className="text-xs text-red-600">Manquante</span>
+                    ) : (
+                      <span className="text-xs text-gray-300">-</span>
+                    )}
+                  </td>
                   <td className="table-cell whitespace-nowrap">{fmtDate(r.date)}</td>
                   <td className="table-cell whitespace-nowrap">{r.declare_par_nom || '-'}</td>
                   {tab !== 'declare' && (
@@ -137,6 +157,9 @@ export default function Comptabilite() {
                   )}
                   {tab === 'declare' && (
                     <td className="table-cell whitespace-nowrap">
+                      {r.est_ma_declaration ? (
+                        <span className="text-xs text-gray-500">Votre déclaration : un autre valideur doit la traiter</span>
+                      ) : (
                       <div className="flex items-center gap-2">
                         <button
                           disabled={busyId === r.id}
@@ -153,6 +176,7 @@ export default function Comptabilite() {
                           Rejeter
                         </button>
                       </div>
+                      )}
                     </td>
                   )}
                 </tr>

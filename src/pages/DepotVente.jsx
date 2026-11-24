@@ -1,6 +1,10 @@
 import { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
 import Modal from '../components/Modal'
+import ClientPicker, { clientPayload } from '../components/ClientPicker'
+import { useAuth } from '../context/AuthContext'
+import { printBonDepot } from '../utils/printDocument'
+import { emetteur } from '../utils/entreprise'
 import { formatCFA as fmt, formatDate as fmtDate } from '../utils/format'
 import { askConfirm } from '../utils/askConfirm'
 
@@ -20,11 +24,16 @@ const statutColor = (s) => ({
 }[s] || 'bg-gray-100 text-gray-600')
 
 const INIT = { client_nom: '', produit: '', quantite_deposee: '', prix_unitaire: '', date_depot: '', note: '' }
+const LIGNE_INIT = () => ({ cle: Math.random().toString(36).slice(2), produit_id: '', quantite: '', prix_unitaire: '' })
 const MOUV_INIT = { type: 'vente', quantite: '', date: '', note: '' }
 
 export default function DepotVente() {
+  const { user } = useAuth()
   const [items, setItems]     = useState([])
   const [clients, setClients] = useState([])
+  // Création : client choisi dans la liste et une ou plusieurs lignes produits.
+  const [clientChoisi, setClientChoisi] = useState(null)
+  const [lignes, setLignes] = useState([LIGNE_INIT()])
   const [produits, setProduits] = useState([])
   const [loading, setLoading] = useState(true)
   const [filterStatut, setFilterStatut] = useState('')
@@ -67,7 +76,25 @@ export default function DepotVente() {
   const openNew = () => {
     setEditing(null)
     setForm({ ...INIT, date_depot: new Date().toISOString().slice(0, 10) })
+    setClientChoisi(null)
+    setLignes([LIGNE_INIT()])
+    setError('')
     setModalOpen(true)
+  }
+
+  const setLigne = (cle, champ, valeur) => setLignes((prev) => prev.map((l) => {
+    if (l.cle !== cle) return l
+    if (champ === 'produit_id') {
+      const p = produits.find((x) => x.id === valeur)
+      return { ...l, produit_id: valeur, prix_unitaire: !l.prix_unitaire && p?.prix_kg ? String(p.prix_kg) : l.prix_unitaire }
+    }
+    return { ...l, [champ]: valeur }
+  }))
+  const totalDepot = lignes.reduce((s, l) => s + (Number(l.quantite) || 0) * (Number(l.prix_unitaire) || 0), 0)
+
+  const imprimerBon = async (item) => {
+    const lot = item.lot ? items.filter((i) => i.lot === item.lot) : [item]
+    printBonDepot(lot, await emetteur(user))
   }
   const openEdit = (item) => {
     setEditing(item)
@@ -83,15 +110,33 @@ export default function DepotVente() {
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); setSaving(true); setError('')
-    try {
-      const payload = {
-        ...form,
-        quantite_deposee: Number(form.quantite_deposee) || 0,
-        prix_unitaire:    Number(form.prix_unitaire) || 0,
+    e.preventDefault(); setError('')
+    if (!editing) {
+      if (!clientChoisi) { setError('Choisissez le distributeur dans la liste'); return }
+      if (lignes.some((l) => !l.produit_id || !(Number(l.quantite) > 0) || !(Number(l.prix_unitaire) > 0))) {
+        setError('Chaque ligne doit avoir un produit, une quantité et un prix'); return
       }
-      if (editing) await api.put(`/api/depots/${editing.id}`, payload)
-      else         await api.post('/api/depots', payload)
+      const ids = lignes.map((l) => l.produit_id)
+      if (new Set(ids).size !== ids.length) { setError('Un même produit apparaît deux fois'); return }
+    }
+    setSaving(true)
+    try {
+      if (editing) {
+        await api.put(`/api/depots/${editing.id}`, {
+          ...form,
+          quantite_deposee: Number(form.quantite_deposee) || 0,
+          prix_unitaire:    Number(form.prix_unitaire) || 0,
+        })
+      } else {
+        const { data } = await api.post('/api/depots', {
+          ...clientPayload(clientChoisi),
+          date_depot: form.date_depot,
+          note: form.note || undefined,
+          lignes: lignes.map((l) => ({ produit_id: l.produit_id, quantite: Number(l.quantite), prix_unitaire: Number(l.prix_unitaire) })),
+        })
+        const crees = data.depots || [data]
+        printBonDepot(crees, await emetteur(user))
+      }
       setModalOpen(false); load()
     } catch (err) {
       setError(err.response?.data?.error || 'Erreur')
@@ -194,7 +239,10 @@ export default function DepotVente() {
             <tbody>
               {visibleItems.map((item) => (
                 <tr key={item.id} className={`hover:bg-gray-50 ${item.statut === 'Clôturé' ? 'opacity-60' : ''}`}>
-                  <td className="table-cell font-mono text-xs text-gray-500">{item.numero || '-'}</td>
+                  <td className="table-cell font-mono text-xs text-gray-500">
+                    {item.numero || '-'}
+                    {item.lot && <div className="text-[10px] text-gray-400">Bon {item.lot}</div>}
+                  </td>
                   <td className="table-cell font-medium">{item.client_nom}</td>
                   <td className="table-cell text-sm">{item.produit}</td>
                   <td className="table-cell text-right">{fmtQ(item.quantite_deposee)}</td>
@@ -218,6 +266,7 @@ export default function DepotVente() {
                   <td className="table-cell">
                     <div className="flex gap-2">
                       <button onClick={() => openMouvements(item)} className="text-xs text-blue-600 hover:text-blue-800 font-medium">Rapports</button>
+                      <button onClick={() => imprimerBon(item)} className="text-xs text-gray-600 hover:text-gray-800 font-medium">Bon</button>
                       <button onClick={() => openEdit(item)} className="text-xs text-gray-600 hover:text-gray-800 font-medium">Éditer</button>
                       <button onClick={() => del(item.id)} className="text-xs text-red-600 hover:text-red-800 font-medium">Suppr.</button>
                     </div>
@@ -232,6 +281,44 @@ export default function DepotVente() {
       {/* Modal nouveau/édition dépôt */}
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Modifier le dépôt' : 'Nouveau dépôt-vente'}>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {!editing && (
+            <>
+              <div>
+                <label className="label" htmlFor="client-picker">Distributeur / point de vente *</label>
+                <ClientPicker value={clientChoisi} onChange={setClientChoisi} required />
+              </div>
+              <div className="space-y-2">
+                <p className="label mb-0">Produits déposés *</p>
+                {lignes.map((l) => (
+                  <div key={l.cle} className="grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)_auto] gap-2 items-end">
+                    <select className="input" value={l.produit_id} onChange={(e) => setLigne(l.cle, 'produit_id', e.target.value)} aria-label="Produit">
+                      <option value="">Produit</option>
+                      {produits.map((p) => (
+                        <option key={p.id} value={p.id}>{p.nom}</option>
+                      ))}
+                    </select>
+                    <input type="number" min="0.01" step="any" className="input" placeholder="Qté (kg)" aria-label="Quantité en kg"
+                      value={l.quantite} onChange={(e) => setLigne(l.cle, 'quantite', e.target.value)} />
+                    <input type="number" min="1" step="any" className="input" placeholder="Prix F/kg" aria-label="Prix au kg"
+                      value={l.prix_unitaire} onChange={(e) => setLigne(l.cle, 'prix_unitaire', e.target.value)} />
+                    <button type="button" className="text-red-600 text-sm px-1 disabled:opacity-30" disabled={lignes.length === 1}
+                      onClick={() => setLignes((prev) => prev.filter((x) => x.cle !== l.cle))} aria-label="Retirer la ligne">✕</button>
+                  </div>
+                ))}
+                <div className="flex items-center justify-between">
+                  <button type="button" className="text-sm font-medium text-[#1b75bc]" onClick={() => setLignes((prev) => [...prev, LIGNE_INIT()])}>
+                    + Ajouter un produit
+                  </button>
+                  <span className="text-sm text-gray-600">Valeur déposée : <strong>{fmt(totalDepot)}</strong></span>
+                </div>
+                {produits.length === 0 && (
+                  <p className="text-xs text-amber-600">Aucun produit au catalogue. Demandez à votre manager d'en ajouter.</p>
+                )}
+              </div>
+            </>
+          )}
+          {editing && (
+          <>
           <div>
             <label className="label">Distributeur / point de vente *</label>
             <input className="input" list="clients-list" value={form.client_nom} onChange={set('client_nom')} required />
@@ -263,6 +350,8 @@ export default function DepotVente() {
               <input type="number" min="1" className="input" value={form.prix_unitaire} onChange={set('prix_unitaire')} required />
             </div>
           </div>
+          </>
+          )}
           <div>
             <label className="label">Date de dépôt *</label>
             <input type="date" className="input" value={form.date_depot} onChange={set('date_depot')} required />

@@ -63,6 +63,11 @@ export default function Rentabilite() {
     { v: r.tendance || '-', c: r.tendance === 'hausse' ? '#1B5E20' : r.tendance === 'déclin' ? '#CC0000' : '#8a7f6e' },
   ])
 
+  // Produits les plus rentables : classés par marge en valeur (le serveur trie et garde 10).
+  const topProduits = data?.produits_plus_rentables
+    || [...(data?.par_produit || [])].sort((a, b) => b.marge - a.marge).slice(0, 10)
+  const margeMax = Math.max(1, ...topProduits.map((p) => p.marge))
+
   const vendeurRows = (data?.par_vendeur || []).map((r) => [
     r.vendeur_nom || '-', fmt(r.ca), fmt(r.marge),
     { v: <TauxBadge taux={r.taux_marge} /> },
@@ -73,7 +78,7 @@ export default function Rentabilite() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h2 className="font-display text-xl font-bold text-gray-900">Rentabilité</h2>
-          <p className="text-sm text-gray-500 mt-0.5">Marges par client, type et produit</p>
+          <p className="text-sm text-gray-500 mt-0.5">Marges par client, type et produit, calculées sur les ventes déclarées.</p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2">
@@ -119,6 +124,31 @@ export default function Rentabilite() {
               <Bar dataKey="Marge" fill="#81C784" radius={[3,3,0,0]} />
             </BarChart>
           </ResponsiveContainer>
+        </Panel>
+      )}
+
+      {!loading && topProduits.length > 0 && (
+        <Panel title="Produits les plus rentables" sub="classés par marge dégagée sur l'année">
+          <ol className="space-y-2.5">
+            {topProduits.map((p, i) => (
+              <li key={p.produit} className="grid grid-cols-[1.5rem_minmax(0,11rem)_minmax(0,1fr)_auto] items-center gap-3">
+                <span className={`text-xs font-bold text-center rounded-full w-6 h-6 leading-6 ${i < 3 ? 'bg-[#1b75bc] text-white' : 'bg-gray-100 text-gray-600'}`}>{i + 1}</span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-gray-900 truncate">{p.produit}</span>
+                  <span className="block text-[11px] text-gray-500">
+                    CA {fmt(p.ca)}{p.quantite ? ` · ${Number(p.quantite).toLocaleString('fr-FR')} kg` : ''}
+                  </span>
+                </span>
+                <span className="bar-row-track">
+                  <span className="block h-full rounded-full bg-[#62bb46]" style={{ width: `${Math.max(2, (Math.max(0, p.marge) / margeMax) * 100)}%` }} />
+                </span>
+                <span className="text-right whitespace-nowrap">
+                  <span className="text-sm font-semibold text-gray-900 tabular-nums mr-2">{fmt(p.marge)}</span>
+                  <TauxBadge taux={p.taux_marge} />
+                </span>
+              </li>
+            ))}
+          </ol>
         </Panel>
       )}
 

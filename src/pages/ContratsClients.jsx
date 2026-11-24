@@ -3,6 +3,9 @@ import api from '../services/api'
 import Modal from '../components/Modal'
 import { formatCFA as fmt, formatDate as fmtDate } from '../utils/format'
 import { askConfirm } from '../utils/askConfirm'
+import { useAuth } from '../context/AuthContext'
+import { printContrat } from '../utils/printDocument'
+import { emetteur } from '../utils/entreprise'
 
 const STATUTS = ['Actif','Suspendu','Terminé']
 const ECH_STATUTS = ['En cours','En retard','Paye']
@@ -20,6 +23,7 @@ const statutColor = (s) => ({
 const INIT = { client_nom: '', produits: [], quantite_mensuelle: '', prix_unitaire: '', date_debut: '', date_fin: '', statut: 'Actif', note: '' }
 
 export default function ContratsClients() {
+  const { user } = useAuth()
   const [items, setItems]     = useState([])
   const [clients, setClients] = useState([])
   const [produits, setProduits] = useState([])
@@ -221,6 +225,7 @@ export default function ContratsClients() {
                   <td className="table-cell text-xs text-gray-500">{item.vendeur_nom || '-'}</td>
                   <td className="table-cell">
                     <div className="flex gap-2">
+                      <button onClick={async () => printContrat(item, await emetteur(user))} className="text-xs text-gray-600 hover:text-gray-800 font-medium">Imprimer</button>
                       <button onClick={() => openEdit(item)} className="text-xs text-blue-600 hover:text-blue-800 font-medium">Éditer</button>
                       <button onClick={() => del(item.id)} className="text-xs text-red-600 hover:text-red-800 font-medium">Suppr.</button>
                     </div>

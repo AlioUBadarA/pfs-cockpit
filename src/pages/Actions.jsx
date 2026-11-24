@@ -34,8 +34,8 @@ export default function Actions() {
     setAlertes((prev) => prev.map((x) => (x.key === a.key ? { ...x, traitee: next } : x)))
     try {
       await api.patch('/api/actions/traiter', { key: a.key, traitee: next })
-    } catch {
-      setError('Erreur mise à jour')
+    } catch (err) {
+      setError(err.response?.data?.error || 'Erreur mise à jour')
       load()
     }
   }

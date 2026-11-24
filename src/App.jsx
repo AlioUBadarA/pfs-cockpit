@@ -12,6 +12,8 @@ const Dashboard = lazy(() => import('./pages/Dashboard'))
 const PilotageSemaine = lazy(() => import('./pages/Pilotage'))
 const Argumentaire = lazy(() => import('./pages/Argumentaire'))
 const Ventes = lazy(() => import('./pages/Ventes'))
+const NouvelleVente = lazy(() => import('./pages/NouvelleVente'))
+const Parametres = lazy(() => import('./pages/Parametres'))
 const Clients = lazy(() => import('./pages/Clients'))
 const Prospection = lazy(() => import('./pages/Prospection'))
 const Creances = lazy(() => import('./pages/Creances'))
@@ -78,12 +80,12 @@ function ManagerRoute({ children }) {
   return children
 }
 
-// Validation des encaissements : comptable et superadmin uniquement (même règle que le
-// backend, voir middleware/permissions.js, 'encaissements:valider').
+// Validation des encaissements : comptable, manager, directeur, rizier et superadmin (même
+// règle que le backend, voir middleware/permissions.js, 'encaissements:valider').
 function ComptableRoute({ children }) {
-  const { user, isComptable, isSuperadmin } = useAuth()
+  const { user, isComptable, isSuperadmin, isManager, isDirecteur, isRizier } = useAuth()
   if (!user) return <Navigate to="/login" replace />
-  if (!isComptable && !isSuperadmin) return <Navigate to="/" replace />
+  if (!isComptable && !isSuperadmin && !isManager && !isDirecteur && !isRizier) return <Navigate to="/" replace />
   return children
 }
 
@@ -111,6 +113,8 @@ function AppRoutes() {
       <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
         <Route index              element={<RootRedirect />} />
         <Route path="ventes"      element={<Ventes />} />
+        <Route path="ventes/nouvelle" element={<NouvelleVente />} />
+        <Route path="parametres"  element={<Parametres />} />
         <Route path="pilotage"    element={<ManagerRoute><PilotageSemaine /></ManagerRoute>} />
         <Route path="argumentaire" element={<Argumentaire />} />
         <Route path="clients"     element={<Clients />} />

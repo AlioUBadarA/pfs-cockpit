@@ -1,36 +1,35 @@
 import { useEffect, useState, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import api from '../services/api'
-import Modal from '../components/Modal'
 import KebabMenu from '../components/KebabMenu'
 import { useAuth } from '../context/AuthContext'
 import { printBonCommande, printFacture } from '../utils/printDocument'
+import { emetteur } from '../utils/entreprise'
 import { formatCFA as fmt, formatDate as fmtDate } from '../utils/format'
 import { askConfirm } from '../utils/askConfirm'
 
 // Valeurs exactes du backend
 const STATUTS_DB   = ['En cours', 'Paye', 'En retard']
 const STATUT_LABEL = { 'Paye': 'Payé', 'En cours': 'En cours', 'En retard': 'En retard' }
-// Valeurs exactes du backend (gcr/utils/paiement.js)
-const CONDITIONS_PAIEMENT = ['Comptant', 'J+15', 'J+30', 'J+45', 'J+60', 'J+90', '50% comptant / 50% J+15', '50% comptant / 50% J+30']
+const STATUT_STYLE = { 'Paye': 'text-green-700 bg-green-50', 'En cours': 'text-amber-700 bg-amber-50', 'En retard': 'text-red-700 bg-red-50' }
 
-
-const VENTE_INIT = {
-  client_nom: '', produit: '', quantite: '', prix_unitaire: '',
-  statut_paiement: 'En cours', date_vente: '', conditions_paiement: '',
+function resumeProduits(v) {
+  const lignes = Array.isArray(v.lignes) && v.lignes.length ? v.lignes : null
+  if (!lignes) return v.produit
+  if (lignes.length === 1) return lignes[0].produit
+  return `${lignes.length} produits`
 }
 
 export default function Ventes() {
   const { user, isVendeur } = useAuth()
   const [ventes, setVentes]     = useState([])
-  const [produits, setProduits] = useState([])
   const [loading, setLoading]   = useState(true)
   const [filterMois, setFilterMois]     = useState('')
   const [filterStatut, setFilterStatut] = useState('')
-  const [modalOpen, setModalOpen] = useState(false)
-  const [form, setForm]           = useState(VENTE_INIT)
-  const [saving, setSaving]       = useState(false)
   const [error, setError]         = useState('')
+  const [info, setInfo]           = useState('')
   const [openMenu, setOpenMenu] = useState(null)
+  const [ouverte, setOuverte] = useState(null)
 
   const load = useCallback(() => {
     setLoading(true)
@@ -48,42 +47,15 @@ export default function Ventes() {
   }, [filterMois, filterStatut])
 
   useEffect(() => { load() }, [load])
-  useEffect(() => { api.get('/api/produits').then((r) => setProduits(r.data)).catch(() => {}) }, [])
 
-  const openNew = () => {
-    setForm({ ...VENTE_INIT, date_vente: new Date().toISOString().slice(0, 10) })
-    setModalOpen(true)
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setSaving(true)
-    setError('')
-    try {
-      await api.post('/api/ventes', {
-        client_nom:          form.client_nom,
-        produit:             form.produit,
-        date_vente:          form.date_vente,
-        quantite:            Number(form.quantite),
-        prix_unitaire:       Number(form.prix_unitaire),
-        statut_paiement:     form.statut_paiement,
-        conditions_paiement: form.conditions_paiement || undefined,
-      })
-      setModalOpen(false)
-      load()
-    } catch (err) {
-      setError(err.response?.data?.error || 'Erreur lors de la création')
-    } finally {
-      setSaving(false)
-    }
-  }
-
+  // « Payé » ne se choisit plus à la main : il vient des encaissements validés.
   const changeStatut = async (id, statut_paiement) => {
+    setError('')
     try {
       await api.patch(`/api/ventes/${id}/statut`, { statut_paiement })
       setVentes((prev) => prev.map((v) => v.id === id ? { ...v, statut_paiement } : v))
-    } catch {
-      setError('Erreur mise à jour statut')
+    } catch (err) {
+      setError(err.response?.data?.error || 'Erreur mise à jour statut')
     }
   }
 
@@ -97,43 +69,47 @@ export default function Ventes() {
     }
   }
 
+  // La facture vient du serveur : il la refuse au commercial tant qu'aucun encaissement n'est
+  // validé. Le commercial envoie alors le reçu de paiement (page Encaissements).
   const handlePrintFacture = async (vente) => {
+    setError(''); setInfo('')
     try {
-      const { data: versements } = await api.get(`/api/ventes/${vente.id}/versements`)
-      printFacture(vente, versements, user)
-    } catch {
-      printFacture(vente, [], user)
+      const { data } = await api.get(`/api/ventes/${vente.id}/facture`)
+      printFacture(data, data.versements || [], await emetteur(user))
+    } catch (err) {
+      if (err.response?.data?.code === 'FACTURE_NON_VALIDEE') setInfo(err.response.data.error)
+      else setError(err.response?.data?.error || 'Facture indisponible')
     }
   }
 
+  const factureDispo = (v) => !isVendeur || Number(v.total_valide) > 0
+
   const venteMenuItems = (v) => [
-    { icon: '⎙', label: 'Bon de commande', onClick: () => printBonCommande(v, user) },
-    ...(v.statut_paiement === 'Paye' ? [{ icon: '🧾', label: 'Facture', onClick: () => handlePrintFacture(v) }] : []),
+    { icon: '⎙', label: 'Bon de commande', onClick: async () => printBonCommande(v, await emetteur(user)) },
+    factureDispo(v)
+      ? { icon: '🧾', label: 'Facture', onClick: () => handlePrintFacture(v) }
+      : { icon: '🧾', label: 'Facture (après validation)', onClick: () => handlePrintFacture(v) },
     ...(!isVendeur ? [{ icon: '🗑', label: 'Supprimer', onClick: () => deleteVente(v.id), danger: true }] : []),
   ]
-
-  const set = (f) => (e) => setForm({ ...form, [f]: e.target.value })
-
-  const setProduit = (e) => {
-    const nom = e.target.value
-    const match = produits.find((p) => p.nom === nom)
-    setForm((p) => ({ ...p, produit: nom, prix_unitaire: !p.prix_unitaire && match ? match.prix_kg : p.prix_unitaire }))
-  }
-
-  // Montant calculé en temps réel dans le formulaire
-  const montantCalc = form.quantite && form.prix_unitaire
-    ? (Number(form.quantite) * Number(form.prix_unitaire)).toLocaleString('fr-FR') + ' F'
-    : '-'
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="font-display text-xl font-bold text-gray-900">Ventes</h2>
-        <button onClick={openNew} className="btn-primary text-sm">+ Nouvelle vente</button>
+        <div>
+          <h2 className="font-display text-xl font-bold text-gray-900">Ventes</h2>
+          <p className="text-sm text-gray-500 mt-0.5">Le CA compte l'argent encaissé et validé. Une vente non payée reste en créance.</p>
+        </div>
+        <Link to="/ventes/nouvelle" className="btn-primary text-sm">+ Nouvelle vente</Link>
       </div>
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">{error}</div>
+      )}
+      {info && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-3 flex items-center justify-between gap-3">
+          <span>{info}</span>
+          <Link to="/encaissements" className="font-medium underline shrink-0">Aller aux encaissements</Link>
+        </div>
       )}
 
       {/* Filtres */}
@@ -170,137 +146,98 @@ export default function Ventes() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr>
-                {['N° transaction','Date','Client','Produit','Qté (kg)','P.U.','Montant','Solde','Prochaine échéance','Statut','Actions'].map(h => (
-                  <th key={h} className="table-header whitespace-nowrap">{h}</th>
+                {['N° transaction','Date','Client','Produits','Montant','Encaissé validé','En attente','Solde','Prochaine échéance','Statut',''].map(h => (
+                  <th key={h || 'actions'} className="table-header whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {ventes.map((v) => (
-                <tr key={v.id} className="hover:bg-gray-50">
-                  <td className="table-cell whitespace-nowrap font-mono text-xs text-gray-500">{v.numero || '-'}</td>
-                  <td className="table-cell whitespace-nowrap">{fmtDate(v.date_vente)}</td>
-                  <td className="table-cell font-medium min-w-[10rem]">{v.client_nom}</td>
-                  <td className="table-cell min-w-[11rem]">{v.produit}</td>
-                  <td className="table-cell text-right whitespace-nowrap tabular-nums">{Number(v.quantite).toLocaleString('fr-FR')}</td>
-                  <td className="table-cell text-right whitespace-nowrap tabular-nums">{fmt(v.prix_unitaire)}</td>
-                  <td className="table-cell text-right font-semibold whitespace-nowrap tabular-nums">{fmt(v.montant)}</td>
-                  <td className="table-cell text-right whitespace-nowrap tabular-nums">
-                    {v.statut_paiement === 'Paye' ? (
-                      <span className="text-xs text-green-700">Soldé</span>
-                    ) : (
-                      fmt(Math.max(0, Number(v.montant) - Number(v.total_verse || 0)))
-                    )}
-                  </td>
-                  <td className="table-cell whitespace-nowrap">
-                    {v.statut_paiement === 'Paye' ? (
-                      <span className="text-gray-300">-</span>
-                    ) : v.date_echeance ? (
-                      <div>
-                        <div>{fmtDate(v.date_echeance)}</div>
-                        {Number(v.montant_attendu_prochaine_echeance) > 0 && (
-                          <div className="text-[10.5px] text-gray-400">{fmt(v.montant_attendu_prochaine_echeance)} attendu</div>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-gray-300">-</span>
-                    )}
-                  </td>
-                  <td className="table-cell whitespace-nowrap">
-                    <div className="flex items-center gap-1.5">
-                      <select
-                        value={v.statut_paiement}
-                        onChange={(e) => changeStatut(v.id, e.target.value)}
-                        className="text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none cursor-pointer"
-                      >
-                        {STATUTS_DB.map((s) => <option key={s} value={s}>{STATUT_LABEL[s]}</option>)}
-                      </select>
-                      {v.statut_paiement === 'Paye' && (
-                        <span className="text-xs font-medium text-green-700" title="Transaction clôturée">✓ Clôturée</span>
+              {ventes.map((v) => {
+                const multi = Array.isArray(v.lignes) && v.lignes.length > 1
+                const solde = Math.max(0, Number(v.montant) - Number(v.total_valide || 0))
+                return [
+                  <tr key={v.id} className="hover:bg-gray-50">
+                    <td className="table-cell whitespace-nowrap font-mono text-xs text-gray-500">{v.numero || '-'}</td>
+                    <td className="table-cell whitespace-nowrap">{fmtDate(v.date_vente)}</td>
+                    <td className="table-cell font-medium min-w-[10rem]">{v.client_nom}</td>
+                    <td className="table-cell min-w-[10rem]">
+                      {multi ? (
+                        <button type="button" className="text-[#1b75bc] underline-offset-2 hover:underline" onClick={() => setOuverte(ouverte === v.id ? null : v.id)}>
+                          {resumeProduits(v)} {ouverte === v.id ? '▴' : '▾'}
+                        </button>
+                      ) : (
+                        <span>{resumeProduits(v)} <span className="text-gray-400 text-xs">· {Number(v.quantite).toLocaleString('fr-FR')} kg</span></span>
                       )}
-                    </div>
-                  </td>
-                  <td className="table-cell">
-                    <KebabMenu
-                      menuKey={v.id}
-                      open={openMenu === v.id}
-                      onToggle={(k) => setOpenMenu(k)}
-                      items={venteMenuItems(v)}
-                    />
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="table-cell text-right font-semibold whitespace-nowrap tabular-nums">{fmt(v.montant)}</td>
+                    <td className="table-cell text-right whitespace-nowrap tabular-nums text-green-700">{fmt(v.total_valide || 0)}</td>
+                    <td className="table-cell text-right whitespace-nowrap tabular-nums text-amber-700">
+                      {Number(v.total_declare) > 0 ? fmt(v.total_declare) : <span className="text-gray-300">-</span>}
+                    </td>
+                    <td className="table-cell text-right whitespace-nowrap tabular-nums">
+                      {v.statut_paiement === 'Paye' ? <span className="text-xs text-green-700">Soldé</span> : fmt(solde)}
+                    </td>
+                    <td className="table-cell whitespace-nowrap">
+                      {v.statut_paiement === 'Paye' || !v.date_echeance ? (
+                        <span className="text-gray-300">-</span>
+                      ) : (
+                        <div>
+                          <div>{fmtDate(v.date_echeance)}</div>
+                          {Number(v.montant_attendu_prochaine_echeance) > 0 && (
+                            <div className="text-[10.5px] text-gray-400">{fmt(v.montant_attendu_prochaine_echeance)} attendu</div>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                    <td className="table-cell whitespace-nowrap">
+                      {!isVendeur && v.statut_paiement !== 'Paye' ? (
+                        <select
+                          value={v.statut_paiement}
+                          onChange={(e) => changeStatut(v.id, e.target.value)}
+                          className="text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none cursor-pointer"
+                          aria-label="Statut de la vente"
+                        >
+                          {['En cours', 'En retard'].map((s) => <option key={s} value={s}>{STATUT_LABEL[s]}</option>)}
+                        </select>
+                      ) : (
+                        <span className={`text-[11px] font-semibold rounded px-2 py-0.5 ${STATUT_STYLE[v.statut_paiement] || ''}`}>
+                          {STATUT_LABEL[v.statut_paiement] || v.statut_paiement}
+                        </span>
+                      )}
+                    </td>
+                    <td className="table-cell">
+                      <KebabMenu
+                        menuKey={v.id}
+                        open={openMenu === v.id}
+                        onToggle={(k) => setOpenMenu(k)}
+                        items={venteMenuItems(v)}
+                      />
+                    </td>
+                  </tr>,
+                  multi && ouverte === v.id ? (
+                    <tr key={`${v.id}-lignes`} className="bg-gray-50/60">
+                      <td colSpan={11} className="px-4 py-2">
+                        <table className="w-full max-w-xl text-xs">
+                          <tbody>
+                            {v.lignes.map((l) => (
+                              <tr key={l.id || l.produit}>
+                                <td className="py-1 pr-3 text-gray-700">{l.produit}</td>
+                                <td className="py-1 pr-3 text-right tabular-nums">{Number(l.quantite).toLocaleString('fr-FR')} kg</td>
+                                <td className="py-1 pr-3 text-right tabular-nums text-gray-500">{fmt(l.prix_unitaire)}/kg</td>
+                                <td className="py-1 text-right tabular-nums font-semibold">{fmt(l.montant)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  ) : null,
+                ]
+              })}
             </tbody>
           </table>
         )}
       </div>
-
-      {/* Modal nouvelle vente */}
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Nouvelle vente">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="label">Date</label>
-            <input type="date" className="input" value={form.date_vente} onChange={set('date_vente')} required />
-          </div>
-          <div>
-            <label className="label">Nom du client</label>
-            <input className="input" placeholder="Ex: Boutique Diallo" value={form.client_nom} onChange={set('client_nom')} required />
-          </div>
-          <div>
-            <label className="label">Produit</label>
-            <select className="input" value={form.produit} onChange={setProduit} required>
-              <option value="">Choisir un produit</option>
-              {produits.map((p) => (
-                <option key={p.id} value={p.nom}>
-                  {p.nom}{p.prix_kg ? ` · ${Number(p.prix_kg).toLocaleString('fr-FR')} F/kg` : ''}
-                </option>
-              ))}
-            </select>
-            {produits.length === 0 && (
-              <p className="text-xs text-amber-600 mt-1">Aucun produit au catalogue. Demandez à votre manager d'en ajouter.</p>
-            )}
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label">Quantité (kg)</label>
-              <input type="number" min="0.01" step="any" className="input" value={form.quantite} onChange={set('quantite')} required />
-            </div>
-            <div>
-              <label className="label">Prix unitaire (F/kg)</label>
-              <input type="number" min="1" className="input" value={form.prix_unitaire} onChange={set('prix_unitaire')} required />
-            </div>
-          </div>
-          <div className="bg-gray-50 rounded-lg px-3 py-2 text-sm">
-            Montant total : <strong className="text-[#1b75bc]">{montantCalc}</strong>
-          </div>
-          {/* Le statut de paiement est réservé aux responsables (permission ventes:statut,
-              appliquée par le serveur). Un vendeur crée une vente « En cours » ; elle passe à
-              « Payé » par un versement. */}
-          {!isVendeur && (
-            <div>
-              <label className="label">Statut paiement</label>
-              <select className="input" value={form.statut_paiement} onChange={set('statut_paiement')}>
-                {STATUTS_DB.map((s) => <option key={s} value={s}>{STATUT_LABEL[s]}</option>)}
-              </select>
-            </div>
-          )}
-          <div>
-            <label className="label">Conditions de paiement</label>
-            <select className="input" value={form.conditions_paiement} onChange={set('conditions_paiement')}>
-              <option value="">Non précisé</option>
-              {CONDITIONS_PAIEMENT.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <p className="text-xs text-gray-400 mt-1">Sans date saisie, ce choix fixe l'échéance.</p>
-          </div>
-          <div className="flex gap-3 pt-2">
-            <button type="button" className="btn-secondary flex-1" onClick={() => setModalOpen(false)}>Annuler</button>
-            <button type="submit" disabled={saving} className="btn-primary flex-1 flex items-center justify-center gap-2">
-              {saving && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-              {saving ? 'Enregistrement...' : 'Enregistrer'}
-            </button>
-          </div>
-        </form>
-      </Modal>
     </div>
   )
 }
