@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import api from '../services/api'
 import Panel from '../components/Panel'
 import Modal from '../components/Modal'
@@ -73,11 +74,36 @@ export default function Encaissements() {
     } finally { setLoadingVers(false) }
   }
 
-  const openNewVersement = () => {
-    setForm(FORM_INIT())
+  const openNewVersement = (montantPropose) => {
+    setForm({ ...FORM_INIT(), montant: montantPropose > 0 ? String(montantPropose) : '' })
     setFormError('')
     setModalOpen(true)
   }
+
+  // Arrivée depuis une vente (bouton « Encaisser ») : /encaissements?ref=V-2026-0005&id=…&type=vente
+  // La transaction s'ouvre directement, avec le formulaire de déclaration si un solde reste dû.
+  const [params, setParams] = useSearchParams()
+  useEffect(() => {
+    const ref = params.get('ref')
+    const id = params.get('id')
+    const type = params.get('type') || 'vente'
+    if (!ref || !id) return
+    setParams({}, { replace: true })
+    setQ(ref)
+    setSearching(true)
+    api.get('/api/encaissements/search', { params: { q: ref } })
+      .then(async ({ data }) => {
+        setResults(data)
+        const item = data.find((r) => String(r.id) === id && r.type === type)
+        if (!item) { setError('Transaction introuvable'); return }
+        await openTransaction(item)
+        const resteDu = Number(item.montant_total) - Number(item.total_verse || 0)
+        if (resteDu > 0 && !isComptable) openNewVersement(resteDu)
+      })
+      .catch(() => setError('Erreur de recherche'))
+      .finally(() => setSearching(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const set = (f) => (e) => setForm((p) => ({ ...p, [f]: e.target.value }))
 
@@ -235,7 +261,7 @@ export default function Encaissements() {
               </button>
             )}
             {reste > 0 && !isComptable && (
-              <button onClick={openNewVersement} className="btn-primary text-sm">+ Déclarer un encaissement</button>
+              <button onClick={() => openNewVersement(reste)} className="btn-primary text-sm">+ Déclarer un encaissement</button>
             )}
           </div>
           {resteValide > 0 && reste <= 0 && (

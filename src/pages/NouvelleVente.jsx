@@ -140,10 +140,14 @@ export default function NouvelleVente() {
   if (resultat) {
     const v = resultat
     const vers = v.versement
+    const resteDu = Math.max(0, Number(v.montant) - Number(vers?.montant || 0))
+    const encaisser = () => navigate(`/encaissements?${new URLSearchParams({ ref: v.numero, id: v.id, type: 'vente' })}`)
     return (
       <div className="max-w-xl mx-auto space-y-4">
         <div className="card text-center space-y-2 py-8">
-          <div className="mx-auto w-12 h-12 rounded-full bg-green-50 text-green-700 flex items-center justify-center text-2xl">✓</div>
+          <div className="mx-auto w-12 h-12 rounded-full bg-green-50 text-green-700 flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
+          </div>
           <h2 className="font-display text-xl font-semibold text-gray-900">Vente {v.numero} enregistrée</h2>
           <p className="text-sm text-gray-600">{v.client_nom} · {fmt(v.montant)}</p>
           {vers && (
@@ -153,7 +157,15 @@ export default function NouvelleVente() {
                 : `Encaissement de ${fmt(vers.montant)} enregistré et validé.`}
             </p>
           )}
+          {resteDu > 0 && (
+            <p className="text-sm font-medium text-amber-700">Reste à encaisser : {fmt(resteDu)}</p>
+          )}
         </div>
+        {resteDu > 0 && (
+          <button className="btn-primary w-full py-3 text-base" onClick={encaisser}>
+            Encaisser{vers ? ' le reste' : ''} · {fmt(resteDu)}
+          </button>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button className="btn-secondary" onClick={async () => printBonCommande(v, await emetteur(user))}>⎙ Bon de commande</button>
           {vers && (
@@ -167,7 +179,7 @@ export default function NouvelleVente() {
               🧾 Reçu de paiement
             </button>
           )}
-          <button className="btn-primary" onClick={recommencer}>+ Nouvelle vente</button>
+          <button className={resteDu > 0 ? 'btn-secondary' : 'btn-primary'} onClick={recommencer}>+ Nouvelle vente</button>
           <button className="btn-secondary" onClick={() => navigate('/ventes')}>Voir les ventes</button>
         </div>
       </div>

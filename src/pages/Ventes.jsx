@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import KebabMenu from '../components/KebabMenu'
 import { useAuth } from '../context/AuthContext'
@@ -21,7 +21,8 @@ function resumeProduits(v) {
 }
 
 export default function Ventes() {
-  const { user, isVendeur } = useAuth()
+  const { user, isVendeur, isComptable } = useAuth()
+  const navigate = useNavigate()
   const [ventes, setVentes]     = useState([])
   const [loading, setLoading]   = useState(true)
   const [filterMois, setFilterMois]     = useState('')
@@ -84,7 +85,14 @@ export default function Ventes() {
 
   const factureDispo = (v) => !isVendeur || Number(v.total_valide) > 0
 
+  // Reste à déclarer : montant moins ce qui est déjà déclaré ou validé (hors rejets).
+  const resteADeclarer = (v) => Math.max(0, Number(v.montant) - Number(v.total_verse || 0))
+  const lienEncaisser = (v) => `/encaissements?${new URLSearchParams({ ref: v.numero || v.client_nom, id: v.id, type: 'vente' })}`
+
   const venteMenuItems = (v) => [
+    ...(resteADeclarer(v) > 0 && !isComptable
+      ? [{ icon: '💰', label: 'Encaisser', onClick: () => navigate(lienEncaisser(v)) }]
+      : []),
     { icon: '⎙', label: 'Bon de commande', onClick: async () => printBonCommande(v, await emetteur(user)) },
     factureDispo(v)
       ? { icon: '🧾', label: 'Facture', onClick: () => handlePrintFacture(v) }
@@ -176,6 +184,9 @@ export default function Ventes() {
                     </td>
                     <td className="table-cell text-right whitespace-nowrap tabular-nums">
                       {v.statut_paiement === 'Paye' ? <span className="text-xs text-green-700">Soldé</span> : fmt(solde)}
+                      {resteADeclarer(v) > 0 && !isComptable && (
+                        <Link to={lienEncaisser(v)} className="block text-[11px] font-semibold text-[#1b75bc] hover:underline">Encaisser</Link>
+                      )}
                     </td>
                     <td className="table-cell whitespace-nowrap">
                       {v.statut_paiement === 'Paye' || !v.date_echeance ? (
