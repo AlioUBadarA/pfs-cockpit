@@ -303,7 +303,7 @@ export default function NouvelleVente() {
 
             <div>
               <label className="label" htmlFor="client-picker">Client *</label>
-              <ClientPicker value={client} onChange={setClient} required />
+              <ClientPicker value={client} onChange={setClient} required mesClientsSeuls />
             </div>
 
             <div className="grid grid-cols-2 gap-3">

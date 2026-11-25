@@ -285,7 +285,7 @@ export default function DepotVente() {
             <>
               <div>
                 <label className="label" htmlFor="client-picker">Distributeur / point de vente *</label>
-                <ClientPicker value={clientChoisi} onChange={setClientChoisi} required />
+                <ClientPicker value={clientChoisi} onChange={setClientChoisi} required mesClientsSeuls />
               </div>
               <div className="space-y-2">
                 <p className="label mb-0">Produits déposés *</p>

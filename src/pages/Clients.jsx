@@ -167,7 +167,7 @@ export default function Clients() {
 
   const sorted = [...clients].sort((a, b) => (b[sortKey] || 0) - (a[sortKey] || 0)).slice(0, 40)
   const rows = sorted.map((c) => [
-    { v: c.nom, sub: [c.id?.slice(0, 8), c.zone].filter(Boolean).join(' · ') },
+    { v: c.nom, sub: [c.zone, c.user_id === user?.id ? 'Mon client' : c.vendeur_nom ? `Suivi par ${c.vendeur_nom}` : null].filter(Boolean).join(' · ') },
     c.segment || '-',
     { v: c.rfmSeg, c: SEG_COLOR[c.rfmSeg] },
     { v: String(c.rfm), sub: 'sur 100' },

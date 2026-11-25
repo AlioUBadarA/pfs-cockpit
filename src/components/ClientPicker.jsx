@@ -1,10 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import api from '../services/api'
+import { useAuth } from '../context/AuthContext'
 
 // Choix du client d'une vente ou d'un dépôt : un client du portefeuille ou un prospect.
 // Aucune saisie libre : le nom tapé sert seulement à filtrer la liste.
 // `value` : { type: 'client' | 'prospect', id, nom } ou null.
-export default function ClientPicker({ value, onChange, required = false, id = 'client-picker' }) {
+// `mesClientsSeuls` : pour une vente, un dépôt ou un encaissement, le commercial ne voit que
+// ses clients (le serveur applique la même règle). Ailleurs, il voit toute la rizerie avec
+// le nom du commercial qui suit chaque client.
+export default function ClientPicker({ value, onChange, required = false, id = 'client-picker', mesClientsSeuls = false }) {
+  const { user, isVendeur } = useAuth()
+  const filtrerSiens = mesClientsSeuls && isVendeur
   const [clients, setClients] = useState([])
   const [prospects, setProspects] = useState([])
   const [loading, setLoading] = useState(true)
@@ -37,10 +43,13 @@ export default function ClientPicker({ value, onChange, required = false, id = '
     const t = q.trim().toLowerCase()
     const match = (x) => !t || x.nom?.toLowerCase().includes(t) || x.telephone?.toLowerCase().includes(t)
     return [
-      ...clients.filter(match).map((c) => ({ type: 'client', id: c.id, nom: c.nom, info: [c.type, c.zone].filter(Boolean).join(' · '), statut: c.statut })),
+      ...clients.filter((c) => !filtrerSiens || c.user_id === user?.id).filter(match).map((c) => ({
+        type: 'client', id: c.id, nom: c.nom, statut: c.statut,
+        info: [c.type, c.zone, c.user_id && c.user_id !== user?.id && c.vendeur_nom ? `Suivi par ${c.vendeur_nom}` : null].filter(Boolean).join(' · '),
+      })),
       ...prospects.filter(match).map((p) => ({ type: 'prospect', id: p.id, nom: p.nom, info: [p.type_client, p.zone].filter(Boolean).join(' · '), statut: 'Prospect' })),
     ].slice(0, 60)
-  }, [clients, prospects, q])
+  }, [clients, prospects, q, filtrerSiens, user?.id])
 
   const choisir = (o) => { onChange(o); setQ(''); setOpen(false) }
 
@@ -74,7 +83,9 @@ export default function ClientPicker({ value, onChange, required = false, id = '
         <div className="absolute z-30 mt-1 w-full max-h-64 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
           {options.length === 0 ? (
             <p className="text-xs text-gray-500 px-3 py-3">
-              {loading ? 'Chargement…' : 'Aucun résultat. Ajoutez d\'abord ce client dans le Portefeuille ou la Prospection.'}
+              {loading ? 'Chargement…' : filtrerSiens
+                ? 'Aucun de vos clients ne correspond. Les clients des autres commerciaux n\'apparaissent pas ici.'
+                : 'Aucun résultat. Ajoutez d\'abord ce client dans le Portefeuille ou la Prospection.'}
             </p>
           ) : options.map((o) => (
             <button

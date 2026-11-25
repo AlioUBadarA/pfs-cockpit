@@ -89,6 +89,8 @@ function clientView(c) {
   const derniere = ventes.reduce((m, v) => (v.date_vente > m ? v.date_vente : m), '')
   return {
     ...c,
+    user_id: c.vendeur_id,
+    vendeur_nom: userNom(c.vendeur_id),
     ca_total: sum(ventes, (v) => v.montant),
     nb_ventes: ventes.length,
     derniere_vente: derniere || null,

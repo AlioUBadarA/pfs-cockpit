@@ -243,7 +243,7 @@ export default function ContratsClients() {
             <label className="label">Nom du client *</label>
             <input className="input" list="clients-list" value={form.client_nom} onChange={set('client_nom')} required />
             <datalist id="clients-list">
-              {clients.map(c => <option key={c.id} value={c.nom} />)}
+              {clients.filter(c => user?.role !== 'vendeur' || c.user_id === user.id).map(c => <option key={c.id} value={c.nom} />)}
             </datalist>
           </div>
           <div>
