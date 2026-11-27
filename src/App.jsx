@@ -15,6 +15,7 @@ const Ventes = lazy(() => import('./pages/Ventes'))
 const NouvelleVente = lazy(() => import('./pages/NouvelleVente'))
 const Parametres = lazy(() => import('./pages/Parametres'))
 const Clients = lazy(() => import('./pages/Clients'))
+const ClientCompte = lazy(() => import('./pages/ClientCompte'))
 const Prospection = lazy(() => import('./pages/Prospection'))
 const Creances = lazy(() => import('./pages/Creances'))
 const Rentabilite = lazy(() => import('./pages/Rentabilite'))
@@ -119,6 +120,7 @@ function AppRoutes() {
         <Route path="pilotage"    element={<ManagerRoute><PilotageSemaine /></ManagerRoute>} />
         <Route path="argumentaire" element={<Argumentaire />} />
         <Route path="clients"     element={<Clients />} />
+        <Route path="clients/:id" element={<ClientCompte />} />
         <Route path="prospection" element={<Prospection />} />
         <Route path="creances"    element={<Creances />} />
         <Route path="rentabilite" element={<Rentabilite />} />

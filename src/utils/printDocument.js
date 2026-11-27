@@ -633,3 +633,55 @@ export function printContratPaddy(c, user) {
   `
   openPrintWindow(`Contrat paddy - ${c.numero || ''}`, body)
 }
+
+
+// ─── RELEVÉ DE COMPTE CLIENT ─────────────────────────────────────────────────
+// Ventes et échéances au débit, encaissements validés au crédit, solde courant.
+export function printReleveClient(compte, user) {
+  const c = compte.client || {}
+  const r = compte.resume || {}
+  const lignes = [...(compte.releve || [])].reverse().map((l) => `
+        <tr>
+          <td>${escapeHtml(fmtDate(l.date))}</td>
+          <td>${escapeHtml(l.libelle || '')}</td>
+          <td class="r">${l.debit ? fmt(l.debit) : ''}</td>
+          <td class="r">${l.credit ? fmt(l.credit) : ''}</td>
+          <td class="r"><strong>${fmt(l.solde)}</strong></td>
+        </tr>`).join('')
+  const body = `
+    <div class="header">
+      <div>${emetteurBlock(user)}</div>
+      <div class="doc-block">
+        <div class="doc-type">Relevé de compte</div>
+        <div class="doc-meta">Au ${escapeHtml(new Date().toLocaleDateString('fr-FR'))}</div>
+      </div>
+    </div>
+    <hr class="separator">
+    <div class="two-col">
+      <div>
+        <div class="section-label">Client</div>
+        <div class="client-name">${escapeHtml(c.nom || '-')}</div>
+        ${[c.type, c.zone, c.telephone ? `Tél : ${c.telephone}` : null].filter(Boolean).length ? `<div class="client-info">${escapeHtml([c.type, c.zone, c.telephone ? `Tél : ${c.telephone}` : null].filter(Boolean).join(' · '))}</div>` : ''}
+      </div>
+      <div style="text-align:right">
+        <div class="section-label">Solde dû</div>
+        <div class="client-name">${escapeHtml(fmt(r.solde_du))}</div>
+        ${r.en_retard ? `<div class="client-info">dont en retard : ${escapeHtml(fmt(r.en_retard))}</div>` : ''}
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Date</th><th>Opération</th><th class="r">Débit</th><th class="r">Crédit</th><th class="r">Solde</th></tr></thead>
+      <tbody>${lignes || '<tr><td colspan="5">Aucune opération.</td></tr>'}</tbody>
+    </table>
+    <div class="total-section">
+      <div class="total-box">
+        <div class="total-row"><span>Total des achats</span><span>${fmt(r.total_achats)}</span></div>
+        <div class="total-row"><span>Total encaissé</span><span>${fmt(r.total_encaisse)}</span></div>
+        <div class="total-row"><span>Solde dû</span><span>${fmt(r.solde_du)}</span></div>
+      </div>
+    </div>
+    ${r.en_attente_validation ? `<p style="font-size:11px;color:#555">Paiements déclarés en attente de validation : <strong>${escapeHtml(fmt(r.en_attente_validation))}</strong>. Ils ne sont pas encore déduits.</p>` : ''}
+    ${mentionsBlock(user)}
+  `
+  openPrintWindow(`Relevé - ${c.nom || ''}`, body)
+}

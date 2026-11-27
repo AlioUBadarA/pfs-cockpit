@@ -472,6 +472,33 @@ function checkDoublonTel(body, exceptId) {
   if (dup) fail(409, 'client_existe', { message: 'Un client avec ce numéro de téléphone existe déjà.', client: { nom: dup.nom, telephone: dup.telephone, assigne_a: userNom(dup.vendeur_id) } })
 }
 route('get', '/api/clients', () => db.clients.map(clientView))
+route('get', '/api/clients/:id/compte', ({ id }) => {
+  const c = byId(db.clients, id) || notFound()
+  const ventes = db.ventes.filter((v) => v.client_id === id).map((v) => {
+    const valide = totalVerse('vente', v.id)
+    return { id: v.id, numero: v.numero, date: v.date_vente, montant: v.montant, statut_paiement: v.statut_paiement, date_echeance: v.date_echeance,
+      produit: v.produit, nb_lignes: 1, total_valide: valide, total_declare: 0, reste: Math.max(0, Number(v.montant) - valide) }
+  })
+  const encaissements = ventes.flatMap((v) => versementsDe('vente', v.id).map((x) => ({ id: x.id, date: x.date, montant: x.montant, mode: x.mode, statut_validation: 'valide', piece: v.numero, origine: 'vente' })))
+  const lignes = [
+    ...ventes.map((v) => ({ date: v.date, libelle: `Vente ${v.numero || ''}`.trim(), debit: Number(v.montant), credit: 0 })),
+    ...encaissements.map((x) => ({ date: x.date, libelle: `Encaissement ${x.mode || ''}`.trim(), debit: 0, credit: Number(x.montant) })),
+  ].sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+  let solde = 0
+  const releve = lignes.map((l) => { solde += l.debit - l.credit; return { ...l, solde } }).reverse()
+  const achats = sum(lignes, (l) => l.debit); const encaisse = sum(lignes, (l) => l.credit)
+  const dates = ventes.map((v) => v.date).sort()
+  const aujourd = todayIso()
+  return {
+    client: clientView(c), restreint: false, releve, ventes, encaissements, contrats: [], depots: [],
+    activites: db.activites.filter((a) => a.cible === c.nom).map((a) => ({ id: a.id, date: a.date, type: a.type, resultat: a.resultat, note: a.note, auteur: userNom(a.vendeur_id) })),
+    taches: (db.taches || []).filter((t) => t.client_id === id), relances: [],
+    resume: { total_achats: achats, total_encaisse: encaisse, en_attente_validation: 0, solde_du: Math.max(0, achats - encaisse),
+      en_retard: sum(ventes.filter((v) => v.reste > 0 && v.date_echeance && v.date_echeance < aujourd), (v) => v.reste),
+      nb_ventes: ventes.length, panier_moyen: ventes.length ? Math.round(achats / ventes.length) : 0,
+      premiere_vente: dates[0] || null, derniere_vente: dates[dates.length - 1] || null, nb_activites: 0, nb_relances: 0 },
+  }
+})
 route('post', '/api/clients', ({ body }) => {
   if (!body.nom) fail(400, 'Le nom est requis')
   checkDoublonTel(body)

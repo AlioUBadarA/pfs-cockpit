@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../services/api'
 import Modal from '../components/Modal'
 import Panel from '../components/Panel'
@@ -48,6 +49,8 @@ const SEG_COLOR = { Champion: '#1B5E20', Fidèle: '#1b75bc', 'À développer': '
 export default function Clients() {
   const { user } = useAuth()
   const [clients, setClients] = useState([])
+  const navigate = useNavigate()
+  const [params, setParams] = useSearchParams()
   const [produits, setProduits] = useState([])
   const [loading, setLoading] = useState(true)
   const [sortKey, setSortKey] = useState('caTotal')
@@ -96,6 +99,15 @@ export default function Clients() {
     setError('')
     setModalOpen(true)
   }
+
+  // Depuis le compte client : /clients?modifier=<id> ouvre directement la fiche à modifier.
+  useEffect(() => {
+    const id = params.get('modifier')
+    if (!id || !clients.length) return
+    const c = clients.find((x) => x.id === id)
+    if (c) openEdit(c)
+    setParams({}, { replace: true })
+  }, [params, clients]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -240,7 +252,7 @@ export default function Clients() {
               headers={['Client', 'Segment', 'Profil', 'Score', 'CA total', 'Dernier achat', 'Potentiel / an', 'Statut']}
               rows={rows}
               align={['left', 'left', 'left', 'left', 'right', 'left', 'right', 'left']}
-              onRowClick={(ri) => openEdit(sorted[ri])}
+              onRowClick={(ri) => navigate(`/clients/${sorted[ri].id}`)}
             />
           </Panel>
         </>
