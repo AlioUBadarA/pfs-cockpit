@@ -4,6 +4,7 @@ import api from '../services/api'
 import KebabMenu from '../components/KebabMenu'
 import { useAuth } from '../context/AuthContext'
 import { printBonCommande, printBonLivraison, printFacture } from '../utils/printDocument'
+import RepousserEcheance from '../components/RepousserEcheance'
 import { emetteur } from '../utils/entreprise'
 import { formatCFA as fmt, formatDate as fmtDate } from '../utils/format'
 import { askConfirm } from '../utils/askConfirm'
@@ -21,7 +22,8 @@ function resumeProduits(v) {
 }
 
 export default function Ventes() {
-  const { user, isVendeur, isComptable } = useAuth()
+  const { user, isVendeur, isComptable, isManager } = useAuth()
+  const [aRepousser, setARepousser] = useState(null)
   const navigate = useNavigate()
   const [ventes, setVentes]     = useState([])
   const [loading, setLoading]   = useState(true)
@@ -95,6 +97,9 @@ export default function Ventes() {
       : []),
     { icon: '⎙', label: 'Bon de commande', onClick: async () => printBonCommande(v, await emetteur(user)) },
     { icon: '⎙', label: 'Bon de livraison', onClick: async () => printBonLivraison(v, await emetteur(user)) },
+    ...((isManager || isComptable) && v.statut_paiement !== 'Paye' && v.date_echeance
+      ? [{ icon: '📅', label: 'Repousser l\'échéance', onClick: () => setARepousser(v) }]
+      : []),
     factureDispo(v)
       ? { icon: '🧾', label: 'Facture', onClick: () => handlePrintFacture(v) }
       : { icon: '🧾', label: 'Facture (après validation)', onClick: () => handlePrintFacture(v) },
@@ -103,6 +108,7 @@ export default function Ventes() {
 
   return (
     <div className="space-y-5">
+      <RepousserEcheance vente={aRepousser} onClose={() => setARepousser(null)} onFait={load} />
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h2 className="font-display text-xl font-bold text-gray-900">Ventes</h2>

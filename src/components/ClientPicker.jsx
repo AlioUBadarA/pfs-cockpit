@@ -85,7 +85,7 @@ export default function ClientPicker({ value, onChange, required = false, id = '
             <p className="text-xs text-gray-500 px-3 py-3">
               {loading ? 'Chargement…' : filtrerSiens
                 ? 'Aucun de vos clients ne correspond. Les clients des autres commerciaux n\'apparaissent pas ici.'
-                : 'Aucun résultat. Ajoutez d\'abord ce client dans le Portefeuille ou la Prospection.'}
+                : 'Aucun résultat. Ajoutez d\'abord ce client dans Clients ou Prospects.'}
             </p>
           ) : options.map((o) => (
             <button

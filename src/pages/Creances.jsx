@@ -5,6 +5,8 @@ import KpiCard from '../components/KpiCard'
 import Panel from '../components/Panel'
 import BarList from '../components/BarList'
 import KebabMenu from '../components/KebabMenu'
+import RepousserEcheance from '../components/RepousserEcheance'
+import { useAuth } from '../context/AuthContext'
 import { formatDate as fmtDate } from '../utils/format'
 
 const fmt = (n) => n != null ? Number(n).toLocaleString('fr-FR') + ' F' : '0 F'
@@ -35,6 +37,10 @@ export default function Creances() {
   const [updating, setUpdating] = useState(null)
   const [filterRisque, setFilterRisque] = useState('Tous')
   const [openMenu, setOpenMenu] = useState(null)
+  const [aRepousser, setARepousser] = useState(null)
+  const { isManager, isComptable } = useAuth()
+  // Repousser une échéance : le manager et le comptable seulement.
+  const peutRepousser = isManager || isComptable
 
   const load = useCallback(() => {
     setLoading(true)
@@ -123,6 +129,7 @@ export default function Creances() {
 
   return (
     <div className="space-y-5">
+      <RepousserEcheance vente={aRepousser} onClose={() => setARepousser(null)} onFait={load} />
       <div>
         <h2 className="font-display text-xl font-bold text-gray-900">Recouvrement</h2>
         <p className="text-sm text-gray-500 mt-0.5">Balance âgée, niveau de risque et suivi des relances</p>
@@ -215,6 +222,7 @@ export default function Creances() {
                         items={[
                           { icon: '📣', label: 'Relancer le client', onClick: () => relancer(v.id) },
                           { icon: '💰', label: 'Encaisser', onClick: () => navigate(`/encaissements?${new URLSearchParams({ ref: v.numero || v.client_nom, id: v.id, type: 'vente' })}`) },
+                          ...(peutRepousser ? [{ icon: '📅', label: 'Repousser l\'échéance', onClick: () => setARepousser(v) }] : []),
                         ]}
                       />
                     )}

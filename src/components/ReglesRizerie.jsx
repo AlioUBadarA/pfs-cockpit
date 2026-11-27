@@ -168,12 +168,10 @@ export default function ReglesRizerie({ regles, peutModifier, onEnregistre }) {
 
       <section className="space-y-3">
         <h3 className="font-semibold text-gray-900">Alertes et rentabilité</h3>
+        <p className="text-sm text-gray-500">Relances d'encaissement : le commercial reçoit une tâche à J-2 et à J de l'échéance, puis un rappel à J+7 si elle n'est ni réglée ni repoussée. Livraisons : une tâche à J-2, J-1 et J.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Nombre id="r-inactif" label="Client inactif après" suffixe="jours sans achat" min={7} max={365}
             value={r.alerte_client_inactif_jours} onChange={set('alerte_client_inactif_jours')} disabled={off} />
-          <Nombre id="r-relance" label="Relance avant l'échéance" suffixe="jours avant (0 : pas d'alerte)" min={0} max={30}
-            value={r.alerte_relance_avant_jours} onChange={set('alerte_relance_avant_jours')} disabled={off}
-            aide="La formation recommande 2 jours avant l'échéance." />
           <Nombre id="r-creance" label="Créance en retard après" suffixe="jours après l'échéance" min={1} max={365}
             value={r.alerte_creance_jours} onChange={set('alerte_creance_jours')} disabled={off} />
           <Nombre id="r-objectif" label="Objectif sous la cible en dessous de" suffixe="% d'atteinte" min={10} max={100}

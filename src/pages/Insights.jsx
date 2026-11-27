@@ -109,7 +109,7 @@ export default function Insights() {
     {
       n: '2', c: '#F9A825',
       t: `Réactiver ${clientsRisque.length} client(s) dormant(s) par une offre ciblée`,
-      w: 'Portefeuille · LTV à protéger',
+      w: 'Clients · LTV à protéger',
     },
     {
       n: '3', c: '#1B5E20',

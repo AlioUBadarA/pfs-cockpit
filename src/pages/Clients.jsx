@@ -192,7 +192,7 @@ export default function Clients() {
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h2 className="font-display text-xl font-bold text-gray-900">Portefeuille</h2>
+          <h2 className="font-display text-xl font-bold text-gray-900">Clients</h2>
           <p className="text-sm text-gray-500 mt-0.5">Valeur et fidélisation des clients</p>
         </div>
         <button onClick={openNew} className="btn-primary text-sm">+ Ajouter un client</button>
@@ -219,7 +219,7 @@ export default function Clients() {
           </Panel>
 
           <Panel
-            title="Portefeuille clients"
+            title="Liste des clients"
             sub={`Top 40 par ${sortKey === 'ca_total' ? 'CA' : sortKey === 'potentiel_annuel' ? 'potentiel/an' : 'score'}`}
             footer={
               <div className="flex gap-2 flex-wrap">

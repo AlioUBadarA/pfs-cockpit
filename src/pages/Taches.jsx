@@ -46,6 +46,7 @@ function LigneTache({ t, onTerminer, onRetirer, moi }) {
           {t.cible_telephone ? ` · ${t.cible_telephone}` : ''}
           {t.cible_zone ? ` · ${t.cible_zone}` : ''}
           {t.origine === 'assignation' ? ` · Assignée par ${t.createur_nom || 'un responsable'}` : ''}
+          {t.origine === 'auto' ? ' · Créée automatiquement' : ''}
         </p>
         {t.consigne && <p className="text-sm text-gray-700 mt-1">{t.consigne}</p>}
         {t.compte_rendu && (
@@ -243,7 +244,7 @@ export default function Taches() {
                     <tr key={t.id} className="border-b border-gray-100 align-top">
                       <td className="py-2 pr-3">{t.commercial_nom}</td>
                       <td className="py-2 pr-3"><Cible t={t} /></td>
-                      <td className="py-2 pr-3">{t.type}{t.origine === 'assignation' && <div className="text-[10.5px] text-gray-500">Assignée</div>}</td>
+                      <td className="py-2 pr-3">{t.type}{t.origine === 'assignation' && <div className="text-[10.5px] text-gray-500">Assignée</div>}{t.origine === 'auto' && <div className="text-[10.5px] text-gray-500">Automatique</div>}</td>
                       <td className="py-2 pr-3 whitespace-nowrap">{formatDate(t.date_prevue)}</td>
                       <td className="py-2 pr-3"><Statut t={t} /></td>
                       <td className="py-2 text-gray-700">{t.compte_rendu || (t.consigne ? <span className="text-gray-400">Consigne : {t.consigne}</span> : '-')}</td>

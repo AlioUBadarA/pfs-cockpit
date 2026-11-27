@@ -37,8 +37,8 @@ const USER_NAVIGATION = [
     key: 'clients-ventes',
     title: 'Clients & Ventes',
     items: [
-      { key: 'clients', to: '/clients', label: 'Portefeuille', icon: 'folder' },
-      { key: 'prospection', to: '/prospection', label: 'Prospection', icon: 'target' },
+      { key: 'clients', to: '/clients', label: 'Clients', icon: 'folder' },
+      { key: 'prospection', to: '/prospection', label: 'Prospects', icon: 'target' },
       {
         key: 'ventes-contrats',
         label: 'Ventes & contrats',
@@ -110,6 +110,7 @@ const COMPTABLE_NAVIGATION = [
     items: [
       { key: 'comptabilite-validation', to: '/comptabilite', label: 'Validation des encaissements', icon: 'checkSquare', end: true },
       { key: 'comptabilite-encaissements', to: '/encaissements', label: 'Rechercher une transaction', icon: 'wallet' },
+      { key: 'comptabilite-recouvrement', to: '/creances', label: 'Recouvrement', icon: 'wallet' },
       { key: 'comptabilite-parametres', to: '/parametres', label: 'Paramètres de la rizerie', icon: 'settings' },
     ],
   },
@@ -192,7 +193,7 @@ export function getBreadcrumb(pathname, role) {
     return [{ label: 'Administration', to: '/admin' }, { label: 'Détail utilisateur' }]
   }
   if (pathname === '/crm') {
-    return [{ label: 'Clients & Ventes' }, { label: 'Portefeuille', to: '/clients' }]
+    return [{ label: 'Clients & Ventes' }, { label: 'Clients', to: '/clients' }]
   }
   return [{ label: 'Sales Cockpit' }]
 }

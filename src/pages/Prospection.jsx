@@ -151,7 +151,7 @@ export default function Prospection() {
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h2 className="font-display text-xl font-bold text-gray-900">Pipeline</h2>
+          <h2 className="font-display text-xl font-bold text-gray-900">Prospects</h2>
           <p className="text-sm text-gray-500 mt-0.5">Suivi des prospects par étape</p>
         </div>
         <button onClick={openNew} className="btn-primary text-sm">+ Nouveau prospect</button>

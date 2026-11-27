@@ -20,8 +20,8 @@ const sectionsRizier = [
   {
     titre: '3. Clients et ventes',
     contenu: [
-      { q: 'Portefeuille (Clients)', r: 'Cette page liste tous vos clients. Chaque client a un score RFM (récence, fréquence, montant). Vous pouvez lui associer des "produits suivis".' },
-      { q: 'Créer une vente', r: 'Ouvrez "Ventes". Chaque nouvelle vente reçoit un numéro (ex : V-2026-0007). Un client absent du Portefeuille est créé seul. Un client existant est mis à jour.' },
+      { q: 'Clients', r: 'Cette page liste tous vos clients. Chaque client a un score RFM (récence, fréquence, montant). Vous pouvez lui associer des "produits suivis".' },
+      { q: 'Créer une vente', r: 'Ouvrez "Ventes". Chaque nouvelle vente reçoit un numéro (ex : V-2026-0007). Un client absent de la page Clients est créé seul. Un client existant est mis à jour.' },
       { q: 'Contrats clients / paddy', r: 'Les contrats récurrents ont aussi un numéro. Ils concernent les clients aval et les producteurs de paddy. Pour clôturer un contrat, passez son statut à "Terminé".' },
       { q: 'Clôture d\'une vente', r: 'Une vente passe seule au statut "Payée" quand les encaissements couvrent son montant. Vous n\'avez rien à faire.' },
     ]
@@ -36,7 +36,7 @@ const sectionsRizier = [
   {
     titre: '5. Pilotage de l\'activité',
     contenu: [
-      { q: 'Prospection', r: 'Cette page suit chaque prospect. Il passe de l\'étape Nouveau à l\'étape Gagné ou Perdu.' },
+      { q: 'Prospects', r: 'Cette page suit chaque prospect. Il passe de l\'étape Nouveau à l\'étape Gagné ou Perdu.' },
       { q: 'Journal du jour', r: 'Cette page montre les ventes et les encaissements du jour. Vous pouvez changer la période.' },
       { q: 'Rentabilité / Prévisions', r: 'Suivez la marge réelle par produit. Comparez-la aux objectifs du mois.' },
       { q: 'Emplois', r: 'Gérez la liste des employés de la rizerie. Saisissez le poste, le contrat et le salaire. La masse salariale se calcule seule.' },
@@ -49,8 +49,8 @@ const sectionsCommercial = [
     titre: '1. Vos outils au quotidien',
     contenu: [
       { q: 'Planning semaine', r: 'Organisez vos visites jour par jour. Indiquez le client ou le prospect à voir. Indiquez aussi l\'action à mener. C\'est votre feuille de route.' },
-      { q: 'Ventes', r: 'Enregistrez chaque vente. Saisissez le client, le produit, la quantité et le prix. Le client est ajouté ou mis à jour dans le Portefeuille.' },
-      { q: 'Prospection', r: 'Suivez vos prospects étape par étape : Nouveau, Qualifié, Proposition, Négociation, Gagné ou Perdu. Vous ne perdez aucune piste.' },
+      { q: 'Ventes', r: 'Enregistrez chaque vente. Saisissez le client, le produit, la quantité et le prix. Le client est ajouté ou mis à jour dans la page Clients.' },
+      { q: 'Prospects', r: 'Suivez vos prospects étape par étape : Nouveau, Qualifié, Proposition, Négociation, Gagné ou Perdu. Vous ne perdez aucune piste.' },
       { q: 'Activités', r: 'Notez chaque visite, chaque appel et chaque relance. Ces notes vous aident à préparer la visite suivante.' },
     ]
   },
