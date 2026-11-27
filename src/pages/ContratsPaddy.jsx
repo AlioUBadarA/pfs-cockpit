@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import api from '../services/api'
 import ChampsFormation from '../components/ChampsFormation'
 import { valeursDe } from '../utils/champsFormation'
@@ -18,7 +19,7 @@ const statutColor = (s) => ({
   'Terminé': 'bg-gray-100 text-gray-500',
 }[s] || 'bg-gray-100 text-gray-600')
 
-const INIT = { producteur_nom: '', zone: '', telephone: '', variete: '', quantite_kg: '', prix_kg: '', date_debut: '', date_fin: '', statut: 'Actif', note: '' }
+const INIT = { producteur_id: '', producteur_nom: '', zone: '', telephone: '', variete: '', quantite_kg: '', prix_kg: '', date_debut: '', date_fin: '', statut: 'Actif', note: '' }
 
 export default function ContratsPaddy() {
   const { user } = useAuth()
@@ -30,6 +31,8 @@ export default function ContratsPaddy() {
   const [editing, setEditing]     = useState(null)
   const [form, setForm]           = useState(INIT)
   const [saving, setSaving]       = useState(false)
+  const [fiches, setFiches]       = useState([])
+  const [params, setParams]       = useSearchParams()
 
   // Liste complète chargée une seule fois : les KPI d'en-tête restent globaux même quand
   // le tableau est filtré par statut (sinon ils s'effondrent à tort en filtrant).
@@ -42,6 +45,25 @@ export default function ContratsPaddy() {
   }, [])
 
   useEffect(() => { load() }, [load])
+  const chargerFiches = useCallback(() => api.get('/api/producteurs').then((r) => setFiches(r.data)).catch(() => {}), [])
+  useEffect(() => { chargerFiches() }, [chargerFiches])
+
+  // Arrivée depuis une fiche producteur (?producteur=id) : ouvre un contrat pour lui.
+  useEffect(() => {
+    const pid = params.get('producteur')
+    if (!pid || !fiches.length) return
+    const f = fiches.find((x) => x.id === pid)
+    setEditing(null)
+    setForm({ ...INIT, producteur_id: pid, producteur_nom: f?.nom || '', zone: f?.zone || '', telephone: f?.telephone || '' })
+    setModalOpen(true)
+    setParams({}, { replace: true })
+  }, [params, fiches, setParams])
+
+  const choisirFiche = (e) => {
+    const pid = e.target.value
+    const f = fiches.find((x) => x.id === pid)
+    setForm((p) => ({ ...p, producteur_id: pid, producteur_nom: f?.nom || '', zone: f?.zone || '', telephone: f?.telephone || '' }))
+  }
 
   const set = (f) => (e) => setForm(p => ({ ...p, [f]: e.target.value }))
 
@@ -49,6 +71,7 @@ export default function ContratsPaddy() {
   const openEdit = (item) => {
     setEditing(item)
     setForm({
+      producteur_id:  item.producteur_id || '',
       producteur_nom: item.producteur_nom,
       zone:           item.zone || '',
       telephone:      item.telephone || '',
@@ -69,6 +92,7 @@ export default function ContratsPaddy() {
     try {
       const payload = {
         ...form,
+        producteur_id: form.producteur_id || undefined,
         quantite_kg: Number(form.quantite_kg) || 0,
         prix_kg:     Number(form.prix_kg)     || 0,
         date_debut: form.date_debut || null,
@@ -76,7 +100,7 @@ export default function ContratsPaddy() {
       }
       if (editing) await api.put(`/api/contrats/paddy/${editing.id}`, payload)
       else         await api.post('/api/contrats/paddy', payload)
-      setModalOpen(false); load()
+      setModalOpen(false); load(); chargerFiches()
     } catch (err) {
       setError(err.response?.data?.error || 'Erreur')
     } finally { setSaving(false) }
@@ -151,7 +175,7 @@ export default function ContratsPaddy() {
                 return (
                   <tr key={item.id} className={`hover:bg-gray-50 ${item.statut === 'Terminé' ? 'opacity-50' : ''}`}>
                     <td className="table-cell font-mono text-xs text-gray-500">{item.numero || '-'}</td>
-                    <td className="table-cell font-medium"><LienCompte to={lienProducteur(item.producteur_nom, item.telephone)}>{item.producteur_nom}</LienCompte></td>
+                    <td className="table-cell font-medium"><LienCompte to={lienProducteur(item.producteur_id, item.producteur_nom, item.telephone)}>{item.producteur_nom}</LienCompte></td>
                     <td className="table-cell text-sm text-gray-500">{item.zone || '-'}</td>
                     <td className="table-cell text-sm">{item.variete || '-'}</td>
                     <td className="table-cell text-right font-medium">{item.quantite_kg ? Number(item.quantite_kg).toLocaleString('fr-FR') : '-'}</td>
@@ -180,19 +204,32 @@ export default function ContratsPaddy() {
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Modifier le contrat' : 'Nouveau contrat paddy'}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="label">Nom du producteur *</label>
-            <input className="input" value={form.producteur_nom} onChange={set('producteur_nom')} required />
+            <label className="label">Producteur *</label>
+            <select className="input" value={form.producteur_id} onChange={choisirFiche}>
+              <option value="">Nouveau producteur (créer sa fiche)</option>
+              {fiches.map((f) => <option key={f.id} value={f.id}>{f.nom}{f.telephone ? ` · ${f.telephone}` : ''}{f.zone ? ` · ${f.zone}` : ''}</option>)}
+            </select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label">Zone / Village</label>
-              <input className="input" placeholder="Ex: Vallée du Fleuve" value={form.zone} onChange={set('zone')} />
-            </div>
-            <div>
-              <label className="label">Téléphone</label>
-              <input className="input" value={form.telephone} onChange={set('telephone')} />
-            </div>
-          </div>
+          {form.producteur_id ? (
+            <p className="text-xs text-gray-500 -mt-2">Le nom, le téléphone et la zone viennent de la fiche. Modifiez-les depuis la fiche du producteur.</p>
+          ) : (
+            <>
+              <div>
+                <label className="label">Nom du producteur *</label>
+                <input className="input" value={form.producteur_nom} onChange={set('producteur_nom')} required />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label">Zone / Village</label>
+                  <input className="input" placeholder="Ex: Vallée du Fleuve" value={form.zone} onChange={set('zone')} />
+                </div>
+                <div>
+                  <label className="label">Téléphone</label>
+                  <input className="input" value={form.telephone} onChange={set('telephone')} />
+                </div>
+              </div>
+            </>
+          )}
           <div>
             <label className="label">Variété de paddy</label>
             <input className="input" placeholder="Ex: Jasmine, Sahel 108..." value={form.variete} onChange={set('variete')} />

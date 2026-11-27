@@ -420,6 +420,36 @@ function clientPourNom(nom, vendeurId) {
 const pickFields = (body, fields) => Object.fromEntries(fields.filter((f) => body[f] !== undefined).map((f) => [f, body[f]]))
 
 // ── Routes ──────────────────────────────────────────────────
+// Fiches producteurs de la démo : une par nom de producteur des contrats paddy.
+const idProducteur = (nom) => 'prod-' + encodeURIComponent(String(nom || '').trim().toLowerCase())
+function producteursDemo() {
+  const parId = new Map()
+  for (const c of db.contrats_paddy) {
+    const id = idProducteur(c.producteur_nom)
+    const p = parId.get(id) || { id, nom: c.producteur_nom, telephone: c.telephone || null, zone: c.zone || null, village: null, superficie_ha: null, varietes: c.variete || null, groupement: null, note: null, created_at: c.date_debut }
+    parId.set(id, p)
+  }
+  return [...parId.values()]
+}
+function compteProducteurDemo(fiche) {
+  const contrats = db.contrats_paddy.filter((c) => idProducteur(c.producteur_nom) === fiche.id)
+    .map((c) => ({ ...c, producteur_id: fiche.id, debut: c.date_debut, fin: c.date_fin, montant: Number(c.quantite_kg) * Number(c.prix_kg), total_paye: totalVerse('paddy', c.id), total_declare: 0, vendeur_nom: userNom(c.vendeur_id), user_id: c.vendeur_id }))
+  const paiements = contrats.flatMap((c) => versementsDe('paddy', c.id).map((x) => ({ id: x.id, date: x.date, montant: x.montant, mode: x.mode, statut_validation: 'valide', piece: c.numero })))
+  const lignes = [
+    ...contrats.map((c) => ({ date: c.debut, libelle: `Contrat ${c.numero || ''} : ${Number(c.quantite_kg).toLocaleString('fr-FR')} kg`, du: c.montant, paye: 0 })),
+    ...paiements.map((x) => ({ date: x.date, libelle: `Paiement ${x.mode || ''}`.trim(), du: 0, paye: Number(x.montant) })),
+  ].sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+  let solde = 0
+  const releve = lignes.map((l) => { solde += l.du - l.paye; return { ...l, solde } }).reverse()
+  const du = sum(contrats, (c) => c.montant); const paye = sum(contrats, (c) => c.total_paye)
+  return {
+    producteur: fiche,
+    resume: { nb_contrats: contrats.length, volume_kg: sum(contrats, (c) => c.quantite_kg), total_du: du, total_paye: paye, reste_a_payer: Math.max(0, du - paye),
+      en_attente_validation: 0, varietes: [...new Set(contrats.map((c) => c.variete).filter(Boolean))] },
+    releve, contrats, paiements,
+  }
+}
+
 const routes = []
 const route = (method, pattern, handler) => {
   const keys = []
@@ -483,25 +513,16 @@ route('get', '/api/comptes/prospect/:id', ({ id }) => {
   }
 })
 route('get', '/api/comptes/producteur', ({ params }) => {
-  const nom = String(params?.nom || '').trim().toLowerCase()
-  const contrats = db.contrats_paddy.filter((c) => String(c.producteur_nom).trim().toLowerCase() === nom)
-    .map((c) => ({ ...c, debut: c.date_debut, fin: c.date_fin, montant: Number(c.quantite_kg) * Number(c.prix_kg), total_paye: totalVerse('paddy', c.id), total_declare: 0 }))
-  if (!contrats.length) notFound()
-  const paiements = contrats.flatMap((c) => versementsDe('paddy', c.id).map((x) => ({ id: x.id, date: x.date, montant: x.montant, mode: x.mode, statut_validation: 'valide', piece: c.numero })))
-  const lignes = [
-    ...contrats.map((c) => ({ date: c.debut, libelle: `Contrat ${c.numero || ''} : ${Number(c.quantite_kg).toLocaleString('fr-FR')} kg`, du: c.montant, paye: 0 })),
-    ...paiements.map((x) => ({ date: x.date, libelle: `Paiement ${x.mode || ''}`.trim(), du: 0, paye: Number(x.montant) })),
-  ].sort((a, b) => (a.date || '').localeCompare(b.date || ''))
-  let solde = 0
-  const releve = lignes.map((l) => { solde += l.du - l.paye; return { ...l, solde } }).reverse()
-  const du = sum(contrats, (c) => c.montant); const paye = sum(contrats, (c) => c.total_paye)
-  return {
-    producteur: { nom: contrats[0].producteur_nom, telephone: contrats.find((c) => c.telephone)?.telephone || null, zone: contrats.find((c) => c.zone)?.zone || null },
-    resume: { nb_contrats: contrats.length, volume_kg: sum(contrats, (c) => c.quantite_kg), total_du: du, total_paye: paye, reste_a_payer: Math.max(0, du - paye),
-      en_attente_validation: 0, varietes: [...new Set(contrats.map((c) => c.variete).filter(Boolean))] },
-    releve, contrats, paiements,
-  }
+  const fiche = producteursDemo().find((p) => p.id === idProducteur(params?.nom)) || notFound()
+  return compteProducteurDemo(fiche)
 })
+route('get', '/api/comptes/producteur/:id', ({ id }) => compteProducteurDemo(producteursDemo().find((p) => p.id === decodeURIComponent(id) || p.id === id) || notFound()))
+route('get', '/api/producteurs', () => producteursDemo().map((p) => {
+  const c = compteProducteurDemo(p)
+  return { ...p, nb_contrats: c.resume.nb_contrats, nb_actifs: c.contrats.filter((x) => x.statut === 'Actif').length, volume_kg: c.resume.volume_kg,
+    total_du: c.resume.total_du, total_paye: c.resume.total_paye, reste_a_payer: c.resume.reste_a_payer }
+}).sort((a, b) => a.nom.localeCompare(b.nom)))
+route('get', '/api/producteurs/:id', ({ id }) => producteursDemo().find((p) => p.id === decodeURIComponent(id) || p.id === id) || notFound())
 route('get', '/api/comptes/agent/:id', ({ id }) => {
   const u = id === DEMO_USER.id ? DEMO_USER : (byId(db.users, id) || notFound())
   const ventes = db.ventes.filter((v) => v.vendeur_id === id).map((v) => {
@@ -772,7 +793,7 @@ route('get', '/api/contrats/echeances', ({ params }) => {
 
 // Contrats paddy
 const PADDY_FIELDS = ['producteur_nom', 'zone', 'telephone', 'variete', 'quantite_kg', 'prix_kg', 'date_debut', 'date_fin', 'statut', 'note']
-route('get', '/api/contrats/paddy', () => [...db.contrats_paddy].sort((a, b) => String(b.date_debut).localeCompare(String(a.date_debut))))
+route('get', '/api/contrats/paddy', () => [...db.contrats_paddy].map((c) => ({ ...c, producteur_id: idProducteur(c.producteur_nom) })).sort((a, b) => String(b.date_debut).localeCompare(String(a.date_debut))))
 route('post', '/api/contrats/paddy', ({ body }) => {
   if (!body.producteur_nom) fail(400, 'Le nom du producteur est requis')
   const year = String(body.date_debut || todayIso()).slice(0, 4)

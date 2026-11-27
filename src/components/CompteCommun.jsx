@@ -51,5 +51,7 @@ export function LienCompte({ to, children }) {
   )
 }
 
-export const lienProducteur = (nom, telephone) =>
-  `/producteurs/compte?nom=${encodeURIComponent(nom || '')}${telephone ? `&telephone=${encodeURIComponent(telephone)}` : ''}`
+// Lien vers la fiche du producteur. Sans fiche (cas rare), retrouve-la par le nom.
+export const lienProducteur = (id, nom, telephone) => (id
+  ? `/producteurs/${id}`
+  : `/producteurs/compte?nom=${encodeURIComponent(nom || '')}${telephone ? `&telephone=${encodeURIComponent(telephone)}` : ''}`)

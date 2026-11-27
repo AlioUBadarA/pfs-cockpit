@@ -46,6 +46,7 @@ const USER_NAVIGATION = [
         children: [
           { key: 'ventes', to: '/ventes', label: 'Ventes' },
           { key: 'contrats-clients', to: '/contrats-clients', label: 'Contrats clients' },
+          { key: 'producteurs', to: '/producteurs', label: 'Producteurs' },
           { key: 'contrats-paddy', to: '/contrats-paddy', label: 'Contrats paddy' },
           { key: 'depots-vente', to: '/depots-vente', label: 'Dépôt-vente' },
         ],
