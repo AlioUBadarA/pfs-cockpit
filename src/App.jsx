@@ -19,6 +19,7 @@ const ClientCompte = lazy(() => import('./pages/ClientCompte'))
 const ProspectCompte = lazy(() => import('./pages/ProspectCompte'))
 const ProducteurCompte = lazy(() => import('./pages/ProducteurCompte'))
 const Producteurs = lazy(() => import('./pages/Producteurs'))
+const PaiementsProducteurs = lazy(() => import('./pages/PaiementsProducteurs'))
 const AgentCompte = lazy(() => import('./pages/AgentCompte'))
 const Prospection = lazy(() => import('./pages/Prospection'))
 const Creances = lazy(() => import('./pages/Creances'))
@@ -127,6 +128,7 @@ function AppRoutes() {
         <Route path="clients/:id" element={<ClientCompte />} />
         <Route path="prospects/:id" element={<ProspectCompte />} />
         <Route path="producteurs" element={<Producteurs />} />
+        <Route path="paiements-producteurs" element={<PaiementsProducteurs />} />
         <Route path="producteurs/:id" element={<ProducteurCompte />} />
         <Route path="agents/:id" element={<AgentCompte />} />
         <Route path="prospection" element={<Prospection />} />

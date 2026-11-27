@@ -25,6 +25,7 @@ const ICONS = {
   'Créance en retard': '₣',
   'Objectif sous cible': '◎',
   'Échéance proche': '◔',
+  'Paiement producteur': '₣',
 }
 
 export default function Actions() {

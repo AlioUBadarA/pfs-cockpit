@@ -433,20 +433,22 @@ function producteursDemo() {
 }
 function compteProducteurDemo(fiche) {
   const contrats = db.contrats_paddy.filter((c) => idProducteur(c.producteur_nom) === fiche.id)
-    .map((c) => ({ ...c, producteur_id: fiche.id, debut: c.date_debut, fin: c.date_fin, montant: Number(c.quantite_kg) * Number(c.prix_kg), total_paye: totalVerse('paddy', c.id), total_declare: 0, vendeur_nom: userNom(c.vendeur_id), user_id: c.vendeur_id }))
-  const paiements = contrats.flatMap((c) => versementsDe('paddy', c.id).map((x) => ({ id: x.id, date: x.date, montant: x.montant, mode: x.mode, statut_validation: 'valide', piece: c.numero })))
+    .map((c) => ({ ...c, producteur_id: fiche.id, debut: c.date_debut, fin: c.date_fin, valeur: Number(c.quantite_kg) * Number(c.prix_kg), livre_kg: Number(c.quantite_kg), du: Number(c.quantite_kg) * Number(c.prix_kg), total_paye: totalVerse('paddy', c.id), vendeur_nom: userNom(c.vendeur_id), user_id: c.vendeur_id }))
+  const paiements = contrats.flatMap((c) => versementsDe('paddy', c.id).map((x) => ({ id: x.id, date: x.date, montant: x.montant, mode: x.mode, reference: null, a_preuve: false, paye_par_nom: null, piece: c.numero })))
+  // Démo : chaque contrat est considéré comme livré en une fois, payable 7 jours après.
+  const livraisons = contrats.map((c) => ({ id: 'liv-' + c.id, date: c.debut, quantite_kg: c.quantite_kg, humidite_pct: null, montant: c.du, date_paiement_prevue: c.debut, reste_a_payer: Math.max(0, c.du - c.total_paye), piece: c.numero, saisi_par: c.vendeur_nom }))
   const lignes = [
-    ...contrats.map((c) => ({ date: c.debut, libelle: `Contrat ${c.numero || ''} : ${Number(c.quantite_kg).toLocaleString('fr-FR')} kg`, du: c.montant, paye: 0 })),
+    ...contrats.map((c) => ({ date: c.debut, libelle: `Livraison ${c.numero || ''} : ${Number(c.quantite_kg).toLocaleString('fr-FR')} kg reçus`, du: c.du, paye: 0 })),
     ...paiements.map((x) => ({ date: x.date, libelle: `Paiement ${x.mode || ''}`.trim(), du: 0, paye: Number(x.montant) })),
   ].sort((a, b) => (a.date || '').localeCompare(b.date || ''))
   let solde = 0
   const releve = lignes.map((l) => { solde += l.du - l.paye; return { ...l, solde } }).reverse()
-  const du = sum(contrats, (c) => c.montant); const paye = sum(contrats, (c) => c.total_paye)
+  const du = sum(contrats, (c) => c.du); const paye = sum(contrats, (c) => c.total_paye)
   return {
     producteur: fiche,
-    resume: { nb_contrats: contrats.length, volume_kg: sum(contrats, (c) => c.quantite_kg), total_du: du, total_paye: paye, reste_a_payer: Math.max(0, du - paye),
-      en_attente_validation: 0, varietes: [...new Set(contrats.map((c) => c.variete).filter(Boolean))] },
-    releve, contrats, paiements,
+    resume: { nb_contrats: contrats.length, volume_kg: sum(contrats, (c) => c.quantite_kg), valeur_contrats: du, livre_kg: sum(contrats, (c) => c.livre_kg), total_du: du, total_paye: paye,
+      reste_a_payer: Math.max(0, du - paye), avance: Math.max(0, paye - du), prochaine_echeance: null, varietes: [...new Set(contrats.map((c) => c.variete).filter(Boolean))] },
+    releve, contrats, livraisons, paiements,
   }
 }
 
@@ -522,6 +524,7 @@ route('get', '/api/producteurs', () => producteursDemo().map((p) => {
   return { ...p, nb_contrats: c.resume.nb_contrats, nb_actifs: c.contrats.filter((x) => x.statut === 'Actif').length, volume_kg: c.resume.volume_kg,
     total_du: c.resume.total_du, total_paye: c.resume.total_paye, reste_a_payer: c.resume.reste_a_payer }
 }).sort((a, b) => a.nom.localeCompare(b.nom)))
+route('get', '/api/paddy/a-payer', () => ({ peut_payer: false, alerte_jours: 2, lignes: [] }))
 route('get', '/api/producteurs/:id', ({ id }) => producteursDemo().find((p) => p.id === decodeURIComponent(id) || p.id === id) || notFound())
 route('get', '/api/comptes/agent/:id', ({ id }) => {
   const u = id === DEMO_USER.id ? DEMO_USER : (byId(db.users, id) || notFound())

@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext'
 import { emetteur } from '../utils/entreprise'
 import { printContratPaddy } from '../utils/printDocument'
 import { LienCompte, lienProducteur } from '../components/CompteCommun'
+import { LivraisonForm } from '../components/AchatPaddy'
 
 const STATUTS = ['Actif','Suspendu','Terminé']
 
@@ -32,6 +33,7 @@ export default function ContratsPaddy() {
   const [form, setForm]           = useState(INIT)
   const [saving, setSaving]       = useState(false)
   const [fiches, setFiches]       = useState([])
+  const [reception, setReception] = useState(null)
   const [params, setParams]       = useSearchParams()
 
   // Liste complète chargée une seule fois : les KPI d'en-tête restent globaux même quand
@@ -188,6 +190,7 @@ export default function ContratsPaddy() {
                     </td>
                     <td className="table-cell">
                       <div className="flex gap-2">
+                        {user?.role !== 'comptable' && item.statut !== 'Terminé' && <button onClick={() => setReception(item)} className="text-xs text-green-700 hover:text-green-900 font-medium">Paddy reçu</button>}
                         <button onClick={async () => printContratPaddy(item, await emetteur(user))} className="text-xs text-blue-600 hover:text-blue-800 font-medium">Imprimer</button>
                         <button onClick={() => openEdit(item)} className="text-xs text-blue-600 hover:text-blue-800 font-medium">Éditer</button>
                         <button onClick={() => del(item.id)} className="text-xs text-red-600 hover:text-red-800 font-medium">Suppr.</button>
@@ -200,6 +203,8 @@ export default function ContratsPaddy() {
           </table>
         )}
       </div>
+
+      <LivraisonForm open={!!reception} contrats={reception ? [reception] : []} onClose={() => setReception(null)} onSaved={() => setReception(null)} />
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Modifier le contrat' : 'Nouveau contrat paddy'}>
         <form onSubmit={handleSubmit} className="space-y-4">

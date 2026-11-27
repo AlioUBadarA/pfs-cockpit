@@ -55,7 +55,7 @@ export default function Producteurs() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <KpiCard title="Producteurs" value={items.length} sub={`${items.filter((p) => p.nb_actifs).length} avec un contrat actif`} color="#1b75bc" />
-        <KpiCard title="Paddy contracté" value={kg(totalVolume)} sub="tous contrats" />
+        <KpiCard title="Paddy reçu" value={kg(items.reduce((s, p) => s + Number(p.livre_kg || 0), 0))} sub={`sur ${kg(totalVolume)} contractés`} />
         <KpiCard title="Reste à payer" value={fmt(totalReste)} sub="dû par la rizerie" color={totalReste ? '#e08e0b' : '#1B5E20'} />
       </div>
 
@@ -72,7 +72,7 @@ export default function Producteurs() {
         ) : (
           <table className="w-full">
             <thead>
-              <tr>{['Producteur', 'Téléphone', 'Zone / village', 'Superficie', 'Contrats', 'Paddy', 'Reste à payer', 'Actions'].map((h) => <th key={h} className="table-header">{h}</th>)}</tr>
+              <tr>{['Producteur', 'Téléphone', 'Zone / village', 'Superficie', 'Contrats', 'Paddy reçu', 'Reste à payer', 'Actions'].map((h) => <th key={h} className="table-header">{h}</th>)}</tr>
             </thead>
             <tbody>
               {visibles.map((p) => (
@@ -82,7 +82,7 @@ export default function Producteurs() {
                   <td className="table-cell text-sm text-gray-600">{[p.zone, p.village].filter(Boolean).join(' · ') || '-'}</td>
                   <td className="table-cell text-sm text-right">{p.superficie_ha ? `${Number(p.superficie_ha).toLocaleString('fr-FR')} ha` : '-'}</td>
                   <td className="table-cell text-sm text-right">{p.nb_contrats}{p.nb_actifs ? <span className="text-green-700"> · {p.nb_actifs} actif(s)</span> : ''}</td>
-                  <td className="table-cell text-sm text-right">{kg(p.volume_kg)}</td>
+                  <td className="table-cell text-sm text-right">{kg(p.livre_kg)}<div className="text-[10.5px] text-gray-400">sur {kg(p.volume_kg)}</div></td>
                   <td className="table-cell text-sm text-right font-semibold" style={{ color: p.reste_a_payer ? '#b45309' : '#1B5E20' }}>{fmt(p.reste_a_payer)}</td>
                   <td className="table-cell">
                     <div className="flex gap-2">

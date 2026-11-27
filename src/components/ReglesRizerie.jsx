@@ -19,6 +19,8 @@ export const REGLES_DEFAUT = {
   commande_si_impaye: 'autorisee',
   alerte_relance_avant_jours: 2,
   penalite_retard: null,
+  delai_paiement_producteur_jours: 7,
+  alerte_paiement_producteur_jours: 2,
 }
 
 const CHOIX_IMPAYE = [
@@ -179,6 +181,18 @@ export default function ReglesRizerie({ regles, peutModifier, onEnregistre }) {
           <Nombre id="r-cout" label="Taux de coût par défaut" suffixe="% du prix de vente" min={0} max={100}
             value={r.taux_cout_defaut_pct} onChange={set('taux_cout_defaut_pct')} disabled={off}
             aide="Utilisé quand le coût réel d'un produit n'est pas connu." />
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h3 className="font-semibold text-gray-900">Achat de paddy</h3>
+        <p className="text-sm text-gray-500">La rizerie paie le paddy reçu. Le comptable fait le paiement avec la preuve. Il est alerté avant la date prévue, puis en cas de retard.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Nombre id="r-delai-paddy" label="Paiement du producteur" suffixe="jours après la réception" min={0} max={180}
+            value={r.delai_paiement_producteur_jours} onChange={set('delai_paiement_producteur_jours')} disabled={off}
+            aide="Date proposée à chaque livraison. Elle reste modifiable." />
+          <Nombre id="r-alerte-paddy" label="Alerte avant le paiement" suffixe="jours avant la date prévue" min={0} max={30}
+            value={r.alerte_paiement_producteur_jours} onChange={set('alerte_paiement_producteur_jours')} disabled={off} />
         </div>
       </section>
 

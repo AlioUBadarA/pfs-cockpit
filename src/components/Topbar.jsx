@@ -46,7 +46,7 @@ export default function Topbar({ collapsed, onToggleCollapse, onOpenMobileNav, o
   const profilePanelRef = useRef(null)
 
   // Les alertes concernent les rôles métier ; admin et comptable n'ont pas cette page dans leur menu.
-  const hasAlerts = role === 'manager' || role === 'vendeur'
+  const hasAlerts = ['manager', 'vendeur', 'comptable', 'rizier', 'directeur'].includes(role)
   const [alerts, setAlerts] = useState({ status: 'idle', items: [], count: 0 })
   const alertCount = alerts.count
 
@@ -369,7 +369,9 @@ export default function Topbar({ collapsed, onToggleCollapse, onOpenMobileNav, o
                   />
                   <div className="min-w-0">
                     <p className="text-[10.5px] font-semibold uppercase tracking-wide text-[#8a99a4]">{a.cat}</p>
-                    <p className="text-[12px] leading-snug text-[#1f2d38]">{a.msg}</p>
+                    {a.cat === 'Paiement producteur'
+                      ? <Link to="/paiements-producteurs" onClick={closeMenus} className="text-[12px] leading-snug text-[#1b75bc] hover:underline">{a.msg}</Link>
+                      : <p className="text-[12px] leading-snug text-[#1f2d38]">{a.msg}</p>}
                   </div>
                 </li>
               ))}
