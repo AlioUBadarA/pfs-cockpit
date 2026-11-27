@@ -5,6 +5,7 @@ import KpiCard from '../components/KpiCard'
 import DataTable from '../components/DataTable'
 import { useAuth } from '../context/AuthContext'
 import { askConfirm } from '../utils/askConfirm'
+import { LienCompte } from '../components/CompteCommun'
 
 const fmt = (n) => Number(n || 0).toLocaleString('fr-FR') + ' F'
 
@@ -64,7 +65,7 @@ export default function Managers() {
       {managers.map((mg) => (
         <Panel
           key={mg.id}
-          title={`${mg.nom} · Manager`}
+          title={<><LienCompte to={`/agents/${mg.id}`}>{mg.nom}</LienCompte> · Manager</>}
           sub={`Zone ${mg.zone || 'n/a'} · ${mg.nb_com} commercial(aux)`}
           right={!isManager && (
             <button onClick={() => deleteManager(mg)} className="text-xs text-red-600 font-medium hover:underline">

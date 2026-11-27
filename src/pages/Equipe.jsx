@@ -9,6 +9,7 @@ import RoleBadge from '../components/RoleBadge'
 import PasswordField from '../components/PasswordField'
 import { useAuth } from '../context/AuthContext'
 import { askConfirm } from '../utils/askConfirm'
+import { LienCompte } from '../components/CompteCommun'
 
 const fmt = (n) => Number(n || 0).toLocaleString('fr-FR') + ' F'
 
@@ -203,8 +204,8 @@ export default function Equipe() {
 
   const makeRow = (v, isMgr = false) => [
     isMgr
-      ? { v: <span className="flex items-center gap-1.5"><span className="font-semibold text-blue-900">{v.nom}</span><RoleBadge role={v.role} /></span>, sub: v.zone ? `Zone ${v.zone}` : '' }
-      : { v: <span className="flex items-center gap-1.5"><span>{v.nom}</span><RoleBadge role={v.role} /></span>, sub: v.email },
+      ? { v: <span className="flex items-center gap-1.5"><LienCompte to={`/agents/${v.id}`}>{v.nom}</LienCompte><RoleBadge role={v.role} /></span>, sub: v.zone ? `Zone ${v.zone}` : '' }
+      : { v: <span className="flex items-center gap-1.5"><LienCompte to={`/agents/${v.id}`}>{v.nom}</LienCompte><RoleBadge role={v.role} /></span>, sub: v.email },
     fmt(v.objectif_mensuel),
     fmt(v.objectif_annuel),
     { v: fmt(v.ca_total), bold: true },

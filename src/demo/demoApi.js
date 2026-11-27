@@ -472,6 +472,66 @@ function checkDoublonTel(body, exceptId) {
   if (dup) fail(409, 'client_existe', { message: 'Un client avec ce numéro de téléphone existe déjà.', client: { nom: dup.nom, telephone: dup.telephone, assigne_a: userNom(dup.vendeur_id) } })
 }
 route('get', '/api/clients', () => db.clients.map(clientView))
+route('get', '/api/comptes/prospect/:id', ({ id }) => {
+  const p = byId(db.prospects, id) || notFound()
+  const activites = db.activites.filter((a) => a.cible === p.nom).map((a) => ({ id: a.id, date: a.date, type: a.type, resultat: a.resultat, note: a.note, auteur: userNom(a.vendeur_id) }))
+  const taches = (db.taches || []).filter((t) => t.prospect_id === id)
+  return {
+    prospect: { ...p, vendeur_nom: userNom(p.vendeur_id) }, activites, taches,
+    resume: { valeur_estimee: Number(p.valeur_estimee || 0), nb_activites: activites.length, nb_positifs: activites.filter((a) => a.resultat === 'Positif').length,
+      derniere_activite: activites.map((a) => a.date).sort().pop() || null, taches_a_faire: taches.filter((t) => t.statut === 'a_faire').length, prochaine_tache: null },
+  }
+})
+route('get', '/api/comptes/producteur', ({ params }) => {
+  const nom = String(params?.nom || '').trim().toLowerCase()
+  const contrats = db.contrats_paddy.filter((c) => String(c.producteur_nom).trim().toLowerCase() === nom)
+    .map((c) => ({ ...c, debut: c.date_debut, fin: c.date_fin, montant: Number(c.quantite_kg) * Number(c.prix_kg), total_paye: totalVerse('paddy', c.id), total_declare: 0 }))
+  if (!contrats.length) notFound()
+  const paiements = contrats.flatMap((c) => versementsDe('paddy', c.id).map((x) => ({ id: x.id, date: x.date, montant: x.montant, mode: x.mode, statut_validation: 'valide', piece: c.numero })))
+  const lignes = [
+    ...contrats.map((c) => ({ date: c.debut, libelle: `Contrat ${c.numero || ''} : ${Number(c.quantite_kg).toLocaleString('fr-FR')} kg`, du: c.montant, paye: 0 })),
+    ...paiements.map((x) => ({ date: x.date, libelle: `Paiement ${x.mode || ''}`.trim(), du: 0, paye: Number(x.montant) })),
+  ].sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+  let solde = 0
+  const releve = lignes.map((l) => { solde += l.du - l.paye; return { ...l, solde } }).reverse()
+  const du = sum(contrats, (c) => c.montant); const paye = sum(contrats, (c) => c.total_paye)
+  return {
+    producteur: { nom: contrats[0].producteur_nom, telephone: contrats.find((c) => c.telephone)?.telephone || null, zone: contrats.find((c) => c.zone)?.zone || null },
+    resume: { nb_contrats: contrats.length, volume_kg: sum(contrats, (c) => c.quantite_kg), total_du: du, total_paye: paye, reste_a_payer: Math.max(0, du - paye),
+      en_attente_validation: 0, varietes: [...new Set(contrats.map((c) => c.variete).filter(Boolean))] },
+    releve, contrats, paiements,
+  }
+})
+route('get', '/api/comptes/agent/:id', ({ id }) => {
+  const u = id === DEMO_USER.id ? DEMO_USER : (byId(db.users, id) || notFound())
+  const ventes = db.ventes.filter((v) => v.vendeur_id === id).map((v) => {
+    const valide = totalVerse('vente', v.id)
+    return { id: v.id, numero: v.numero, date: v.date_vente, client_id: v.client_id, client_nom: v.client_nom, montant: v.montant, statut_paiement: v.statut_paiement,
+      date_echeance: v.date_echeance, total_valide: valide, reste: Math.max(0, Number(v.montant) - valide) }
+  })
+  const encaissements = ventes.flatMap((v) => versementsDe('vente', v.id).map((x) => ({ id: x.id, date: x.date, montant: x.montant, mode: x.mode, statut_validation: 'valide', piece: v.numero, client_nom: v.client_nom })))
+  const clients = db.clients.filter((c) => c.vendeur_id === id).map((c) => {
+    const vs = db.ventes.filter((v) => v.client_id === c.id)
+    return { id: c.id, nom: c.nom, type: c.type, zone: c.zone, ca: sum(vs, (v) => v.montant), derniere_vente: vs.map((v) => v.date_vente).sort().pop() || null }
+  }).sort((a, b) => b.ca - a.ca)
+  const prospects = db.prospects.filter((p) => p.vendeur_id === id).map((p) => ({ id: p.id, nom: p.nom, statut: p.statut, valeur_estimee: p.valeur_estimee }))
+  const taches = (db.taches || []).filter((t) => t.user_id === id)
+  const activites = db.activites.filter((a) => a.vendeur_id === id).map((a) => ({ id: a.id, date: a.date, type: a.type, resultat: a.resultat, note: a.note, cible: a.cible }))
+  const st = statsUser(u)
+  const montant = sum(ventes, (v) => v.montant); const enc = sum(ventes, (v) => v.total_valide)
+  const aujourd = todayIso()
+  return {
+    agent: { id: u.id, nom: u.nom, role: u.role, zone: u.zone, telephone: u.telephone, responsable_nom: userNom(u.parent_id) },
+    resume: { ca_encaisse_annee: st.ca_ytd, objectif_annee: st.objectif_annuel, taux_objectif: st.objectif_annuel ? Math.round((st.ca_ytd / st.objectif_annuel) * 100) : null,
+      nb_ventes: ventes.length, montant_ventes: montant, taux_encaissement: montant ? Math.round((enc / montant) * 100) : null,
+      encours: sum(ventes, (v) => v.reste), en_retard: sum(ventes.filter((v) => v.reste > 0 && v.date_echeance && v.date_echeance < aujourd), (v) => v.reste),
+      nb_clients: clients.length, nb_prospects: prospects.filter((p) => !['Gagné', 'Perdu'].includes(p.statut)).length,
+      taches_30j: taches.length, taches_faites_30j: taches.filter((t) => t.statut === 'terminee').length, taches_en_retard: 0, visites_30j: activites.length,
+      encaissements_valides_par_lui: 0, montant_valide_par_lui: 0 },
+    ventes, encaissements, clients, prospects, taches, activites,
+    equipe: db.users.filter((x) => x.parent_id === id).map((x) => ({ id: x.id, nom: x.nom, role: x.role })),
+  }
+})
 route('get', '/api/clients/:id/compte', ({ id }) => {
   const c = byId(db.clients, id) || notFound()
   const ventes = db.ventes.filter((v) => v.client_id === id).map((v) => {
@@ -490,13 +550,18 @@ route('get', '/api/clients/:id/compte', ({ id }) => {
   const dates = ventes.map((v) => v.date).sort()
   const aujourd = todayIso()
   return {
-    client: clientView(c), restreint: false, releve, ventes, encaissements, contrats: [], depots: [],
+    client: clientView(c), restreint: false, releve, ventes, encaissements, contrats: [],
+    depots: db.depots.filter((d) => d.client_id === id).map(depotView).map((d) => ({ ...d, date: d.date_depot, montant_du: d.quantite_vendue * d.prix_unitaire,
+      stock_restant: d.solde_restant, total_valide: totalVerse('depot', d.id),
+      mouvements: db.mouvements.filter((m) => m.depot_id === d.id).map((m) => ({ id: m.id, type: m.type, quantite: m.quantite, date: m.date, note: m.note })) })),
     activites: db.activites.filter((a) => a.cible === c.nom).map((a) => ({ id: a.id, date: a.date, type: a.type, resultat: a.resultat, note: a.note, auteur: userNom(a.vendeur_id) })),
     taches: (db.taches || []).filter((t) => t.client_id === id), relances: [],
     resume: { total_achats: achats, total_encaisse: encaisse, en_attente_validation: 0, solde_du: Math.max(0, achats - encaisse),
       en_retard: sum(ventes.filter((v) => v.reste > 0 && v.date_echeance && v.date_echeance < aujourd), (v) => v.reste),
       nb_ventes: ventes.length, panier_moyen: ventes.length ? Math.round(achats / ventes.length) : 0,
-      premiere_vente: dates[0] || null, derniere_vente: dates[dates.length - 1] || null, nb_activites: 0, nb_relances: 0 },
+      premiere_vente: dates[0] || null, derniere_vente: dates[dates.length - 1] || null, nb_activites: 0, nb_relances: 0,
+      ...(() => { const ds = db.depots.filter((d) => d.client_id === id).map(depotView)
+        return { nb_depots: ds.length, stock_en_depot: sum(ds, (d) => d.solde_restant), valeur_stock_en_depot: sum(ds, (d) => d.solde_restant * d.prix_unitaire) } })() },
   }
 })
 route('post', '/api/clients', ({ body }) => {

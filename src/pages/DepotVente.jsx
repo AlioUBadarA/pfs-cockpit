@@ -7,6 +7,7 @@ import { printBonDepot } from '../utils/printDocument'
 import { emetteur } from '../utils/entreprise'
 import { formatCFA as fmt, formatDate as fmtDate } from '../utils/format'
 import { askConfirm } from '../utils/askConfirm'
+import { LienCompte } from '../components/CompteCommun'
 
 const STATUTS = ['En cours', 'Clôturé']
 const STATUT_PAIEMENT_LABEL = { 'En cours': 'En cours', 'Paye': 'Payé' }
@@ -243,7 +244,7 @@ export default function DepotVente() {
                     {item.numero || '-'}
                     {item.lot && <div className="text-[10px] text-gray-400">Bon {item.lot}</div>}
                   </td>
-                  <td className="table-cell font-medium">{item.client_nom}</td>
+                  <td className="table-cell font-medium">{item.client_id ? <LienCompte to={`/clients/${item.client_id}`}>{item.client_nom}</LienCompte> : item.client_nom}</td>
                   <td className="table-cell text-sm">{item.produit}</td>
                   <td className="table-cell text-right">{fmtQ(item.quantite_deposee)}</td>
                   <td className="table-cell text-right">

@@ -8,36 +8,10 @@ import PageTabs from '../components/PageTabs'
 import { formatCFA as fmt, formatDate as fmtDate } from '../utils/format'
 import { emetteur } from '../utils/entreprise'
 import { printReleveClient } from '../utils/printDocument'
+import { Badge, EtatCompte, LienCompte, STATUT_TACHE, STATUT_VENTE, STATUT_VERS, Tableau, kg } from '../components/CompteCommun'
 
 // Compte d'un client : tout ce qu'il a fait avec la rizerie, comme un compte en banque.
 
-const STATUT_VENTE = { Paye: ['Payé', 'text-green-700 bg-green-50'], 'En cours': ['En cours', 'text-amber-700 bg-amber-50'], 'En retard': ['En retard', 'text-red-700 bg-red-50'] }
-const STATUT_VERS = { valide: ['Validé', 'text-green-700 bg-green-50'], declare: ['À valider', 'text-amber-700 bg-amber-50'], rejete: ['Rejeté', 'text-red-700 bg-red-50'] }
-const STATUT_TACHE = { a_faire: ['À faire', 'text-blue-700 bg-blue-50'], terminee: ['Terminée', 'text-green-700 bg-green-50'], non_realisee: ['Pas faite', 'text-red-700 bg-red-50'] }
-
-const Badge = ({ def }) => (def ? <span className={`text-[11px] font-semibold rounded px-2 py-0.5 ${def[1]}`}>{def[0]}</span> : null)
-
-function Tableau({ entetes, lignes, vide, alignDroite = [] }) {
-  if (!lignes.length) return <p className="text-sm text-gray-500 py-4">{vide}</p>
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-left text-xs text-gray-500 border-b">
-            {entetes.map((e, i) => <th key={e} className={`py-2 pr-3 ${alignDroite.includes(i) ? 'text-right' : ''}`}>{e}</th>)}
-          </tr>
-        </thead>
-        <tbody>
-          {lignes.map((cellules, i) => (
-            <tr key={i} className="border-b border-gray-100 align-top">
-              {cellules.map((c, j) => <td key={j} className={`py-2 pr-3 ${alignDroite.includes(j) ? 'text-right tabular-nums' : ''}`}>{c}</td>)}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
 
 export default function ClientCompte() {
   const { id } = useParams()
@@ -54,13 +28,7 @@ export default function ClientCompte() {
       .catch((err) => setErreur(err.response?.data?.error || 'Compte introuvable'))
   }, [id])
 
-  if (erreur) return (
-    <div className="space-y-4">
-      <Link to="/clients" className="text-sm text-[#1b75bc]">← Clients</Link>
-      <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">{erreur}</div>
-    </div>
-  )
-  if (!compte) return <div className="flex justify-center py-16"><span className="w-8 h-8 border-4 border-[#388E3C] border-t-transparent rounded-full animate-spin" /></div>
+  if (!compte) return <EtatCompte erreur={erreur} retour="/clients" libelleRetour="Clients" />
 
   const { client: c, resume: r } = compte
   const onglets = [
@@ -80,7 +48,8 @@ export default function ClientCompte() {
         <div>
           <h2 className="font-display text-xl font-bold text-gray-900">{c.nom}</h2>
           <p className="text-sm text-gray-500 mt-0.5">
-            {[c.type, c.zone, c.telephone, c.statut, c.vendeur_nom ? (c.user_id === user?.id ? 'Mon client' : `Suivi par ${c.vendeur_nom}`) : null].filter(Boolean).join(' · ')}
+            {[c.type, c.zone, c.telephone, c.statut].filter(Boolean).join(' · ')}
+            {c.vendeur_nom && <> · {c.user_id === user?.id ? 'Mon client' : <>Suivi par <LienCompte to={`/agents/${c.user_id}`}>{c.vendeur_nom}</LienCompte></>}</>}
           </p>
         </div>
         <div className="flex gap-2">
@@ -99,7 +68,9 @@ export default function ClientCompte() {
         <KpiCard title="Total des achats" value={fmt(r.total_achats)} sub={`${r.nb_ventes} vente(s) · panier moyen ${fmt(r.panier_moyen)}`} color="#1b75bc" />
         <KpiCard title="Encaissé" value={fmt(r.total_encaisse)} sub={r.en_attente_validation ? `${fmt(r.en_attente_validation)} à valider` : 'validé'} color="#1B5E20" />
         <KpiCard title="Solde dû" value={fmt(r.solde_du)} sub={r.en_retard ? `dont ${fmt(r.en_retard)} en retard` : 'aucun retard'} color={r.en_retard ? '#CC0000' : '#e08e0b'} />
-        <KpiCard title="Client depuis" value={r.premiere_vente ? fmtDate(r.premiere_vente) : '-'} sub={r.derniere_vente ? `dernier achat le ${fmtDate(r.derniere_vente)}` : 'aucun achat'} />
+        {r.nb_depots
+          ? <KpiCard title="Stock en dépôt" value={kg(r.stock_en_depot)} sub={`${fmt(r.valeur_stock_en_depot)} · ${r.nb_depots} dépôt(s)`} color="#6a1b9a" />
+          : <KpiCard title="Client depuis" value={r.premiere_vente ? fmtDate(r.premiere_vente) : '-'} sub={r.derniere_vente ? `dernier achat le ${fmtDate(r.derniere_vente)}` : 'aucun achat'} />}
       </div>
 
       <PageTabs tabs={onglets} active={onglet} setActive={setOnglet} />
@@ -132,11 +103,22 @@ export default function ClientCompte() {
         </Panel>
       )}
       {onglet === 'depots' && (
-        <Panel title="Dépôts-vente">
-          <Tableau entetes={['N°', 'Date', 'Produit', 'Déposé', 'Vendu', 'Montant dû', 'Encaissé', 'Statut']} alignDroite={[3, 4, 5, 6]} vide="Aucun dépôt."
-            lignes={compte.depots.map((d) => [d.numero || '-', fmtDate(d.date), d.produit, `${Number(d.quantite_deposee).toLocaleString('fr-FR')} kg`, `${Number(d.quantite_vendue).toLocaleString('fr-FR')} kg`,
-              fmt(d.montant_du), fmt(d.total_valide), d.statut])} />
-        </Panel>
+        <>
+          <Panel title="Dépôts-vente" sub="Stock confié au distributeur. Il doit ce qu'il a déclaré vendu.">
+            <Tableau entetes={['N°', 'Date', 'Produit', 'Déposé', 'Vendu', 'Retourné', 'En stock', 'Montant dû', 'Encaissé', 'Statut']} alignDroite={[3, 4, 5, 6, 7, 8]} vide="Aucun dépôt."
+              lignes={compte.depots.map((d) => [d.numero || '-', fmtDate(d.date), d.produit, kg(d.quantite_deposee), kg(d.quantite_vendue), kg(d.quantite_retournee),
+                <strong key="s">{kg(d.stock_restant)}</strong>, fmt(d.montant_du), fmt(d.total_valide), d.statut])} />
+          </Panel>
+          {compte.depots.some((d) => (d.mouvements || []).length) && (
+            <Panel title="Rapports du distributeur" sub="Ventes déclarées et retours, passage par passage">
+              <Tableau entetes={['Date', 'Dépôt', 'Mouvement', 'Quantité', 'Montant', 'Note']} alignDroite={[3, 4]} vide="Aucun rapport."
+                lignes={compte.depots.flatMap((d) => (d.mouvements || []).map((m) => ({ ...m, d })))
+                  .sort((x, y) => (y.date || '').localeCompare(x.date || ''))
+                  .map((m) => [fmtDate(m.date), m.d.numero || m.d.produit, m.type === 'vente' ? 'Vendu' : 'Retour', kg(m.quantite),
+                    m.type === 'vente' ? fmt(Number(m.quantite) * Number(m.d.prix_unitaire)) : '-', m.note || '-'])} />
+            </Panel>
+          )}
+        </>
       )}
       {onglet === 'activites' && (
         <Panel title="Activités" sub="Visites, appels, relances et comptes rendus">

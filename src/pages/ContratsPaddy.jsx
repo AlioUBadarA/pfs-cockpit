@@ -8,6 +8,7 @@ import { askConfirm } from '../utils/askConfirm'
 import { useAuth } from '../context/AuthContext'
 import { emetteur } from '../utils/entreprise'
 import { printContratPaddy } from '../utils/printDocument'
+import { LienCompte, lienProducteur } from '../components/CompteCommun'
 
 const STATUTS = ['Actif','Suspendu','Terminé']
 
@@ -150,7 +151,7 @@ export default function ContratsPaddy() {
                 return (
                   <tr key={item.id} className={`hover:bg-gray-50 ${item.statut === 'Terminé' ? 'opacity-50' : ''}`}>
                     <td className="table-cell font-mono text-xs text-gray-500">{item.numero || '-'}</td>
-                    <td className="table-cell font-medium">{item.producteur_nom}</td>
+                    <td className="table-cell font-medium"><LienCompte to={lienProducteur(item.producteur_nom, item.telephone)}>{item.producteur_nom}</LienCompte></td>
                     <td className="table-cell text-sm text-gray-500">{item.zone || '-'}</td>
                     <td className="table-cell text-sm">{item.variete || '-'}</td>
                     <td className="table-cell text-right font-medium">{item.quantite_kg ? Number(item.quantite_kg).toLocaleString('fr-FR') : '-'}</td>

@@ -5,6 +5,7 @@ import Panel from '../components/Panel'
 import BarList from '../components/BarList'
 import KpiCard from '../components/KpiCard'
 import { askConfirm } from '../utils/askConfirm'
+import { LienCompte } from '../components/CompteCommun'
 
 const STATUTS   = ['Nouveau','Qualifié','Proposition','Négociation','Gagné','Perdu']
 const PRIORITES = ['Haute','Normale','Basse']
@@ -209,7 +210,7 @@ export default function Prospection() {
             <tbody>
               {items.map(item => (
                 <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="table-cell font-medium">{item.nom}<div className="text-[10.5px] text-gray-400">{item.zone}</div></td>
+                  <td className="table-cell font-medium"><LienCompte to={`/prospects/${item.id}`}>{item.nom}</LienCompte><div className="text-[10.5px] text-gray-400">{item.zone}</div></td>
                   <td className="table-cell text-xs text-gray-600">{item.region || '-'}</td>
                   <td className="table-cell text-xs text-gray-500">{item.source || '-'}</td>
                   <td className="table-cell text-right text-xs font-semibold text-[#1b75bc]">{fmt(item.valeur_estimee)}</td>
