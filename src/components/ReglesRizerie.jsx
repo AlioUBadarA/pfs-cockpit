@@ -2,7 +2,7 @@ import { useState } from 'react'
 import api from '../services/api'
 
 // Valeurs exactes du backend (gcr/utils/paiement.js et gcr/utils/parametresRizerie.js)
-export const TOUTES_CONDITIONS = ['Comptant', 'J+15', 'J+30', 'J+45', 'J+60', 'J+90', '50% comptant / 50% J+15', '50% comptant / 50% J+30']
+export const TOUTES_CONDITIONS = ['Comptant', 'J+7', 'J+15', 'J+30', 'J+45', 'J+60', 'J+90', '50% comptant / 50% J+15', '50% comptant / 50% J+30']
 export const TOUS_MODES = ['Espèces', 'Mobile Money', 'Virement', 'Chèque']
 export const REGLES_DEFAUT = {
   conditions_paiement: TOUTES_CONDITIONS,
@@ -15,7 +15,17 @@ export const REGLES_DEFAUT = {
   alerte_creance_jours: 30,
   alerte_objectif_pct: 80,
   taux_cout_defaut_pct: 70,
+  achats_comptant_avant_credit: 0,
+  commande_si_impaye: 'autorisee',
+  alerte_relance_avant_jours: 2,
+  penalite_retard: null,
 }
+
+const CHOIX_IMPAYE = [
+  ['autorisee', 'Autorisée'],
+  ['validation_manager', 'Validée par un responsable avant la livraison'],
+  ['refusee', "Refusée jusqu'au règlement"],
+]
 
 function Cases({ options, valeurs, onChange, disabled }) {
   return (
@@ -82,6 +92,8 @@ export default function ReglesRizerie({ regles, peutModifier, onEnregistre }) {
         ...r,
         condition_defaut: r.condition_defaut && r.conditions_paiement.includes(r.condition_defaut) ? r.condition_defaut : null,
         modes_preuve: r.modes_preuve.filter((m) => r.modes_paiement.includes(m)),
+        achats_comptant_avant_credit: r.achats_comptant_avant_credit ?? 0,
+        alerte_relance_avant_jours: r.alerte_relance_avant_jours ?? 0,
       })
       setR({ ...REGLES_DEFAUT, ...data.parametres })
       setSucces('Règles enregistrées. Elles s\'appliquent tout de suite, sur le site et dans l\'app.')
@@ -108,6 +120,26 @@ export default function ReglesRizerie({ regles, peutModifier, onEnregistre }) {
             {r.conditions_paiement.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
           <p className="text-xs text-gray-400 mt-1">Appliquée quand le commercial ne précise rien.</p>
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <h3 className="font-semibold text-gray-900">Crédit et impayés</h3>
+        <p className="text-sm text-gray-500">La formation recommande : comptant ou acompte de 50 % pour un nouveau client, crédit après 3 achats payés, jamais de deuxième livraison si la première n'est pas payée. La rizerie décide.</p>
+        <Nombre id="r-credit" label="Crédit ouvert après" suffixe="achats payés (0 : pas de règle)" min={0} max={20}
+          value={r.achats_comptant_avant_credit} onChange={set('achats_comptant_avant_credit')} disabled={off}
+          aide="Avant ce nombre, le commercial ne peut proposer que Comptant ou 50 % comptant." />
+        <div className="max-w-md">
+          <label className="label" htmlFor="r-impaye">Nouvelle commande d'un client qui a une échéance impayée en retard</label>
+          <select id="r-impaye" className="input disabled:bg-gray-50" value={r.commande_si_impaye} disabled={off} onChange={(e) => set('commande_si_impaye')(e.target.value)}>
+            {CHOIX_IMPAYE.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+          <p className="text-xs text-gray-400 mt-1">S'applique aux commerciaux. Un responsable qui saisit la vente la valide lui-même.</p>
+        </div>
+        <div className="max-w-md">
+          <label className="label" htmlFor="r-penalite">Pénalité de retard (imprimée sur le bon de commande et le contrat)</label>
+          <input id="r-penalite" className="input disabled:bg-gray-50" maxLength={300} disabled={off} placeholder="Ex : 2 % par semaine de retard"
+            value={r.penalite_retard || ''} onChange={(e) => set('penalite_retard')(e.target.value || null)} />
         </div>
       </section>
 
@@ -139,6 +171,9 @@ export default function ReglesRizerie({ regles, peutModifier, onEnregistre }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Nombre id="r-inactif" label="Client inactif après" suffixe="jours sans achat" min={7} max={365}
             value={r.alerte_client_inactif_jours} onChange={set('alerte_client_inactif_jours')} disabled={off} />
+          <Nombre id="r-relance" label="Relance avant l'échéance" suffixe="jours avant (0 : pas d'alerte)" min={0} max={30}
+            value={r.alerte_relance_avant_jours} onChange={set('alerte_relance_avant_jours')} disabled={off}
+            aide="La formation recommande 2 jours avant l'échéance." />
           <Nombre id="r-creance" label="Créance en retard après" suffixe="jours après l'échéance" min={1} max={365}
             value={r.alerte_creance_jours} onChange={set('alerte_creance_jours')} disabled={off} />
           <Nombre id="r-objectif" label="Objectif sous la cible en dessous de" suffixe="% d'atteinte" min={10} max={100}

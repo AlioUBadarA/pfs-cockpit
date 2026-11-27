@@ -5,7 +5,8 @@ import { useAuth } from '../context/AuthContext'
 import ClientPicker, { clientPayload } from '../components/ClientPicker'
 import { ModeButtons, PreuveFields } from '../components/PaiementFields'
 import { useRegles } from '../utils/regles'
-import { printBonCommande, printRecu } from '../utils/printDocument'
+import ChampsFormation from '../components/ChampsFormation'
+import { printBonCommande, printBonLivraison, printRecu } from '../utils/printDocument'
 import { emetteur } from '../utils/entreprise'
 import { formatCFA as fmt } from '../utils/format'
 
@@ -55,6 +56,7 @@ export default function NouvelleVente() {
   const [reference, setReference] = useState('')
   const [preuve, setPreuve] = useState(null)
   const [note, setNote] = useState('')
+  const [livraison, setLivraison] = useState({})
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -122,6 +124,7 @@ export default function NouvelleVente() {
         date_vente: dateVente,
         conditions_paiement: conditions || undefined,
         note: note.trim() || undefined,
+        ...Object.fromEntries(Object.entries(livraison).filter(([, v]) => v !== '')),
         lignes: panier.map((l) => ({ produit_id: l.produit_id, quantite: Number(l.quantite), prix_unitaire: Number(l.prix_unitaire) })),
         encaissement: mode ? {
           montant: recu, mode,
@@ -139,7 +142,7 @@ export default function NouvelleVente() {
 
   const recommencer = () => {
     setPanier([]); setClient(null); setConditions(''); setMode(''); setMontantRecu('')
-    setReference(''); setPreuve(null); setNote(''); setResultat(null); setError(''); setDateVente(today())
+    setReference(''); setPreuve(null); setNote(''); setLivraison({}); setResultat(null); setError(''); setDateVente(today())
   }
 
   if (resultat) {
@@ -166,6 +169,11 @@ export default function NouvelleVente() {
             <p className="text-sm font-medium text-amber-700">Reste à encaisser : {fmt(resteDu)}</p>
           )}
         </div>
+        {v.validation_commande === 'a_valider' && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-3">
+            Ce client a une échéance impayée en retard. Un responsable doit valider la commande avant la livraison.
+          </div>
+        )}
         {resteDu > 0 && (
           <button className="btn-primary w-full py-3 text-base" onClick={encaisser}>
             Encaisser{vers ? ' le reste' : ''} · {fmt(resteDu)}
@@ -173,6 +181,7 @@ export default function NouvelleVente() {
         )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button className="btn-secondary" onClick={async () => printBonCommande(v, await emetteur(user))}>⎙ Bon de commande</button>
+          <button className="btn-secondary" onClick={async () => printBonLivraison(v, await emetteur(user))}>⎙ Bon de livraison</button>
           {vers && (
             <button
               className="btn-secondary"
@@ -338,6 +347,8 @@ export default function NouvelleVente() {
                 <PreuveFields mode={mode} reference={reference} onReference={setReference} preuve={preuve} onPreuve={setPreuve} modesPreuve={regles.modes_preuve} />
               </div>
             )}
+
+            <ChampsFormation groupe="ventes" valeurs={livraison} onChange={(cle, v) => setLivraison((p) => ({ ...p, [cle]: v }))} />
 
             <div>
               <label className="label">Notes</label>

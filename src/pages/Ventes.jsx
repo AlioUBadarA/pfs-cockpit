@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import KebabMenu from '../components/KebabMenu'
 import { useAuth } from '../context/AuthContext'
-import { printBonCommande, printFacture } from '../utils/printDocument'
+import { printBonCommande, printBonLivraison, printFacture } from '../utils/printDocument'
 import { emetteur } from '../utils/entreprise'
 import { formatCFA as fmt, formatDate as fmtDate } from '../utils/format'
 import { askConfirm } from '../utils/askConfirm'
@@ -94,6 +94,7 @@ export default function Ventes() {
       ? [{ icon: '💰', label: 'Encaisser', onClick: () => navigate(lienEncaisser(v)) }]
       : []),
     { icon: '⎙', label: 'Bon de commande', onClick: async () => printBonCommande(v, await emetteur(user)) },
+    { icon: '⎙', label: 'Bon de livraison', onClick: async () => printBonLivraison(v, await emetteur(user)) },
     factureDispo(v)
       ? { icon: '🧾', label: 'Facture', onClick: () => handlePrintFacture(v) }
       : { icon: '🧾', label: 'Facture (après validation)', onClick: () => handlePrintFacture(v) },
@@ -167,7 +168,11 @@ export default function Ventes() {
                   <tr key={v.id} className="hover:bg-gray-50">
                     <td className="table-cell whitespace-nowrap font-mono text-xs text-gray-500">{v.numero || '-'}</td>
                     <td className="table-cell whitespace-nowrap">{fmtDate(v.date_vente)}</td>
-                    <td className="table-cell font-medium min-w-[10rem]">{v.client_nom}</td>
+                    <td className="table-cell font-medium min-w-[10rem]">
+                      {v.client_nom}
+                      {v.validation_commande === 'a_valider' && <span className="block text-[10.5px] font-semibold text-amber-700">À valider par un responsable</span>}
+                      {v.validation_commande === 'refusee' && <span className="block text-[10.5px] font-semibold text-red-700" title={v.validation_motif || ''}>Commande refusée</span>}
+                    </td>
                     <td className="table-cell min-w-[10rem]">
                       {multi ? (
                         <button type="button" className="text-[#1b75bc] underline-offset-2 hover:underline" onClick={() => setOuverte(ouverte === v.id ? null : v.id)}>

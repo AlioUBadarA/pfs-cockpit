@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
+import ChampsFormation from '../components/ChampsFormation'
+import { valeursDe } from '../utils/champsFormation'
 import Modal from '../components/Modal'
 import KebabMenu from '../components/KebabMenu'
 import { useAuth } from '../context/AuthContext'
@@ -46,6 +48,7 @@ export default function Produits() {
       ref: item.ref, nom: item.nom,
       prix_kg: item.prix_kg || '', cout_kg: item.cout_kg || '',
       tendance: item.tendance || 'stable',
+      ...valeursDe('produits', item),
     })
     setError('')
     setModalOpen(true)
@@ -178,6 +181,7 @@ export default function Produits() {
               {TENDANCES.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
+          <ChampsFormation groupe="produits" valeurs={form} onChange={(cle, v) => setForm((p) => ({ ...p, [cle]: v }))} />
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-2">
             <button type="button" className="btn-secondary flex-1" onClick={() => setModalOpen(false)}>Annuler</button>

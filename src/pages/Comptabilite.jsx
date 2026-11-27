@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
 import Modal from '../components/Modal'
 import KpiCard from '../components/KpiCard'
+import CommandesAValider from '../components/CommandesAValider'
 import { formatCFA as fmt, formatDate as fmtDate } from '../utils/format'
 import { ouvrirPreuve } from '../utils/entreprise'
 
@@ -80,6 +81,8 @@ export default function Comptabilite() {
           </p>
         </div>
       </div>
+
+      <CommandesAValider />
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">{error}</div>

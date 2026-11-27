@@ -149,11 +149,58 @@ function lignesDe(vente) {
   }))
 }
 
+
+// ─── Formation : fiche produit, sacs, livraison, pénalité ────────────────────
+
+const fmtPct = (n) => `${Number(n).toLocaleString('fr-FR')} %`
+const rempli = (v) => v !== null && v !== undefined && v !== ''
+
+// « Sahel 108 · brisure 5 % · humidité 11 % · propreté 100 % »
+function specsProduit(l) {
+  return [
+    l.variete,
+    rempli(l.brisure_pct) ? `brisure ${fmtPct(l.brisure_pct)}` : null,
+    rempli(l.humidite_pct) ? `humidité ${fmtPct(l.humidite_pct)}` : null,
+    l.proprete ? `propreté ${l.proprete}` : null,
+  ].filter(Boolean).join(' · ')
+}
+
+// « 10 sacs de 50 kg » quand le poids du sac est connu.
+function enSacs(kg, poids) {
+  const p = Number(poids)
+  if (!p) return ''
+  const n = Math.round((Number(kg) / p) * 10) / 10
+  return `${fmtN(n)} sac${n > 1 ? 's' : ''} de ${fmtN(p)} kg`
+}
+
+const sousLigne = (t) => (t ? `<div style="font-size:10px;color:#666;margin-top:2px">${escapeHtml(t)}</div>` : '')
+
+function blocLivraison(v) {
+  const quand = [v.livraison_date ? fmtDate(v.livraison_date) : null, v.livraison_heure].filter(Boolean).join(', ')
+  const lignes = [
+    quand ? `Date : <strong>${escapeHtml(quand)}</strong>` : null,
+    v.livraison_lieu ? `Lieu : <strong>${escapeHtml(v.livraison_lieu)}</strong>` : null,
+    v.transport_charge ? `Transport payé par : <strong>${escapeHtml(v.transport_charge)}</strong>` : null,
+  ].filter(Boolean)
+  if (!lignes.length) return ''
+  return `<div class="note-box"><div class="note-label">Livraison</div>${lignes.join('<br>')}</div>`
+}
+
+function penaliteDe(user, propre) {
+  return propre || user?.entreprise?.parametres?.penalite_retard || ''
+}
+
+function blocValidation(v) {
+  if (v.validation_commande === 'a_valider') return '<div class="note-box" style="border-color:#e08e0b"><div class="note-label">Commande en attente</div>Ce client a une échéance impayée. Un responsable doit valider la commande avant la livraison.</div>'
+  if (v.validation_commande === 'refusee') return `<div class="note-box" style="border-color:#c62828"><div class="note-label">Commande refusée</div>${escapeHtml(v.validation_motif || '')}</div>`
+  return ''
+}
+
 function tableLignes(vente) {
   const rows = lignesDe(vente).map((l) => `
         <tr>
-          <td>${escapeHtml(l.produit || '-')}</td>
-          <td class="r">${fmtN(l.quantite)} kg</td>
+          <td>${escapeHtml(l.produit || '-')}${sousLigne(specsProduit(l))}</td>
+          <td class="r">${fmtN(l.quantite)} kg${sousLigne(enSacs(l.quantite, l.poids_sac_kg))}</td>
           <td class="r">${fmt(l.prix_unitaire)} / kg</td>
           <td class="r"><strong>${fmt(l.montant)}</strong></td>
         </tr>`).join('')
@@ -222,6 +269,7 @@ export function printBonCommande(vente, user) {
       </div>
     </div>
 
+    ${blocValidation(vente)}
     ${tableLignes(vente)}
 
     <div class="total-section">
@@ -232,6 +280,8 @@ export function printBonCommande(vente, user) {
     </div>
 
     ${vente.mode ? `<p style="font-size:11px;color:#555;margin-bottom:20px">Mode de paiement : <strong>${escapeHtml(vente.mode)}</strong></p>` : ''}
+    ${blocLivraison(vente)}
+    ${penaliteDe(user) ? `<p style="font-size:11px;color:#555;margin-bottom:20px">Pénalité de retard : <strong>${escapeHtml(penaliteDe(user))}</strong></p>` : ''}
 
     ${vente.note ? `<div class="note-box"><div class="note-label">Note</div>${escapeHtml(vente.note)}</div>` : ''}
 
@@ -465,13 +515,121 @@ export function printContrat(contrat, user) {
       </tr></tbody>
     </table>
     <ul class="clauses">
-      <li>Le fournisseur livre chaque mois la quantité indiquée.</li>
-      <li>Le client règle chaque livraison selon l'échéancier du contrat.</li>
-      <li>Chaque paiement donne lieu à un reçu.</li>
+      ${contrat.frequence_livraison ? `<li>Quantité et fréquence : ${escapeHtml(contrat.frequence_livraison)}.</li>` : '<li>Le fournisseur livre chaque mois la quantité indiquée.</li>'}
+      ${rempli(contrat.clause_revision_pct) ? `<li>Prix : il est révisé si le prix du paddy varie de plus de ${escapeHtml(fmtPct(contrat.clause_revision_pct))}.</li>` : ''}
+      ${(contrat.livraison_moment || contrat.livraison_lieu || contrat.transport_charge) ? `<li>Livraison : ${escapeHtml([contrat.livraison_moment, contrat.livraison_lieu, contrat.transport_charge ? `transport payé par ${contrat.transport_charge.toLowerCase()}` : null].filter(Boolean).join(', '))}.</li>` : ''}
+      <li>Paiement : ${escapeHtml([contrat.paiement_delai || 'selon l\'échéancier du contrat', contrat.paiement_mode ? `par ${contrat.paiement_mode}` : null].filter(Boolean).join(', '))}. Chaque paiement donne lieu à un reçu.</li>
+      ${penaliteDe(user, contrat.penalite_retard) ? `<li>Retard de paiement : ${escapeHtml(penaliteDe(user, contrat.penalite_retard))}.</li>` : ''}
     </ul>
     ${contrat.note ? `<div class="note-box"><div class="note-label">Conditions particulières</div>${escapeHtml(contrat.note)}</div>` : ''}
     ${signatures({ label: 'Signature client', nom: contrat.client_nom }, { label: 'Signature fournisseur', nom: nomEmetteur(user) })}
     ${mentionsBlock(user)}
   `
   openPrintWindow(`Contrat - ${contrat.numero || ''}`, body)
+}
+
+
+// ─── BON DE LIVRAISON ────────────────────────────────────────────────────────
+// Signé par les deux parties à la livraison (formation, séance 3).
+export function printBonLivraison(vente, user) {
+  const lignes = lignesDe(vente).map((l) => `
+        <tr>
+          <td>${escapeHtml(l.produit || '-')}${sousLigne(specsProduit(l))}</td>
+          <td class="r">${fmtN(l.quantite)} kg</td>
+          <td class="r">${escapeHtml(enSacs(l.quantite, l.poids_sac_kg) || '-')}</td>
+        </tr>`).join('')
+  const body = `
+    <div class="header">
+      <div>${emetteurBlock(user)}</div>
+      <div class="doc-block">
+        <div class="doc-type">Bon de livraison</div>
+        <div class="doc-meta">
+          N° <strong>BL-${escapeHtml(vente.numero || '-')}</strong><br>
+          Commande : ${escapeHtml(vente.numero || '-')} du ${escapeHtml(fmtDate(vente.date_vente))}<br>
+          Livraison : ${escapeHtml([vente.livraison_date ? fmtDate(vente.livraison_date) : null, vente.livraison_heure].filter(Boolean).join(', ') || '..................')}
+        </div>
+      </div>
+    </div>
+    <hr class="separator">
+    <div class="two-col">
+      <div>
+        <div class="section-label">Client</div>
+        <div class="client-name">${escapeHtml(vente.client_nom || '-')}</div>
+        ${vente.client_telephone ? `<div class="client-info">Tél : ${escapeHtml(vente.client_telephone)}</div>` : ''}
+      </div>
+      <div style="text-align:right">
+        <div class="section-label">Lieu de livraison</div>
+        <div class="client-name">${escapeHtml(vente.livraison_lieu || '..................')}</div>
+        ${vente.transport_charge ? `<div class="client-info">Transport payé par : ${escapeHtml(vente.transport_charge)}</div>` : ''}
+      </div>
+    </div>
+    ${blocValidation(vente)}
+    <table>
+      <thead><tr><th>Désignation</th><th class="r">Quantité</th><th class="r">Sacs</th></tr></thead>
+      <tbody>${lignes}</tbody>
+    </table>
+    <div class="note-box">
+      <div class="note-label">À la réception</div>
+      ☐ Marchandise reçue en bon état et conforme à la commande<br>
+      ☐ Réserves : ...................................................................................
+    </div>
+    ${signatures({ label: 'Reçu par (client)', nom: vente.client_nom }, { label: 'Livré par', nom: vente.vendeur_nom || user?.nom })}
+    ${mentionsBlock(user)}
+  `
+  openPrintWindow(`Bon de livraison - ${vente.numero || ''}`, body)
+}
+
+// ─── CONTRAT D'ACHAT DE PADDY ────────────────────────────────────────────────
+// Les 5 éléments (formation, séance 4) : parties, qualité, volume, prix, calendrier et paiement.
+export function printContratPaddy(c, user) {
+  const montant = Number(c.quantite_kg || 0) * Number(c.prix_kg || 0)
+  const qualite = [
+    c.variete ? `Variété : ${c.variete}` : null,
+    rempli(c.humidite_max_pct) ? `humidité maximale ${fmtPct(c.humidite_max_pct)}` : null,
+    rempli(c.corps_etrangers_max_pct) ? `corps étrangers ${fmtPct(c.corps_etrangers_max_pct)} au plus` : null,
+  ].filter(Boolean).join(', ')
+  const body = `
+    <div class="header">
+      <div>${emetteurBlock(user)}</div>
+      <div class="doc-block">
+        <div class="doc-type">Contrat d'achat de paddy</div>
+        <div class="doc-meta">
+          N° <strong>${escapeHtml(c.numero || '-')}</strong><br>
+          ${c.date_debut ? `Du ${escapeHtml(fmtDate(c.date_debut))}` : ''}${c.date_fin ? ` au ${escapeHtml(fmtDate(c.date_fin))}` : ''}
+        </div>
+      </div>
+    </div>
+    <hr class="separator">
+    <div class="two-col">
+      <div>
+        <div class="section-label">Acheteur</div>
+        <div class="client-name">${escapeHtml(nomEmetteur(user))}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="section-label">Producteur</div>
+        <div class="client-name">${escapeHtml(c.producteur_nom || '-')}</div>
+        ${[c.zone, c.telephone ? `Tél : ${c.telephone}` : null].filter(Boolean).length ? `<div class="client-info">${escapeHtml([c.zone, c.telephone ? `Tél : ${c.telephone}` : null].filter(Boolean).join(' · '))}</div>` : ''}
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Paddy</th><th class="r">Volume</th><th class="r">Prix</th><th class="r">Montant estimé</th></tr></thead>
+      <tbody><tr>
+        <td>${escapeHtml(c.variete || 'Paddy')}</td>
+        <td class="r">${fmtN(c.quantite_kg)} kg${rempli(c.tolerance_pct) ? sousLigne(`tolérance ± ${fmtPct(c.tolerance_pct)}`) : ''}</td>
+        <td class="r">${fmt(c.prix_kg)} / kg${c.type_prix ? sousLigne(c.type_prix) : ''}</td>
+        <td class="r"><strong>${fmt(montant)}</strong></td>
+      </tr></tbody>
+    </table>
+    <ul class="clauses">
+      <li>Qualité : ${escapeHtml(qualite || 'à préciser')}.${c.controle_qualite ? ` Contrôle : ${escapeHtml(c.controle_qualite)}.` : ''}</li>
+      <li>Volume : ${escapeHtml(fmtN(c.quantite_kg))} kg${rempli(c.tolerance_pct) ? `, avec une tolérance de ${escapeHtml(fmtPct(c.tolerance_pct))}` : ''}.</li>
+      <li>Prix : ${escapeHtml(fmt(c.prix_kg))} le kg${c.type_prix ? ` (${escapeHtml(c.type_prix.toLowerCase())})` : ''}.</li>
+      <li>Calendrier : ${escapeHtml(c.calendrier || 'selon les dates du contrat')}${c.lieu_remise ? `, remise à ${escapeHtml(c.lieu_remise)}` : ''}${c.transport_charge ? `, transport payé par ${escapeHtml(c.transport_charge.toLowerCase())}` : ''}.</li>
+      <li>Paiement : ${rempli(c.acompte_pct) ? `acompte de ${escapeHtml(fmtPct(c.acompte_pct))} à la signature, solde à la livraison` : 'à la livraison'}.</li>
+    </ul>
+    ${c.note ? `<div class="note-box"><div class="note-label">Conditions particulières</div>${escapeHtml(c.note)}</div>` : ''}
+    ${signatures({ label: 'Signature producteur', nom: c.producteur_nom }, { label: 'Signature acheteur', nom: nomEmetteur(user) })}
+    ${mentionsBlock(user)}
+  `
+  openPrintWindow(`Contrat paddy - ${c.numero || ''}`, body)
 }

@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
+import ChampsFormation from '../components/ChampsFormation'
+import { valeursDe } from '../utils/champsFormation'
 import Modal from '../components/Modal'
 import { formatCFA as fmt, formatDate as fmtDate } from '../utils/format'
 import { askConfirm } from '../utils/askConfirm'
@@ -84,6 +86,7 @@ export default function ContratsClients() {
       date_fin:           item.date_fin ? item.date_fin.slice(0,10) : '',
       statut:             item.statut,
       note:               item.note || '',
+      ...valeursDe('contrats_clients', item),
     })
     setModalOpen(true)
   }
@@ -314,6 +317,7 @@ export default function ContratsClients() {
             <label className="label">Note</label>
             <textarea className="input" rows={2} value={form.note} onChange={set('note')} />
           </div>
+          <ChampsFormation groupe="contrats_clients" valeurs={form} onChange={(cle, v) => setForm((p) => ({ ...p, [cle]: v }))} />
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-2">
             <button type="button" className="btn-secondary flex-1" onClick={() => setModalOpen(false)}>Annuler</button>

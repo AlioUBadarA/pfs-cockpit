@@ -1,8 +1,13 @@
 import { useEffect, useState, useCallback } from 'react'
 import api from '../services/api'
+import ChampsFormation from '../components/ChampsFormation'
+import { valeursDe } from '../utils/champsFormation'
 import Modal from '../components/Modal'
 import { formatCFA as fmt, formatDate as fmtDate } from '../utils/format'
 import { askConfirm } from '../utils/askConfirm'
+import { useAuth } from '../context/AuthContext'
+import { emetteur } from '../utils/entreprise'
+import { printContratPaddy } from '../utils/printDocument'
 
 const STATUTS = ['Actif','Suspendu','Terminé']
 
@@ -15,6 +20,7 @@ const statutColor = (s) => ({
 const INIT = { producteur_nom: '', zone: '', telephone: '', variete: '', quantite_kg: '', prix_kg: '', date_debut: '', date_fin: '', statut: 'Actif', note: '' }
 
 export default function ContratsPaddy() {
+  const { user } = useAuth()
   const [items, setItems]     = useState([])
   const [loading, setLoading] = useState(true)
   const [filterStatut, setFilterStatut] = useState('')
@@ -52,6 +58,7 @@ export default function ContratsPaddy() {
       date_fin:       item.date_fin   ? item.date_fin.slice(0,10)   : '',
       statut:         item.statut,
       note:           item.note || '',
+      ...valeursDe('contrats_paddy', item),
     })
     setModalOpen(true)
   }
@@ -156,6 +163,7 @@ export default function ContratsPaddy() {
                     </td>
                     <td className="table-cell">
                       <div className="flex gap-2">
+                        <button onClick={async () => printContratPaddy(item, await emetteur(user))} className="text-xs text-blue-600 hover:text-blue-800 font-medium">Imprimer</button>
                         <button onClick={() => openEdit(item)} className="text-xs text-blue-600 hover:text-blue-800 font-medium">Éditer</button>
                         <button onClick={() => del(item.id)} className="text-xs text-red-600 hover:text-red-800 font-medium">Suppr.</button>
                       </div>
@@ -223,6 +231,7 @@ export default function ContratsPaddy() {
             <label className="label">Note</label>
             <textarea className="input" rows={2} value={form.note} onChange={set('note')} />
           </div>
+          <ChampsFormation groupe="contrats_paddy" valeurs={form} onChange={(cle, v) => setForm((p) => ({ ...p, [cle]: v }))} />
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-3 pt-2">
             <button type="button" className="btn-secondary flex-1" onClick={() => setModalOpen(false)}>Annuler</button>

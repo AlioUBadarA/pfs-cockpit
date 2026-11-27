@@ -14,7 +14,7 @@ function tacheDepuisAlerte(a) {
   if (a.cat === 'Client inactif') {
     return { user_id: a.owner || '', type: 'Visite', cible: { type: 'client', id: a.entity_id, nom }, alerte_key: a.key, consigne: a.msg }
   }
-  if (a.cat === 'Créance en retard') {
+  if (a.cat === 'Créance en retard' || a.cat === 'Échéance proche') {
     return { user_id: a.owner || '', type: 'Recouvrement', vente_id: a.entity_id, cible_libelle: nom, alerte_key: a.key, consigne: a.msg }
   }
   return null
@@ -24,6 +24,7 @@ const ICONS = {
   'Client inactif': '◷',
   'Créance en retard': '₣',
   'Objectif sous cible': '◎',
+  'Échéance proche': '◔',
 }
 
 export default function Actions() {
